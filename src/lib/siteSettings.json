@@ -1,0 +1,213 @@
+{
+  "heroTitle": "M1G ARAMA KURTARMA DERNEĞİ ",
+  "heroSubtitle": "Daima Hazır. Asla Geride Bırakma.",
+  "aboutText": "M1G Arama & Kurtarma, 2023 senesinde tamamı gönüllülerden oluşan bir arama kurtarma, ekoloji ve insani yardım grubudur. M1G Ekibi ulusal ve uluslararası alanda yaşamı tehdit eden bütün felaketlerde, afet sonrasında enkaz altında kalmış insanlara ulaşmak için arama kurtarma operasyonları gerçekleştirmekte, ihtiyaç halinde afet bölgesinde tıbbi ve insani yardım faaliyetleri sürdürmektedir.",
+  "volunteerTitle": "Sahada Bir El De Sen Uzat",
+  "volunteerSubtitle": "Profesyonel bir arama kurtarma personeli olmak için adım at. Eğitimlerimize katıl, sertifikalarını al ve umut ışığı ol.",
+  "liveSession": {
+    "isActive": false,
+    "title": "Gece Dağ Arama Koordinasyon Brifingi",
+    "url": "https://zoom.us/j/12345"
+  },
+  "sponsors": [
+    {
+      "id": 1,
+      "name": "AFAD",
+      "role": "Kamu Desteği ve Akreditasyon"
+    },
+    {
+      "id": 1779659145030,
+      "name": "Kotto Customs",
+      "role": "Ekipman Destek"
+    },
+    {
+      "id": 1780520295205,
+      "name": "epic event",
+      "role": "aaa"
+    }
+  ],
+  "boardMembers": [
+    {
+      "id": "cgorgu",
+      "name": "Cem GÖRGÜL",
+      "role": "Yönetim Kurulu Başkanı",
+      "photo": "",
+      "desc": "M1G Arama Kurtarma operasyonlarının genel yönetimi ve stratejik kurumsal iletişim süreçlerinden sorumludur."
+    },
+    {
+      "id": "taksit",
+      "name": "Tolga AKŞİT",
+      "role": "Genel Sekreter",
+      "photo": "",
+      "desc": "Resmi işlemler, dernek koordinasyonu ve genel yasal yükümlülüklerin yürütülmesini sağlar."
+    },
+    {
+      "id": "mtasli",
+      "name": "Mehmet TAŞLI",
+      "role": "Sayman",
+      "photo": "",
+      "desc": "Dernek kaynaklarının etkin kullanımı ve finansal şeffaflık süreçlerinden sorumludur."
+    },
+    {
+      "id": "mseyre",
+      "name": "Mustafa SEYREK",
+      "role": "Yönetim Kurulu Üyesi",
+      "photo": "",
+      "desc": "Arama kurtarma eğitim modüllerinin geliştirilmesi ve sahada uygulanması süreçlerini yönetir."
+    },
+    {
+      "id": "agunas",
+      "name": "Ali Berkay GÜNASLAN",
+      "role": "Yönetim Kurulu Üyesi",
+      "photo": "",
+      "desc": "Gençlik kolları ve insani yardım projelerinde sahada direkt operasyonları koordine eder."
+    }
+  ],
+  "activities": [
+    {
+      "id": 1,
+      "title": "Arama Kurtarma",
+      "icon": "AlertTriangle",
+      "desc": "Afet ve acil durumlarda profesyonel teçhizat ve eğitimli personelle 7/24 sahada hayat kurtarma operasyonları."
+    },
+    {
+      "id": 2,
+      "title": "Sosyal Sorumluluk",
+      "icon": "HeartHandshake",
+      "desc": "Toplumsal dayanışma kampanyaları ile ihtiyaç sahiplerine umut ışığı olmaya devam ediyoruz."
+    },
+    {
+      "id": 3,
+      "title": "Ekoloji Faaliyetleri",
+      "icon": "Mountain",
+      "desc": "Doğayı koruma, ağaçlandırma ve çevre temizliği bilincini artırma projeleri."
+    },
+    {
+      "id": 4,
+      "title": "M1G Eğitimleri",
+      "icon": "Radio",
+      "desc": "Arama kurtarma personeli yetiştirmek için uluslararası standartlarda teorik ve pratik eğitimler."
+    },
+    {
+      "id": 5,
+      "title": "İnsani Yardım",
+      "icon": "HeartHandshake",
+      "desc": "Afet bölgelerinde ve kriz anlarında tıbbi, barınma ve gıda yardımı temini."
+    },
+    {
+      "id": 6,
+      "title": "Depremle Birlikte Yaşam",
+      "icon": "AlertTriangle",
+      "desc": "Halkı bilinçlendirme seminerleri ile deprem öncesi, anı ve sonrasında yapılması gerekenler."
+    }
+  ],
+  "announcements": [
+    {
+      "id": "1780518839202",
+      "title": "444",
+      "summary": "44",
+      "category": "Duyuru",
+      "date": "03 Haziran 2026",
+      "image": ""
+    },
+    {
+      "id": "1779282312174",
+      "summary": "DENEME",
+      "category": "Duyuru",
+      "date": "20 Mayıs 2026",
+      "image": "",
+      "title": "DENEME"
+    }
+  ],
+  "calendarEvents": [],
+  "operations": [],
+  "heroBadge": "",
+  "heroDesc": "",
+  "aboutSections": [
+    {
+      "id": "SEC-012222",
+      "title": "KURULUŞUMUZ",
+      "subtitle": "BİR UMUT YOLCULUĞU",
+      "desc": "M1G Arama Kurtarma Derneği, 2023 yılında, afetlere karşı en zorlu koşullarda bile bir cana daha ulaşabilmek sevdasıyla, tamamen gönüllülük esasıyla kuruldu.",
+      "metrics": [],
+      "stepNumber": "033"
+    },
+    {
+      "id": "SEC-02",
+      "title": "KARARLILIK",
+      "subtitle": "BİLİNÇ VE EĞİTİM",
+      "desc": "Sadece sahada olmakla yetinmedik. Doğada, kentsel alanlarda ve su altındaki her türlü senaryoya karşı profesyonel uluslararası standartlarda eğitimlerimizi tamamladık.",
+      "metrics": [
+        {
+          "label": "EĞİTİMLİ GÖNÜLLÜ",
+          "value": "300+"
+        },
+        {
+          "label": "BRANŞ",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "SEC-03",
+      "title": "GÜCÜMÜZ",
+      "subtitle": "OPERASYONEL KAPASİTE",
+      "desc": "Özel donanımlı araçlarımız, sismik dinleme cihazlarımız, termal dronlarımız ve medikal müdahale kitlerimiz ile karanlığın çöktüğü her yerde ışık olmaya hazırız.",
+      "metrics": [
+        {
+          "label": "HAZIRLIK SÜRESİ",
+          "value": "7/24"
+        },
+        {
+          "label": "MÜDAHALE EKİPMANI",
+          "value": "FULL"
+        }
+      ]
+    },
+    {
+      "id": "SEC-04",
+      "title": "OPERASYONLAR",
+      "subtitle": "SAHADA İZİMİZ VAR",
+      "desc": "Depremler, kayıp vakaları ve büyük doğa felaketlerinde yüzlerce arama kurtarma faaliyetine katıldık. Geri dönmeyen tek bir can kalmayana dek durmayacağız.",
+      "metrics": [
+        {
+          "label": "GÖREV",
+          "value": "150+"
+        },
+        {
+          "label": "KURTARILAN",
+          "value": "HAYATLAR"
+        }
+      ]
+    }
+  ],
+  "socialMedia": {
+    "website": "m1g.org.tr",
+    "whatsapp": "",
+    "email": "info@m1g.og.tr",
+    "instagram": "https://www.instagram.com/m1g.aramakurtarmadernegi/",
+    "twitter": "https://x.com/M1Gorg",
+    "facebook": "https://www.facebook.com/M1G.AramaKurtarma/",
+    "youtube": "https://www.youtube.com/@M1G.AramaKurtarma"
+  },
+  "redCodeActive": false,
+  "siteTitle": "",
+  "siteDesc": "",
+  "vizyonTitle": "",
+  "vizyonBadge": "",
+  "vizyonDesc": "",
+  "vizyonText": "",
+  "misyonText": "",
+  "degerlerList": [],
+  "bankName": "",
+  "iban": "",
+  "aboutBadge": "",
+  "aboutTitle": "",
+  "aboutTag1": "",
+  "aboutTag2": "",
+  "activitiesBadge": "",
+  "activitiesTitle": "",
+  "sponsorsBadge": "",
+  "sponsorsTitle": "",
+  "heroVideoUrl": "https://youtu.be/fuAnFEFaCAM"
+}

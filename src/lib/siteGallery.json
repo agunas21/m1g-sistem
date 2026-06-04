@@ -1,0 +1,58 @@
+{
+  "activityGallery": [
+    {
+      "id": 1779226404671,
+      "common": "Yeni Görsel",
+      "binomial": "",
+      "photo": {
+        "url": "__lazy_gallery__:0"
+      },
+      "_hasPhoto": true
+    },
+    {
+      "id": 1779226408272,
+      "common": "Yeni Görsel",
+      "binomial": "",
+      "photo": {
+        "url": "__lazy_gallery__:1"
+      },
+      "_hasPhoto": true
+    },
+    {
+      "id": 1779226411496,
+      "common": "Yeni Görsel",
+      "binomial": "",
+      "photo": {
+        "url": "__lazy_gallery__:2"
+      },
+      "_hasPhoto": true
+    },
+    {
+      "id": 1779226417351,
+      "common": "Yeni Görsel",
+      "binomial": "",
+      "photo": {
+        "url": "__lazy_gallery__:3"
+      },
+      "_hasPhoto": true
+    },
+    {
+      "id": 1779226422663,
+      "common": "Yeni Görsel",
+      "binomial": "",
+      "photo": {
+        "url": "__lazy_gallery__:4"
+      },
+      "_hasPhoto": true
+    },
+    {
+      "id": 1779226428321,
+      "common": "Yeni Görsel",
+      "binomial": "",
+      "photo": {
+        "url": "__lazy_gallery__:5"
+      },
+      "_hasPhoto": true
+    }
+  ]
+}

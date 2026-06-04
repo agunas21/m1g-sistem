@@ -1,0 +1,25 @@
+{
+  "name": "M1G Arama Kurtarma",
+  "short_name": "M1G",
+  "description": "M1G Arama & Kurtarma Derneği - Daima Hazır, Asla Geride Bırakma",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#dc2626",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/m1g-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/m1g-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["emergency", "rescue", "nonprofit"]
+}

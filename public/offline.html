@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnternet Bağlantısı Yok - M1G Arama Kurtarma</title>
+    <style>
+        body {
+            margin: 0; padding: 0;
+            background-color: #020617;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+            max-width: 400px;
+        }
+        .logo {
+            width: 100px;
+            margin-bottom: 20px;
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+        h1 {
+            color: #ef4444;
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        p {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .retry-btn {
+            margin-top: 20px;
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: background-color 0.2s;
+        }
+        .retry-btn:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="/m1g-logo.png" alt="M1G" class="logo" />
+        <h1>Bağlantı Koptu</h1>
+        <p>Görünüşe göre internet bağlantınız yok veya sunucuya ulaşılamıyor. M1G platformu çevrimdışı modda çalışamıyor, ancak verileriniz cihazınızda saklanmaktadır.</p>
+        <button class="retry-btn" onclick="window.location.reload()">Tekrar Dene</button>
+    </div>
+</body>
+</html>

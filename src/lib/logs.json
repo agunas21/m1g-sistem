@@ -1,0 +1,1414 @@
+[
+  {
+    "id": "1780585633338",
+    "timestamp": "2026-06-04T15:07:13.338Z",
+    "level": "WARN",
+    "user": "Admin",
+    "action": "Operasyon Kalıcı Olarak Silindi: OP-506",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780585627748",
+    "timestamp": "2026-06-04T15:07:07.748Z",
+    "level": "WARN",
+    "user": "Admin",
+    "action": "Operasyon Kalıcı Olarak Silindi: OP-PANIC-3377",
+    "target": "OP-PANIC-3377"
+  },
+  {
+    "id": "1780585609267",
+    "timestamp": "2026-06-04T15:06:49.267Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: 55",
+    "target": "OP-063"
+  },
+  {
+    "id": "1780581956618",
+    "timestamp": "2026-06-04T14:05:56.618Z",
+    "level": "SUCCESS",
+    "user": "admin",
+    "action": "Başarılı Giriş",
+    "target": "Sistem Yöneticisi",
+    "details": {
+      "ip": "::1",
+      "role": "Yönetim Kurulu Başkanı"
+    }
+  },
+  {
+    "id": "1780581798140",
+    "timestamp": "2026-06-04T14:03:18.140Z",
+    "level": "SUCCESS",
+    "user": "agunas",
+    "action": "Başarılı Giriş",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "ip": "::1",
+      "role": "Yönetim Kurulu Üyesi"
+    }
+  },
+  {
+    "id": "1780581676594",
+    "timestamp": "2026-06-04T14:01:16.594Z",
+    "level": "WARN",
+    "user": "::1",
+    "action": "Başarısız Giriş",
+    "target": "admin@m1g.org.tr",
+    "details": {
+      "reason": "Üye bulunamadı"
+    }
+  },
+  {
+    "id": "1780580973082",
+    "timestamp": "2026-06-04T13:49:33.082Z",
+    "level": "WARN",
+    "user": "::1",
+    "action": "Başarısız Giriş",
+    "target": "admin@m1g.org.tr",
+    "details": {
+      "reason": "Üye bulunamadı"
+    }
+  },
+  {
+    "id": "1780580115007",
+    "timestamp": "2026-06-04T13:35:15.007Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Yeni Operasyon Başlatıldı: 55",
+    "target": "OP-063"
+  },
+  {
+    "id": "1780579289542",
+    "timestamp": "2026-06-04T13:21:29.542Z",
+    "level": "WARN",
+    "user": "Admin",
+    "action": "Demirbaş Sistemden Silindi",
+    "target": "Aselsan El Telsizi",
+    "details": {
+      "id": "eq-001"
+    }
+  },
+  {
+    "id": "1780579271690",
+    "timestamp": "2026-06-04T13:21:11.690Z",
+    "level": "WARN",
+    "user": "Admin",
+    "action": "Demirbaş Sistemden Silindi",
+    "target": "aaa",
+    "details": {
+      "id": "eq-988756"
+    }
+  },
+  {
+    "id": "1780579269650",
+    "timestamp": "2026-06-04T13:21:09.650Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Durumu Değişti: Bakımda",
+    "target": "aaa",
+    "details": {
+      "oldStatus": "Depoda"
+    }
+  },
+  {
+    "id": "1780579263910",
+    "timestamp": "2026-06-04T13:21:03.910Z",
+    "level": "WARN",
+    "user": "Admin",
+    "action": "Demirbaş Sistemden Silindi",
+    "target": "sdsd",
+    "details": {
+      "id": "eq-775869"
+    }
+  },
+  {
+    "id": "1780579259660",
+    "timestamp": "2026-06-04T13:20:59.660Z",
+    "level": "WARN",
+    "user": "Admin",
+    "action": "Demirbaş Sistemden Silindi",
+    "target": "ilkyardım çantası",
+    "details": {
+      "id": "eq-481871"
+    }
+  },
+  {
+    "id": "1780579203232",
+    "timestamp": "2026-06-04T13:20:03.232Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "aaa"
+  },
+  {
+    "id": "1780579202109",
+    "timestamp": "2026-06-04T13:20:02.109Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "aaa"
+  },
+  {
+    "id": "1780579193211",
+    "timestamp": "2026-06-04T13:19:53.211Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "aaa"
+  },
+  {
+    "id": "1780579189380",
+    "timestamp": "2026-06-04T13:19:49.380Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "ilkyardım çantası"
+  },
+  {
+    "id": "1780578982305",
+    "timestamp": "2026-06-04T13:16:22.305Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "Tıbbi Ampul Seti (Adrenalin)"
+  },
+  {
+    "id": "1780578981167",
+    "timestamp": "2026-06-04T13:16:21.167Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "Tıbbi Ampul Seti (Adrenalin)"
+  },
+  {
+    "id": "1780578978488",
+    "timestamp": "2026-06-04T13:16:18.488Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "Tıbbi Ampul Seti (Adrenalin)"
+  },
+  {
+    "id": "1780578347427",
+    "timestamp": "2026-06-04T13:05:47.427Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Demirbaş Eklendi",
+    "target": "sdsd",
+    "details": {
+      "id": "eq-775869",
+      "category": "Tıbbi"
+    }
+  },
+  {
+    "id": "1780578108401",
+    "timestamp": "2026-06-04T13:01:48.401Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Demirbaş Eklendi",
+    "target": "aaa",
+    "details": {
+      "id": "eq-988756",
+      "category": "Kişisel Koruyucu"
+    }
+  },
+  {
+    "id": "1780578029366",
+    "timestamp": "2026-06-04T13:00:29.366Z",
+    "level": "SUCCESS",
+    "user": "super-admin",
+    "action": "Super Admin Girişi",
+    "target": "admin@m1g.org.tr",
+    "details": {
+      "ip": "::1"
+    }
+  },
+  {
+    "id": "1780530593555",
+    "timestamp": "2026-06-03T23:49:53.555Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780530572849",
+    "timestamp": "2026-06-03T23:49:32.849Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780530566913",
+    "timestamp": "2026-06-03T23:49:26.913Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780530563557",
+    "timestamp": "2026-06-03T23:49:23.557Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780530511319",
+    "timestamp": "2026-06-03T23:48:31.319Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "ilkyardım çantası"
+  },
+  {
+    "id": "1780530508060",
+    "timestamp": "2026-06-03T23:48:28.060Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "ilkyardım çantası"
+  },
+  {
+    "id": "1780529054786",
+    "timestamp": "2026-06-03T23:24:14.786Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "ilkyardım çantası"
+  },
+  {
+    "id": "1780529054211",
+    "timestamp": "2026-06-03T23:24:14.211Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Güncellendi",
+    "target": "ilkyardım çantası"
+  },
+  {
+    "id": "1780529047857",
+    "timestamp": "2026-06-03T23:24:07.857Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Demirbaş Eklendi",
+    "target": "ilkyardım çantası",
+    "details": {
+      "id": "eq-481871",
+      "category": "Tıbbi"
+    }
+  },
+  {
+    "id": "1780528759436",
+    "timestamp": "2026-06-03T23:19:19.436Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780528755152",
+    "timestamp": "2026-06-03T23:19:15.152Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780528663552",
+    "timestamp": "2026-06-03T23:17:43.552Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780528652996",
+    "timestamp": "2026-06-03T23:17:32.996Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780528643224",
+    "timestamp": "2026-06-03T23:17:23.224Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Yeni Operasyon Başlatıldı: karşıyaka izmir",
+    "target": "OP-506"
+  },
+  {
+    "id": "1780528612097",
+    "timestamp": "2026-06-03T23:16:52.097Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780528595135",
+    "timestamp": "2026-06-03T23:16:35.135Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528588288",
+    "timestamp": "2026-06-03T23:16:28.288Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: ACİL DEPREM AFET SEVKİYATI",
+    "target": "OP-PANIC-3377"
+  },
+  {
+    "id": "1780528581727",
+    "timestamp": "2026-06-03T23:16:21.727Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: ACİL DEPREM AFET SEVKİYATI",
+    "target": "OP-PANIC-3377"
+  },
+  {
+    "id": "1780528580329",
+    "timestamp": "2026-06-03T23:16:20.329Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: ACİL DEPREM AFET SEVKİYATI",
+    "target": "OP-PANIC-3377"
+  },
+  {
+    "id": "1780528567596",
+    "timestamp": "2026-06-03T23:16:07.596Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Yeni Operasyon Başlatıldı: ACİL DEPREM AFET SEVKİYATI",
+    "target": "OP-PANIC-3377"
+  },
+  {
+    "id": "1780528531407",
+    "timestamp": "2026-06-03T23:15:31.407Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528526808",
+    "timestamp": "2026-06-03T23:15:26.808Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Durumu Değişti: Zimmetli",
+    "target": "Aselsan El Telsizi",
+    "details": {
+      "oldStatus": "Depoda"
+    }
+  },
+  {
+    "id": "1780528526795",
+    "timestamp": "2026-06-03T23:15:26.795Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528484292",
+    "timestamp": "2026-06-03T23:14:44.292Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528475945",
+    "timestamp": "2026-06-03T23:14:35.945Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528472559",
+    "timestamp": "2026-06-03T23:14:32.559Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528468430",
+    "timestamp": "2026-06-03T23:14:28.430Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528445516",
+    "timestamp": "2026-06-03T23:14:05.516Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528439530",
+    "timestamp": "2026-06-03T23:13:59.530Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528391599",
+    "timestamp": "2026-06-03T23:13:11.599Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780528264046",
+    "timestamp": "2026-06-03T23:11:04.046Z",
+    "level": "SUCCESS",
+    "user": "super-admin",
+    "action": "Super Admin Girişi",
+    "target": "admin@m1g.org.tr",
+    "details": {
+      "ip": "::1"
+    }
+  },
+  {
+    "id": "1780524024512",
+    "timestamp": "2026-06-03T22:00:24.512Z",
+    "level": "WARN",
+    "user": "agunas",
+    "action": "Üye Silindi",
+    "target": "BEDİRHAN BEDİR",
+    "details": {
+      "id": "bbedir"
+    }
+  },
+  {
+    "id": "1780523962608",
+    "timestamp": "2026-06-03T21:59:22.608Z",
+    "level": "WARN",
+    "user": "agunas",
+    "action": "Üye Silindi",
+    "target": "GÖKHAN BEDİR",
+    "details": {
+      "id": "gbedir"
+    }
+  },
+  {
+    "id": "1780523957879",
+    "timestamp": "2026-06-03T21:59:17.879Z",
+    "level": "WARN",
+    "user": "agunas",
+    "action": "Üye Silindi",
+    "target": "ŞAFAK TALAY",
+    "details": {
+      "id": "stalay_2"
+    }
+  },
+  {
+    "id": "1780522945831",
+    "timestamp": "2026-06-03T21:42:25.831Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780522937393",
+    "timestamp": "2026-06-03T21:42:17.393Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780522923547",
+    "timestamp": "2026-06-03T21:42:03.547Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: Kandilli Sektör C Gece İntikali",
+    "target": "OP-001"
+  },
+  {
+    "id": "1780522917314",
+    "timestamp": "2026-06-03T21:41:57.314Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Yeni Operasyon Başlatıldı: aa",
+    "target": "OP-940"
+  },
+  {
+    "id": "1780521618343",
+    "timestamp": "2026-06-03T21:20:18.343Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521618160",
+    "timestamp": "2026-06-03T21:20:18.160Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521617977",
+    "timestamp": "2026-06-03T21:20:17.977Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521616818",
+    "timestamp": "2026-06-03T21:20:16.818Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521616630",
+    "timestamp": "2026-06-03T21:20:16.630Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521615407",
+    "timestamp": "2026-06-03T21:20:15.407Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521615207",
+    "timestamp": "2026-06-03T21:20:15.207Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521615031",
+    "timestamp": "2026-06-03T21:20:15.031Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521614855",
+    "timestamp": "2026-06-03T21:20:14.855Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521613511",
+    "timestamp": "2026-06-03T21:20:13.511Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521613321",
+    "timestamp": "2026-06-03T21:20:13.321Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521613127",
+    "timestamp": "2026-06-03T21:20:13.127Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521612897",
+    "timestamp": "2026-06-03T21:20:12.897Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521610368",
+    "timestamp": "2026-06-03T21:20:10.368Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521595057",
+    "timestamp": "2026-06-03T21:19:55.057Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521590469",
+    "timestamp": "2026-06-03T21:19:50.469Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521584703",
+    "timestamp": "2026-06-03T21:19:44.703Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521572410",
+    "timestamp": "2026-06-03T21:19:32.410Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Yeni Operasyon Başlatıldı: deneme",
+    "target": "OP-957"
+  },
+  {
+    "id": "1780521558520",
+    "timestamp": "2026-06-03T21:19:18.520Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: m1g",
+    "target": "OP-016"
+  },
+  {
+    "id": "1780521546051",
+    "timestamp": "2026-06-03T21:19:06.051Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: m1g",
+    "target": "OP-016"
+  },
+  {
+    "id": "1780521544904",
+    "timestamp": "2026-06-03T21:19:04.904Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: m1g",
+    "target": "OP-016"
+  },
+  {
+    "id": "1780521543159",
+    "timestamp": "2026-06-03T21:19:03.159Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: m1g",
+    "target": "OP-016"
+  },
+  {
+    "id": "1780521540153",
+    "timestamp": "2026-06-03T21:19:00.153Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Operasyon Güncellendi: m1g",
+    "target": "OP-016"
+  },
+  {
+    "id": "1780521140093",
+    "timestamp": "2026-06-03T21:12:20.093Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Yeni Operasyon Başlatıldı: m1g",
+    "target": "OP-016"
+  },
+  {
+    "id": "1780498035343",
+    "timestamp": "2026-06-03T14:47:15.343Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession",
+        "birthDate"
+      ]
+    }
+  },
+  {
+    "id": "1780497939375",
+    "timestamp": "2026-06-03T14:45:39.375Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "SONAY TALAY",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1780497903019",
+    "timestamp": "2026-06-03T14:45:03.019Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "Melis Şener",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1780497891556",
+    "timestamp": "2026-06-03T14:44:51.556Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "SİBEL TEZERTEN",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  },
+  {
+    "id": "1780497870630",
+    "timestamp": "2026-06-03T14:44:30.630Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "aa aa",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1780497854212",
+    "timestamp": "2026-06-03T14:44:14.212Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "Gönüllü Üyeler",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1780497819474",
+    "timestamp": "2026-06-03T14:43:39.474Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "BARIŞ TÜLİS",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  },
+  {
+    "id": "1780497328245",
+    "timestamp": "2026-06-03T14:35:28.245Z",
+    "level": "SUCCESS",
+    "user": "agunas",
+    "action": "Başarılı Giriş",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "ip": "::1",
+      "role": "Yönetim Kurulu Üyesi"
+    }
+  },
+  {
+    "id": "1780496884099",
+    "timestamp": "2026-06-03T14:28:04.099Z",
+    "level": "SUCCESS",
+    "user": "super-admin",
+    "action": "Super Admin Girişi",
+    "target": "admin@m1g.org.tr",
+    "details": {
+      "ip": "::1"
+    }
+  },
+  {
+    "id": "1780496866799",
+    "timestamp": "2026-06-03T14:27:46.799Z",
+    "level": "WARN",
+    "user": "::1",
+    "action": "Başarısız Giriş",
+    "target": "admin@m1g.org",
+    "details": {
+      "reason": "Üye bulunamadı"
+    }
+  },
+  {
+    "id": "1780428945553",
+    "timestamp": "2026-06-02T19:35:45.553Z",
+    "level": "SUCCESS",
+    "user": "super-admin",
+    "action": "Süper Admin Girişi",
+    "target": "admin@m1g.org",
+    "details": {
+      "ip": "::1"
+    }
+  },
+  {
+    "id": "1780343435380",
+    "timestamp": "2026-06-01T19:50:35.380Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Demirbaş Eklendi",
+    "target": "abc",
+    "details": {
+      "id": "eq-909246",
+      "category": "Navigasyon"
+    }
+  },
+  {
+    "id": "1780343388107",
+    "timestamp": "2026-06-01T19:49:48.107Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Durumu Değişti: Depoda",
+    "target": "AKROBAT MERDİVEN",
+    "details": {
+      "oldStatus": "Zimmetli"
+    }
+  },
+  {
+    "id": "1780343342585",
+    "timestamp": "2026-06-01T19:49:02.585Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Durumu Değişti: Zimmetli",
+    "target": "AKROBAT MERDİVEN",
+    "details": {
+      "oldStatus": "Depoda"
+    }
+  },
+  {
+    "id": "1780151663157",
+    "timestamp": "2026-05-30T14:34:23.157Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Demirbaş Eklendi",
+    "target": "AKROBAT MERDİVEN",
+    "details": {
+      "id": "eq-686448",
+      "category": "Diğer"
+    }
+  },
+  {
+    "id": "1780151649316",
+    "timestamp": "2026-05-30T14:34:09.316Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Demirbaş Eklendi",
+    "target": "aa",
+    "details": {
+      "id": "eq-418473",
+      "category": "Diğer"
+    }
+  },
+  {
+    "id": "1779742345351",
+    "timestamp": "2026-05-25T20:52:25.351Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "SONAY TALAY",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1779742329318",
+    "timestamp": "2026-05-25T20:52:09.318Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "BARIŞ TÜLİS",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  },
+  {
+    "id": "1779742311122",
+    "timestamp": "2026-05-25T20:51:51.122Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "BEDİRHAN BEDİR",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1779742295621",
+    "timestamp": "2026-05-25T20:51:35.621Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "Melis Şener",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1779742270369",
+    "timestamp": "2026-05-25T20:51:10.369Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "EMEL DÖĞDÜ",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  },
+  {
+    "id": "1779741393630",
+    "timestamp": "2026-05-25T20:36:33.630Z",
+    "level": "INFO",
+    "user": "DERYA BEREKETLİ",
+    "action": "Profil Güncellendi",
+    "target": "DERYA BEREKETLİ",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession",
+        "birthDate"
+      ]
+    }
+  },
+  {
+    "id": "1779741160710",
+    "timestamp": "2026-05-25T20:32:40.710Z",
+    "level": "INFO",
+    "user": "DERYA BEREKETLİ",
+    "action": "Profil Güncellendi",
+    "target": "DERYA BEREKETLİ",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession",
+        "birthDate"
+      ]
+    }
+  },
+  {
+    "id": "1779665293644",
+    "timestamp": "2026-05-24T23:28:13.644Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Demirbaş Durumu Değişti: Zimmetli",
+    "target": "denem2",
+    "details": {
+      "oldStatus": "Depoda"
+    }
+  },
+  {
+    "id": "1779662299845",
+    "timestamp": "2026-05-24T22:38:19.845Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661959177",
+    "timestamp": "2026-05-24T22:32:39.177Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661958568",
+    "timestamp": "2026-05-24T22:32:38.568Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661951291",
+    "timestamp": "2026-05-24T22:32:31.291Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661951078",
+    "timestamp": "2026-05-24T22:32:31.078Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661950881",
+    "timestamp": "2026-05-24T22:32:30.881Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661950202",
+    "timestamp": "2026-05-24T22:32:30.202Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661949701",
+    "timestamp": "2026-05-24T22:32:29.701Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661949480",
+    "timestamp": "2026-05-24T22:32:29.480Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661948869",
+    "timestamp": "2026-05-24T22:32:28.869Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661948635",
+    "timestamp": "2026-05-24T22:32:28.635Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661948011",
+    "timestamp": "2026-05-24T22:32:28.011Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779661945937",
+    "timestamp": "2026-05-24T22:32:25.937Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779659439815",
+    "timestamp": "2026-05-24T21:50:39.815Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779659425041",
+    "timestamp": "2026-05-24T21:50:25.041Z",
+    "level": "INFO",
+    "user": "ALİ BERKAY GÜNASLAN",
+    "action": "Profil Güncellendi",
+    "target": "ALİ BERKAY GÜNASLAN",
+    "details": {
+      "fields": [
+        "phone",
+        "bloodType",
+        "address",
+        "emergencyContact",
+        "avatar",
+        "profession"
+      ]
+    }
+  },
+  {
+    "id": "1779651783829",
+    "timestamp": "2026-05-24T19:43:03.829Z",
+    "level": "SUCCESS",
+    "user": "Admin",
+    "action": "Demirbaş Eklendi",
+    "target": "denem2",
+    "details": {
+      "id": "eq-058215",
+      "category": "Hava Gözlem"
+    }
+  },
+  {
+    "id": "1779304085985",
+    "timestamp": "2026-05-20T19:08:05.985Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "BEDİRHAN BEDİR",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1779304071712",
+    "timestamp": "2026-05-20T19:07:51.712Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "EYÜP ALAKUŞ",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1779304021018",
+    "timestamp": "2026-05-20T19:07:01.018Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "Didem Şarman",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  },
+  {
+    "id": "1779304015513",
+    "timestamp": "2026-05-20T19:06:55.513Z",
+    "level": "WARN",
+    "user": "admin",
+    "action": "Üye Uzaklaştırıldı",
+    "target": "Melis Şener",
+    "details": {
+      "reason": ""
+    }
+  },
+  {
+    "id": "1779304006657",
+    "timestamp": "2026-05-20T19:06:46.657Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "GÜVEN ATIF TEZERTEN",
+    "details": {
+      "newRole": "Denetim Kurulu Başkanı"
+    }
+  },
+  {
+    "id": "1779303998980",
+    "timestamp": "2026-05-20T19:06:38.980Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "CENK DÖĞDÜ",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  },
+  {
+    "id": "1779281615190",
+    "timestamp": "2026-05-20T12:53:35.190Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "SELÇUK ARGUN",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  },
+  {
+    "id": "1779281603982",
+    "timestamp": "2026-05-20T12:53:23.982Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "NEŞE ARGUN",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  },
+  {
+    "id": "1779281593044",
+    "timestamp": "2026-05-20T12:53:13.044Z",
+    "level": "INFO",
+    "user": "Admin",
+    "action": "Üye Rolü Değiştirildi",
+    "target": "ZEYNEP ARGUN",
+    "details": {
+      "newRole": "Asil Üye"
+    }
+  }
+]

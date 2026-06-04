@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- Background transparent, wait, make it exact like the badge -->
+  
+  <!-- Outer black/dark ring for text -->
+  <circle cx="250" cy="250" r="230" fill="#000000" />
+  
+  <!-- Outer gear/teeth effect (simplified with a dashed stroke) -->
+  <circle cx="250" cy="250" r="230" fill="none" stroke="#ea1d2c" stroke-width="20" stroke-dasharray="30 15" />
+  
+  <!-- Inner red background -->
+  <circle cx="250" cy="250" r="170" fill="#ea1d2c" />
+  
+  <!-- Inner black border -->
+  <circle cx="250" cy="250" r="170" fill="none" stroke="#000000" stroke-width="6" />
+
+  <!-- Mountain Silhouette in white -->
+  <path d="M 110 250 
+           L 150 190 
+           L 180 220 
+           L 240 120 
+           L 290 190 
+           L 320 150 
+           L 360 210 
+           L 390 250 Z" 
+        fill="#ffffff" />
+
+  <!-- Deep Cuts in the Mountain (simulating the jagged cutouts) -->
+  <path d="M 240 120 L 255 170 L 230 180 Z" fill="#ea1d2c" />
+  <path d="M 290 190 L 305 230 L 280 230 Z" fill="#ea1d2c" />
+  <path d="M 180 220 L 195 240 L 170 250 Z" fill="#ea1d2c" />
+
+  <!-- "M1G" Bold Text in the center -->
+  <text x="250" y="320" font-family="'Impact', 'Arial Black', sans-serif" font-size="110" font-weight="900" fill="#ffffff" stroke="#000000" stroke-width="6" text-anchor="middle" letter-spacing="4">M1G</text>
+
+  <!-- Circular Text Setup -->
+  <path id="topArc" d="M 80,250 A 170,170 0 0,1 420,250" fill="none" />
+  <path id="bottomArc" d="M 420,250 A 170,170 0 0,1 80,250" fill="none" />
+  
+  <!-- ARAMA & KURTARMA Text -->
+  <text font-family="'Arial Black', sans-serif" font-size="34" font-weight="bold" fill="#ffffff" letter-spacing="6">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">ARAMA &amp; KURTARMA</textPath>
+  </text>
+  
+  <!-- SEARCH AND RESCUE Text -->
+  <text font-family="'Arial Black', sans-serif" font-size="28" font-weight="bold" fill="#ffffff" letter-spacing="4">
+    <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">SEARCH AND RESCUE</textPath>
+  </text>
+
+  <!-- Left and Right Stars -->
+  <polygon points="100,250 105,265 120,265 107,275 112,290 100,280 88,290 93,275 80,265 95,265" fill="#ffffff" transform="translate(-10, -20) scale(0.8)"/>
+  <polygon points="100,250 105,265 120,265 107,275 112,290 100,280 88,290 93,275 80,265 95,265" fill="#ffffff" transform="translate(330, -20) scale(0.8)"/>
+
+</svg>

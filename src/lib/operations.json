@@ -1,0 +1,529 @@
+[
+  {
+    "id": "OP-063",
+    "name": "55",
+    "type": "Deprem",
+    "status": "Tamamlandı",
+    "startTime": "2026-06-04 13:35",
+    "endTime": "2026-06-04 15:06",
+    "location": "55",
+    "radioFrequency": "145.550",
+    "temperature": "",
+    "teams": [],
+    "baseCamp": {
+      "members": [],
+      "equipment": []
+    },
+    "supplies": {
+      "tentCount": 6,
+      "waterLiters": 100,
+      "mealsCount": 60,
+      "blanketCount": 10,
+      "rakeCount": 0,
+      "pumpCount": 0,
+      "electrolyteLiters": 20,
+      "flashlightCount": 12,
+      "gpsCount": 2
+    },
+    "logs": [
+      {
+        "time": "2026-06-04 13:35",
+        "message": "Operasyon kaydı oluşturuldu. Tür: Deprem"
+      },
+      {
+        "time": "2026-06-04 15:06",
+        "message": "Operasyon Kapanış Raporu ve FTR Tıbbi Kayıtları onaylanıp arşivlendi."
+      }
+    ],
+    "isEvacuationActive": false,
+    "postMortemReport": {
+      "completed": true,
+      "notes": "",
+      "memberNotes": {}
+    }
+  },
+  {
+    "id": "OP-940",
+    "name": "aa",
+    "type": "Yangın",
+    "status": "Tamamlandı",
+    "startTime": "2026-06-03 21:41",
+    "endTime": "2026-06-03 23:16",
+    "location": "aa (Rüzgar: aa)",
+    "attendees": [],
+    "restingAttendees": [],
+    "equipment": [],
+    "supplies": {
+      "tentCount": 0,
+      "waterLiters": 0,
+      "mealsCount": 0,
+      "batteriesCount": 0,
+      "bitsCount": 0
+    },
+    "victims": [],
+    "radioChannel": "Kanal-1 (Arama)",
+    "sectorStatus": "Arama Devam Ediyor",
+    "logs": [
+      {
+        "time": "2026-06-03 21:41",
+        "message": "Operasyon kaydı başlatıldı. Tür: Yangın."
+      },
+      {
+        "time": "2026-06-03 23:13",
+        "message": "Yeni kurtarma timi oluşturuldu: team a"
+      },
+      {
+        "time": "2026-06-03 23:13",
+        "message": "Yoklama Girişi: CEM GÖRGÜL base kampına giriş yaptı."
+      },
+      {
+        "time": "2026-06-03 23:14",
+        "message": "CEM GÖRGÜL, team a ekibine 'Üye' olarak atandı."
+      },
+      {
+        "time": "2026-06-03 23:14",
+        "message": "Yoklama Girişi: ALİ BERKAY GÜNASLAN base kampına giriş yaptı."
+      },
+      {
+        "time": "2026-06-03 23:14",
+        "message": "ALİ BERKAY GÜNASLAN, team a ekibine 'Üye' olarak atandı."
+      },
+      {
+        "time": "2026-06-03 23:14",
+        "message": "🚀 Tim sahaya intikal etti: team a"
+      },
+      {
+        "time": "2026-06-03 23:14",
+        "message": "⛺ Tim kampa dönüş yaptı: team a. Debriefing Nabız: Zinde"
+      },
+      {
+        "time": "2026-06-03 23:15",
+        "message": "Malzeme Girişi: Aselsan El Telsizi base deposuna girdi."
+      },
+      {
+        "time": "2026-06-03 23:15",
+        "message": "Aselsan El Telsizi ekipmanı, team a ekibine devredildi."
+      },
+      {
+        "time": "2026-06-03 23:16",
+        "message": "Operasyon kapatıldı. FTR Performans raporu hazırlandı."
+      }
+    ],
+    "isEvacuationActive": false,
+    "gridSectors": [
+      {
+        "cell": "A1",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "A2",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "A3",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "B1",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "B2",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "B3",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "C1",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "C2",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "C3",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      }
+    ],
+    "clearanceChecklist": {
+      "k9": false,
+      "acoustic": false,
+      "thermal": false,
+      "physical": false
+    },
+    "environment": {
+      "temperature": "18°C",
+      "noiseLevel": "Sakin",
+      "collapseRisk": "Düşük"
+    },
+    "teams": [
+      {
+        "id": "TEAM-666",
+        "name": "team a",
+        "status": "Kampta",
+        "members": [
+          {
+            "id": "cgorgu",
+            "role": "Üye"
+          },
+          {
+            "id": "agunas",
+            "role": "Üye"
+          }
+        ],
+        "equipment": [
+          "eq-001"
+        ],
+        "deployments": [
+          {
+            "deployTime": "2026-06-03 23:14",
+            "returnTime": "2026-06-03 23:14",
+            "pulse": "Yeşil"
+          }
+        ]
+      }
+    ],
+    "baseCamp": {
+      "members": [],
+      "equipment": []
+    },
+    "postMortemReport": {
+      "completed": false,
+      "notes": "",
+      "memberNotes": {}
+    },
+    "radioFrequency": "",
+    "temperature": ""
+  },
+  {
+    "id": "OP-957",
+    "name": "deneme",
+    "type": "Deprem",
+    "status": "Tamamlandı",
+    "startTime": "2026-06-03 21:19",
+    "endTime": "2026-06-03 23:16",
+    "location": "Sektör: 11 - 11",
+    "attendees": [
+      "uberek",
+      "cgorgu",
+      "agunas"
+    ],
+    "restingAttendees": [],
+    "equipment": [],
+    "supplies": {
+      "tentCount": 1,
+      "waterLiters": 4,
+      "mealsCount": 4,
+      "batteriesCount": 2,
+      "bitsCount": 3
+    },
+    "victims": [],
+    "radioChannel": "Kanal-1 (Arama)",
+    "sectorStatus": "Arama Devam Ediyor",
+    "logs": [
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Operasyon kaydı başlatıldı. Tür: Deprem."
+      },
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Hızlı Giriş: UFUK BEREKETLİ operasyon yoklamasına eklendi."
+      },
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Hızlı Giriş: CEM GÖRGÜL operasyon yoklamasına eklendi."
+      },
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Hızlı Giriş: ALİ BERKAY GÜNASLAN operasyon yoklamasına eklendi."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Çadır miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Su miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Su miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Su miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Su miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Kumanya miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Kumanya miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Kumanya miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Kumanya miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Pil miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Pil miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Matkap Ucu miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Matkap Ucu miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:20",
+        "message": "İkmal Güncellemesi: Matkap Ucu miktarı değiştirildi (+1)."
+      },
+      {
+        "time": "2026-06-03 21:42",
+        "message": "🗺️ Sektör Izgarası: Hücre A1 konumuna UFUK BEREKETLİ (Personel) yerleştirildi."
+      },
+      {
+        "time": "2026-06-03 21:42",
+        "message": "🗺️ Sektör Izgarası: Hücre A1 konumuna UFUK BEREKETLİ (Personel) kaldırıldı."
+      },
+      {
+        "time": "2026-06-03 23:16",
+        "message": "Operasyon kapatıldı. FTR Performans raporu hazırlandı."
+      }
+    ],
+    "isEvacuationActive": false,
+    "gridSectors": [
+      {
+        "cell": "A1",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "A2",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "A3",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "B1",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "B2",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "B3",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "C1",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "C2",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      },
+      {
+        "cell": "C3",
+        "victims": [],
+        "rescuers": [],
+        "hazards": []
+      }
+    ],
+    "clearanceChecklist": {
+      "k9": false,
+      "acoustic": false,
+      "thermal": false,
+      "physical": false
+    },
+    "environment": {
+      "temperature": "18°C",
+      "noiseLevel": "Sakin",
+      "collapseRisk": "Düşük"
+    },
+    "teams": [],
+    "baseCamp": {
+      "members": [],
+      "equipment": []
+    },
+    "postMortemReport": {
+      "completed": false,
+      "notes": "",
+      "memberNotes": {}
+    },
+    "radioFrequency": "",
+    "temperature": ""
+  },
+  {
+    "id": "OP-016",
+    "name": "m1g",
+    "type": "Yangın",
+    "status": "Tamamlandı",
+    "startTime": "2026-06-03 21:12",
+    "endTime": "2026-06-03 21:19",
+    "location": "foca orman (Rüzgar: bilinmiyor)",
+    "attendees": [],
+    "equipment": [],
+    "supplies": {
+      "tentCount": 0,
+      "waterLiters": 0,
+      "mealsCount": 0,
+      "batteriesCount": 0,
+      "bitsCount": 0
+    },
+    "logs": [
+      {
+        "time": "2026-06-03 21:12",
+        "message": "Operasyon başlatıldı. Tür: Yangın."
+      },
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Parametre Değişikliği: Telsiz Kanalı 'Kanal-2 (Lojistik)' olarak güncellendi."
+      },
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Parametre Değişikliği: Telsiz Kanalı 'Kanal-3 (Medikal)' olarak güncellendi."
+      },
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Parametre Değişikliği: Telsiz Kanalı 'Kanal-4 (İntikal)' olarak güncellendi."
+      },
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Parametre Değişikliği: Telsiz Kanalı 'Kanal-1 (AKUT)' olarak güncellendi."
+      },
+      {
+        "time": "2026-06-03 21:19",
+        "message": "Operasyon sonlandırıldı."
+      }
+    ],
+    "radioChannel": "Kanal-1 (AKUT)"
+  },
+  {
+    "id": "OP-001",
+    "name": "Kandilli Sektör C Gece İntikali",
+    "type": "Deprem",
+    "status": "Tamamlandı",
+    "startTime": "2026-06-03 22:00",
+    "endTime": "2026-06-03 21:42",
+    "location": "Sektör C-3 Enkaz Alanı",
+    "attendees": [
+      "dberek",
+      "mozkol"
+    ],
+    "equipment": [
+      "eq-001",
+      "eq-002",
+      "eq-009"
+    ],
+    "supplies": {
+      "tentCount": 2,
+      "waterLiters": 24,
+      "mealsCount": 24
+    },
+    "logs": [
+      {
+        "time": "2026-06-03 22:05",
+        "message": "Operasyon başlatıldı. Vaka türü: Deprem."
+      },
+      {
+        "time": "2026-06-03 22:15",
+        "message": "Sessiz yoklama: Derya Bereketli sahaya giriş yaptı."
+      },
+      {
+        "time": "2026-06-03 22:20",
+        "message": "Envanter çıkışı: Travma İlkyardım Çantası (eq-009) operasyona sevk edildi."
+      },
+      {
+        "time": "2026-06-03 21:42",
+        "message": "Operasyon sonlandırıldı."
+      }
+    ]
+  },
+  {
+    "id": "OP-002",
+    "name": "Spil Dağı Kayıp Arama",
+    "type": "Doğada Arama",
+    "status": "Tamamlandı",
+    "startTime": "2026-05-18 09:00",
+    "endTime": "2026-05-18 19:30",
+    "location": "Spil Dağı Zirve Koordinatı 38.5678, 27.4567",
+    "attendees": [
+      "uberek",
+      "otemiz"
+    ],
+    "equipment": [
+      "eq-004",
+      "eq-006"
+    ],
+    "supplies": {
+      "tentCount": 1,
+      "waterLiters": 12,
+      "mealsCount": 12
+    },
+    "logs": [
+      {
+        "time": "2026-05-18 09:00",
+        "message": "Operasyon başlatıldı. Vaka türü: Doğada Arama."
+      },
+      {
+        "time": "2026-05-18 19:30",
+        "message": "Kayıp kişi sağ olarak kurtarıldı. Operasyon sonlandırıldı."
+      }
+    ]
+  }
+]
