@@ -118,20 +118,37 @@ export default function DepoYonetimi() {
                 if (!html5QrCodeRef.current) {
                     html5QrCodeRef.current = new Html5Qrcode("reader");
                 }
-                await html5QrCodeRef.current.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-                    (decodedText) => {
-                        html5QrCodeRef.current?.stop().then(() => {
-                            setIsScannerOpen(false);
-                            handleScanSuccess(decodedText);
-                        }).catch(() => {
-                            setIsScannerOpen(false);
-                            handleScanSuccess(decodedText);
-                        });
-                    },
-                    () => {}
-                );
+
+                const startWithConfig = async (config: any) => {
+                    return html5QrCodeRef.current?.start(
+                        config,
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+                            html5QrCodeRef.current?.stop().then(() => {
+                                setIsScannerOpen(false);
+                                handleScanSuccess(decodedText);
+                            }).catch(() => {
+                                setIsScannerOpen(false);
+                                handleScanSuccess(decodedText);
+                            });
+                        },
+                        () => {}
+                    );
+                };
+
+                try {
+                    await startWithConfig({ facingMode: "environment" });
+                } catch (e) {
+                    console.warn("Environment camera failed, trying getCameras fallback", e);
+                    const devices = await Html5Qrcode.getCameras();
+                    if (devices && devices.length > 0) {
+                        const backCamera = devices.find(d => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("arka"));
+                        await startWithConfig(backCamera ? backCamera.id : devices[0].id);
+                    } else {
+                        throw new Error("No cameras found");
+                    }
+                }
+
                 setIsCameraStarted(true);
                 setCameraError(false);
             } catch (err) {
@@ -191,7 +208,10 @@ export default function DepoYonetimi() {
 
                     {cameraError && (
                         <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
-                            <p className="text-sm text-red-400 font-bold uppercase tracking-widest mb-3 text-center">Kamera Erişimi Sağlanamadı</p>
+                            <p className="text-sm text-red-400 font-bold uppercase tracking-widest mb-2 text-center">Kamera Erişimi Sağlanamadı</p>
+                            <p className="text-xs text-neutral-400 text-center mb-4">
+                                Tarayıcınız kamerayı engelliyor olabilir. Lütfen tarayıcı ayarlarından (Site Ayarları) izin verin veya aşağıdaki alternatifi kullanın.
+                            </p>
                             <label className="w-full flex flex-col items-center justify-center py-4 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl cursor-pointer transition-colors text-center">
                                 <span className="font-bold uppercase tracking-widest text-xs mb-1">Kameradan Çek / Fotoğraf Yükle</span>
                                 <span className="text-[10px] text-blue-500/70">Alternatif Tarama Yöntemi</span>
