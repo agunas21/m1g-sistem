@@ -63,9 +63,12 @@ export async function POST(req: Request) {
         const protocol = host.includes('localhost') ? 'http' : 'https';
         const resetLink = `${protocol}://${host}/reset-password?token=${token}`;
 
-        import('@/lib/mailer').then(({ sendEmail }) => {
-            sendEmail(member.email, 'M1G Arama Kurtarma — Şifre Sıfırlama Talebi', 'resetPassword', [member.fullName, resetLink]);
-        }).catch(err => console.error("Mail gönderim modülü yüklenemedi:", err));
+        try {
+            const { sendEmail } = await import('@/lib/mailer');
+            await sendEmail(member.email, 'M1G Arama Kurtarma — Şifre Sıfırlama Talebi', 'resetPassword', [member.fullName, resetLink]);
+        } catch (err) {
+            console.error("Mail gönderim modülü yüklenemedi:", err);
+        }
 
         return NextResponse.json({
             success: true,
