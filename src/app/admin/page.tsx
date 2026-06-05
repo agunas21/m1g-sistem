@@ -89,11 +89,11 @@ export default function AdminDashboard() {
         const allMembers = membersData;
         const allInventory = inventoryData;
 
-        const activeCount   = allMembers.filter(m => !m.dir?.includes("PASİF") && !m.dir?.includes("İPTAL")).length;
-        const passiveCount  = allMembers.length - activeCount;
-        const adminCount    = allMembers.filter(m => ['cgorgu','taksit','mtasli','mseyre','gakdor','agunas'].includes(m.id)).length;
-        const volunteerCount = allMembers.filter(m => m.honorary !== "Evet" && m.memberType !== "Üye" && !['cgorgu','taksit','mtasli','mseyre','gakdor','agunas'].includes(m.id)).length;
-        const honoraryCount = allMembers.filter(m => m.honorary === "Evet").length;
+        const activeCount    = allMembers.filter(m => m.status === "ACTIVE" || m.status === "Aktif").length;
+        const passiveCount   = allMembers.filter(m => m.status === "PASSIVE" || m.status === "Pasif" || m.status === "BANNED").length;
+        const adminCount     = allMembers.filter(m => m.role === "ADMIN" || m.role === "SUPER_ADMIN" || m.isAdmin).length;
+        const volunteerCount = allMembers.filter(m => m.memberType === "Gönüllü").length;
+        const honoraryCount  = allMembers.filter(m => m.honorary === "Evet").length;
 
         const totalEquipment  = allInventory.length;
         const depodaCount     = allInventory.filter(i => i.status === "Depoda").length;
@@ -105,20 +105,20 @@ export default function AdminDashboard() {
             totalEquipment, depodaCount, zimmetliCount, bakimdaCount,
             totalMembers: allMembers.length
         };
-    }, []);
+    }, [membersData, inventoryData]);
 
     // ─── GERÇEK ZAMANLI SON ÜYELER ───
     const recentMembers = useMemo(() => {
         return membersData
-            .filter(m => !m.dir?.includes("PASİF"))
+            .filter(m => m.status === "ACTIVE" || m.status === "Aktif")
             .slice(-8)
             .reverse()
             .map((m, idx) => ({
-                name: m.fullName || m.Name || "İsimsiz",
+                name: m.fullName || "İsimsiz",
                 id: m.id || `m1g-${idx}`,
                 status: m.status || "Aktif"
             }));
-    }, []);
+    }, [membersData]);
 
     // ─── CANLI SISTEM OLAY GÜNLÜĞÜ (gerçek hesaplara dayalı) ───
     const systemLogs = useMemo(() => {
@@ -184,8 +184,7 @@ export default function AdminDashboard() {
             });
         }
 
-        const adminIds = ['cgorgu','taksit','mtasli','mseyre','gakdor','agunas'];
-        const admins = allMembers.filter(m => adminIds.includes(m.id));
+        const admins = allMembers.filter(m => m.role === "ADMIN" || m.role === "SUPER_ADMIN" || m.isAdmin);
         if (admins.length > 0) {
             logs.push({
                 type: "cert",
