@@ -96,12 +96,14 @@ export default function DepoYonetimi() {
     const QRScanner = () => {
         const [isCameraStarted, setIsCameraStarted] = useState(false);
         const [cameraError, setCameraError] = useState(false);
+        const [cameraErrorMsg, setCameraErrorMsg] = useState("");
         const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
         useEffect(() => {
             if (!isScannerOpen) {
                 setIsCameraStarted(false);
                 setCameraError(false);
+                setCameraErrorMsg("");
                 if (html5QrCodeRef.current?.isScanning) {
                     html5QrCodeRef.current.stop().catch(() => {});
                 }
@@ -115,6 +117,22 @@ export default function DepoYonetimi() {
 
         const startCamera = async () => {
             try {
+                // 1. Force native permission prompt first to ensure the browser actually asks
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    // Permission granted! Stop the stream so html5-qrcode can use it without conflict
+                    stream.getTracks().forEach(track => track.stop());
+                } catch (nativeErr: any) {
+                    console.warn("Native getUserMedia with environment failed:", nativeErr);
+                    // Try generic video if environment constraint failed
+                    try {
+                        const stream2 = await navigator.mediaDevices.getUserMedia({ video: true });
+                        stream2.getTracks().forEach(track => track.stop());
+                    } catch (nativeErr2: any) {
+                        throw new Error(`Native Cam Err: ${nativeErr2.name || nativeErr2.message || String(nativeErr2)}`);
+                    }
+                }
+
                 if (!html5QrCodeRef.current) {
                     html5QrCodeRef.current = new Html5Qrcode("reader");
                 }
@@ -138,22 +156,23 @@ export default function DepoYonetimi() {
 
                 try {
                     await startWithConfig({ facingMode: "environment" });
-                } catch (e) {
-                    console.warn("Environment camera failed, trying getCameras fallback", e);
+                } catch (e: any) {
+                    console.warn("Environment config failed, trying getCameras fallback", e);
                     const devices = await Html5Qrcode.getCameras();
                     if (devices && devices.length > 0) {
                         const backCamera = devices.find(d => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("arka"));
                         await startWithConfig(backCamera ? backCamera.id : devices[0].id);
                     } else {
-                        throw new Error("No cameras found");
+                        throw new Error(`HTML5QR Err: ${e.name || e.message || String(e)}`);
                     }
                 }
 
                 setIsCameraStarted(true);
                 setCameraError(false);
-            } catch (err) {
-                console.error("Camera start failed", err);
+            } catch (err: any) {
+                console.error("Camera start failed completely:", err);
                 setCameraError(true);
+                setCameraErrorMsg(err.message || String(err));
                 setIsCameraStarted(false);
             }
         };
@@ -207,11 +226,14 @@ export default function DepoYonetimi() {
                     <div id="reader" className="w-full bg-black rounded-xl overflow-hidden"></div>
 
                     {cameraError && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex flex-col items-center">
                             <p className="text-sm text-red-400 font-bold uppercase tracking-widest mb-2 text-center">Kamera Erişimi Sağlanamadı</p>
-                            <p className="text-xs text-neutral-400 text-center mb-4">
+                            <p className="text-xs text-neutral-400 text-center mb-1">
                                 Tarayıcınız kamerayı engelliyor olabilir. Lütfen tarayıcı ayarlarından (Site Ayarları) izin verin veya aşağıdaki alternatifi kullanın.
                             </p>
+                            <div className="bg-black/30 px-3 py-2 rounded-lg text-[10px] text-red-300 font-mono mb-4 text-center break-all">
+                                HATA: {cameraErrorMsg || "Bilinmeyen Hata"}
+                            </div>
                             <label className="w-full flex flex-col items-center justify-center py-4 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl cursor-pointer transition-colors text-center">
                                 <span className="font-bold uppercase tracking-widest text-xs mb-1">Kameradan Çek / Fotoğraf Yükle</span>
                                 <span className="text-[10px] text-blue-500/70">Alternatif Tarama Yöntemi</span>
