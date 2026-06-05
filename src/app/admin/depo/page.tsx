@@ -94,35 +94,69 @@ export default function DepoYonetimi() {
 
     // QR Okuyucu Componenti (Modal)
     const QRScanner = () => {
+        const [isCameraStarted, setIsCameraStarted] = useState(false);
+        const [cameraError, setCameraError] = useState(false);
+        const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+
         useEffect(() => {
-            if (!isScannerOpen) return;
-            
-            const html5QrCode = new Html5Qrcode("reader");
-
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
-                    html5QrCode.stop().then(() => {
-                        setIsScannerOpen(false);
-                        handleScanSuccess(decodedText);
-                    }).catch(() => {
-                        setIsScannerOpen(false);
-                        handleScanSuccess(decodedText);
-                    });
-                },
-                () => {} // Ignore scan failure logs
-            ).catch(err => {
-                console.error("Camera start failed", err);
-                alert("Kamera otomatik başlatılamadı. Lütfen tarayıcı ayarlarından M1G için Kamera erişim izni verin.");
-            });
-
+            if (!isScannerOpen) {
+                setIsCameraStarted(false);
+                setCameraError(false);
+                if (html5QrCodeRef.current?.isScanning) {
+                    html5QrCodeRef.current.stop().catch(() => {});
+                }
+            }
             return () => {
-                if (html5QrCode.isScanning) {
-                    html5QrCode.stop().catch(error => console.error("Failed to stop scanner.", error));
+                if (html5QrCodeRef.current?.isScanning) {
+                    html5QrCodeRef.current.stop().catch(() => {});
                 }
             };
         }, [isScannerOpen]);
+
+        const startCamera = async () => {
+            try {
+                if (!html5QrCodeRef.current) {
+                    html5QrCodeRef.current = new Html5Qrcode("reader");
+                }
+                await html5QrCodeRef.current.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        html5QrCodeRef.current?.stop().then(() => {
+                            setIsScannerOpen(false);
+                            handleScanSuccess(decodedText);
+                        }).catch(() => {
+                            setIsScannerOpen(false);
+                            handleScanSuccess(decodedText);
+                        });
+                    },
+                    () => {}
+                );
+                setIsCameraStarted(true);
+                setCameraError(false);
+            } catch (err) {
+                console.error("Camera start failed", err);
+                setCameraError(true);
+                setIsCameraStarted(false);
+            }
+        };
+
+        const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+            if (e.target.files && e.target.files.length > 0) {
+                const file = e.target.files[0];
+                try {
+                    if (!html5QrCodeRef.current) {
+                        html5QrCodeRef.current = new Html5Qrcode("reader");
+                    }
+                    const decodedText = await html5QrCodeRef.current.scanFile(file, true);
+                    setIsScannerOpen(false);
+                    handleScanSuccess(decodedText);
+                } catch (err) {
+                    console.error("File scan failed", err);
+                    alert("QR kod okunamadı. Lütfen daha net bir fotoğraf çekin.");
+                }
+            }
+        };
 
         if (!isScannerOpen) return null;
 
@@ -140,11 +174,37 @@ export default function DepoYonetimi() {
                     <h2 className="text-2xl font-bold text-white uppercase tracking-widest">
                         {scanMode === "equipment" ? "Ekipman Barkodu Okutun" : "Personel Kimlik Kartını Okutun"}
                     </h2>
-                    <p className="text-neutral-400 mt-2 text-sm">Kameranızı karekoda doğru tutun.</p>
+                    <p className="text-neutral-400 mt-2 text-sm">Kameranızı karekoda doğru tutun veya fotoğraf çekin.</p>
                 </div>
 
-                <div className="w-full max-w-md bg-black rounded-3xl overflow-hidden border-2 border-white/10 shadow-[0_0_50px_rgba(239,68,68,0.3)]">
-                    <div id="reader" className="w-full"></div>
+                <div className="w-full max-w-md bg-black rounded-3xl border-2 border-white/10 shadow-[0_0_50px_rgba(239,68,68,0.3)] p-4 flex flex-col gap-4">
+                    {!isCameraStarted && !cameraError && (
+                        <button 
+                            onClick={startCamera} 
+                            className="w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-2xl font-bold uppercase tracking-widest transition-colors"
+                        >
+                            Kamerayı Aç / QR Okut
+                        </button>
+                    )}
+                    
+                    <div id="reader" className="w-full bg-black rounded-xl overflow-hidden"></div>
+
+                    {cameraError && (
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                            <p className="text-sm text-red-400 font-bold uppercase tracking-widest mb-3 text-center">Kamera Erişimi Sağlanamadı</p>
+                            <label className="w-full flex flex-col items-center justify-center py-4 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl cursor-pointer transition-colors text-center">
+                                <span className="font-bold uppercase tracking-widest text-xs mb-1">Kameradan Çek / Fotoğraf Yükle</span>
+                                <span className="text-[10px] text-blue-500/70">Alternatif Tarama Yöntemi</span>
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    capture="environment" 
+                                    className="hidden" 
+                                    onChange={handleFileUpload} 
+                                />
+                            </label>
+                        </div>
+                    )}
                 </div>
             </div>
         );

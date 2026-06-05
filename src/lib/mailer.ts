@@ -109,9 +109,10 @@ function createTransporter() {
     const pass = (process.env.SMTP_PASS || '').replace(/^["']|["']$/g, ''); // Başındaki/sonundaki tırnak işaretlerini temizle
 
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-        port: Number(process.env.SMTP_PORT) || 465,
-        secure: true, // Port 465 için her zaman true
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: Number(process.env.SMTP_PORT) === 465, // Port 465 için true, diğerleri (örn 587) için false
+        requireTLS: true, // TLS şifrelemesini zorunlu kıl
         auth: {
             user: process.env.SMTP_USER || 'info@m1g.org.tr',
             pass: pass,
