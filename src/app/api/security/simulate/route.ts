@@ -21,9 +21,12 @@ export async function POST(req: Request) {
         const loopCount = count || 1;
 
         for (let i = 0; i < loopCount; i++) {
-            incrementWafStat('totalRequests');
+            incrementWafStat('totalRequests'); // Her halükarda toplam istek artar
             
-            if (type === 'ddos') {
+            if (type === 'normal') {
+                // Sadece totalRequests artar, blockedRequests artmaz. Böylece "İzin Verilen" sayısı yükselir.
+                continue;
+            } else if (type === 'ddos') {
                 incrementWafStat('blockedRequests');
                 incrementWafStat('ddosBlocks');
                 await writeLog('WARN', 'SYSTEM_WAF', `Simulated DDoS block from 192.168.1.${Math.floor(Math.random()*255)}`, 'WAF_ENGINE');

@@ -155,6 +155,7 @@ export default function GuvenlikPage() {
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 p-1.5 rounded-xl">
                         <span className="text-xs font-bold text-red-400 px-2">SİMÜLASYON:</span>
+                        <button onClick={() => simulateAttack('normal', 100)} className="text-[10px] px-2 py-1 bg-green-600 hover:bg-green-500 text-white rounded font-bold uppercase transition">Normal Trafik</button>
                         <button onClick={() => simulateAttack('ddos', 50)} className="text-[10px] px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded font-bold uppercase transition">DDoS</button>
                         <button onClick={() => simulateAttack('sql', 15)} className="text-[10px] px-2 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded font-bold uppercase transition">SQL</button>
                         <button onClick={() => simulateAttack('bot', 25)} className="text-[10px] px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold uppercase transition">Bot</button>
