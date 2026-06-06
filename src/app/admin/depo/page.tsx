@@ -747,12 +747,39 @@ export default function DepoYonetimi() {
                                     <div className="text-center py-4">
                                         <CheckCircle size={32} className="mx-auto text-emerald-500 mb-3" />
                                         <p className="text-white font-medium mb-6">Malzeme şu an depoda ve zimmete hazır.</p>
-                                        <button 
-                                            onClick={startAssignProcess}
-                                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors shadow-[0_0_20px_rgba(37,99,235,0.3)]"
-                                        >
-                                            <ScanBarcode size={18} /> Personele Zimmetle (Kart Okut)
-                                        </button>
+                                        <div className="flex flex-col gap-3">
+                                            <button 
+                                                onClick={startAssignProcess}
+                                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors shadow-[0_0_20px_rgba(37,99,235,0.3)]"
+                                            >
+                                                <ScanBarcode size={18} /> Personele Zimmetle (Kart Okut)
+                                            </button>
+
+                                            <div className="relative">
+                                                <select
+                                                    className="w-full py-3 pl-4 pr-10 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-neutral-300 text-xs font-semibold tracking-wider uppercase outline-none focus:border-blue-500/50 appearance-none cursor-pointer transition-colors"
+                                                    onChange={(e) => {
+                                                        const memberId = e.target.value;
+                                                        if (!memberId) return;
+                                                        const member = membersData.find(m => m.id === memberId);
+                                                        if (member) {
+                                                            assignItemToMember(selectedItem.id, member.id, member.fullName);
+                                                        }
+                                                        e.target.value = "";
+                                                    }}
+                                                >
+                                                    <option value="" className="bg-[#050B14]">Manuel Personel Seç...</option>
+                                                    {membersData.map(m => (
+                                                        <option key={m.id} value={m.id} className="bg-[#050B14] text-white">
+                                                            {m.fullName}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <User size={14} className="text-neutral-500" />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="text-center py-4">
