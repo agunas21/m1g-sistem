@@ -3,7 +3,7 @@
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Video, Image as ImageIcon, Users, LayoutDashboard, Factory, PenTool, Award, Menu, X, Home, LogOut, Bell, Mail, Activity, FolderArchive, Shield, BookOpen } from "lucide-react";
+import { Video, Image as ImageIcon, Users, LayoutDashboard, Factory, PenTool, Award, Menu, X, Home, LogOut, Bell, Mail, Activity, FolderArchive, Shield, BookOpen, ShieldAlert } from "lucide-react";
 import clsx from "clsx";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -106,6 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }, [sidebarOpen]);
 
     const isLojistik = (user as any)?.role === 'Lojistik Sorumlusu';
+    const isSuperAdmin = (user as any)?.isSuperAdmin === true;
 
     const allNavItems = [
         { href: "/admin", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
@@ -122,6 +123,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { href: "/admin/sistem-kayitlari", label: "Sistem Kayıtları", icon: <Activity size={20} /> },
         { href: "/admin/arsiv", label: "Sistem Arşivi", icon: <FolderArchive size={20} /> },
         { href: "/admin/guvenlik", label: "Siber Güvenlik", icon: <Shield size={20} /> },
+        ...(isSuperAdmin ? [{ href: "/admin/sistem", label: "Sistem & Yedek", icon: <ShieldAlert size={20} /> }] : []),
     ];
 
     const navItems = allNavItems.filter(item => {

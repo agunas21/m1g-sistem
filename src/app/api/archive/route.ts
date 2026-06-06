@@ -18,43 +18,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "No file data" }, { status: 400 });
     }
 
-    const externalUploadUrl = process.env.NEXT_PUBLIC_EXTERNAL_UPLOAD_URL;
-    const uploadSecretToken = process.env.UPLOAD_SECRET_TOKEN;
-
-    if (!externalUploadUrl || !uploadSecretToken) {
-      return NextResponse.json({ success: false, message: "Upload provider configured incorrectly." }, { status: 500 });
-    }
-
-    // Clean base64 string
-    const base64Clean = base64Data.split(';base64,').pop();
-    const buffer = Buffer.from(base64Clean, 'base64');
-    
-    const blob = new Blob([buffer], { type: fileType || 'application/octet-stream' });
-    const proxyFormData = new FormData();
-    proxyFormData.append('file', blob, fileName || 'upload.bin');
-    proxyFormData.append('secret', uploadSecretToken);
-
-    const response = await fetch(externalUploadUrl, {
-        method: 'POST',
-        body: proxyFormData
-    });
-
-    if (!response.ok) {
-        throw new Error("Harici sunucuya yükleme başarısız oldu.");
-    }
-
-    const responseData = await response.json();
-
-    const safeFileName = responseData.fileName || fileName || "uploaded_file";
+    // Dosyayı dış sunucuya göndermek yerine Base64 stringini arşiv json'ına koyalım
+    // veya basitçe kaydedelim
+    const safeFileName = fileName || "uploaded_file";
 
     // Save to archive json
     const fileRecord: ArchiveFile = {
       id: Date.now().toString(),
       fileName: safeFileName,
       originalName: fileName,
-      url: responseData.url,
+      url: base64Data,
       type: fileType,
-      size: Math.round(base64Clean.length * 0.75), // approximate byte size
+      size: Math.round(base64Data.length * 0.75), // approximate byte size
       uploadedBy: uploadedBy || "Sistem",
       uploadedAt: new Date().toISOString(),
       category: category || "Genel"

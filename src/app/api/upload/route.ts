@@ -5,13 +5,7 @@ import { cookies } from 'next/headers'
 /**
  * POST /api/upload
  * 
- * Güvenli Dosya Yükleme Proxy'si:
- * Tüm medya yüklemeleri (avatar, makbuz, etkinlik görseli vb.) 
- * frontend tarafından bu adrese POST (FormData) edilir.
- * 
- * Bu route, gelen dosyayı alır ve .env'deki NEXT_PUBLIC_EXTERNAL_UPLOAD_URL 
- * adresine UPLOAD_SECRET_TOKEN ile birlikte iletir.
- * Dönen URL'i frontend'e geri verir.
+ * Dosyayı alır ve base64 formatında döner.
  */
 export async function POST(req: NextRequest) {
     let actor: any = null;
@@ -33,39 +27,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Dosya gerekli.' }, { status: 400 });
         }
 
-        const EXTERNAL_UPLOAD_URL = process.env.NEXT_PUBLIC_EXTERNAL_UPLOAD_URL;
-        const SECRET_TOKEN = process.env.UPLOAD_SECRET_TOKEN;
-
-        if (!EXTERNAL_UPLOAD_URL || !SECRET_TOKEN) {
-            return NextResponse.json({ error: 'Harici sunucu upload ayarları (.env) eksik.' }, { status: 500 });
-        }
-
-        // Harici sunucuya iletmek için yeni FormData oluştur
-        const externalFormData = new FormData();
-        externalFormData.append('file', file);
-
-        const externalRes = await fetch(EXTERNAL_UPLOAD_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${SECRET_TOKEN}`
-            },
-            body: externalFormData
-        });
-
-        if (!externalRes.ok) {
-            const errText = await externalRes.text();
-            throw new Error(`Harici sunucu hatası (${externalRes.status}): ${errText}`);
-        }
-
-        const externalData = await externalRes.json();
-        
-        if (!externalData.success || !externalData.url) {
-            throw new Error(externalData.error || 'Harici sunucu URL döndürmedi.');
-        }
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const base64 = buffer.toString('base64');
+        const dataUrl = `data:${file.type};base64,${base64}`;
 
         return NextResponse.json({
             success: true,
-            url: externalData.url
+            url: dataUrl
         });
 
     } catch (e: any) {
