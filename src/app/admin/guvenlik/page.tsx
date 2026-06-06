@@ -85,6 +85,19 @@ export default function GuvenlikPage() {
         }
     }, []);
 
+    const simulateAttack = async (type: string, count: number) => {
+        try {
+            await fetch("/api/security/simulate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type, count })
+            });
+            fetchData(); // Hemen yenile
+        } catch (e) {
+            console.error("Simulation failed", e);
+        }
+    };
+
     useEffect(() => {
         fetchData();
     }, [fetchData]);
@@ -106,13 +119,13 @@ export default function GuvenlikPage() {
     );
 
     if (error) return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-            <AlertTriangle className="w-12 h-12 text-red-500" />
-            <p className="text-red-400">{error}</p>
+        <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 flex items-center gap-3">
+            <AlertTriangle className="w-6 h-6" />
+            <p><strong>Hata:</strong> {error}</p>
         </div>
     );
 
-    const w = data!.waf;
+    const { waf: w, rateLimit, blockedIPs, recentSecurityEvents } = data!;
     const allowed = w.totalRequests - w.blockedRequests;
 
     const threatBreakdown = [
@@ -127,35 +140,37 @@ export default function GuvenlikPage() {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
+            {/* Üst Kısım - Başlık ve Kontroller */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
                 <div>
-                    <div className="flex items-center gap-3 mb-1">
-                        <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20">
-                            <Shield className="w-5 h-5 text-red-400" />
-                        </div>
-                        <h1 className="text-xl font-black text-white uppercase tracking-widest">Siber Güvenlik</h1>
-                    </div>
-                    <p className="text-neutral-500 text-sm ml-12">
-                        WAF • DDoS Koruması • Spam Filtresi • Veri Şifreleme
+                    <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                        <Shield className="w-6 h-6 text-red-500" />
+                        SİBER GÜVENLİK
+                    </h1>
+                    <p className="text-neutral-400 text-sm mt-1 flex items-center gap-2">
+                        <Activity className="w-4 h-4" /> WAF ve Rate Limit Durum Merkezi
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    {lastUpdate && (
-                        <span className="text-[11px] text-neutral-600 hidden sm:block">
-                            Son güncelleme: {lastUpdate.toLocaleTimeString('tr-TR')}
-                        </span>
-                    )}
+                
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 p-1.5 rounded-xl">
+                        <span className="text-xs font-bold text-red-400 px-2">SİMÜLASYON:</span>
+                        <button onClick={() => simulateAttack('ddos', 50)} className="text-[10px] px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded font-bold uppercase transition">DDoS</button>
+                        <button onClick={() => simulateAttack('sql', 15)} className="text-[10px] px-2 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded font-bold uppercase transition">SQL</button>
+                        <button onClick={() => simulateAttack('bot', 25)} className="text-[10px] px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold uppercase transition">Bot</button>
+                    </div>
+                    <div className="text-xs text-neutral-500 font-mono">
+                        Son Güncelleme: {lastUpdate?.toLocaleTimeString('tr-TR')}
+                    </div>
                     <button
-                        onClick={() => setAutoRefresh(v => !v)}
-                        className={`p-2 rounded-xl border text-xs transition-all ${
-                            autoRefresh
-                                ? "bg-green-500/10 border-green-500/30 text-green-400"
-                                : "bg-white/5 border-white/10 text-neutral-500"
+                        onClick={() => setAutoRefresh(!autoRefresh)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                            autoRefresh 
+                            ? "bg-green-500/20 text-green-400 border-green-500/30" 
+                            : "bg-white/5 text-neutral-400 border-white/10"
                         }`}
-                        title={autoRefresh ? "Otomatik yenileme açık" : "Otomatik yenileme kapalı"}
                     >
-                        <Activity size={16} className={autoRefresh ? "animate-pulse" : ""} />
+                        Canlı Akış: {autoRefresh ? "Açık" : "Kapalı"}
                     </button>
                     <button
                         onClick={fetchData}
