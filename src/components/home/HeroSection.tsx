@@ -9,20 +9,14 @@ const slides = [
     {
         image: "/images/m1gekip.png",
         fallbackClass: "bg-gradient-to-br from-red-900 via-stone-900 to-black",
-        title: "BİRLİKTE",
-        subtitle: "ASLA GERİDE BIRAKMA"
     },
     {
         image: "/images/Çalışma yüzeyi 1.png",
         fallbackClass: "bg-gradient-to-tr from-stone-900 via-neutral-900 to-zinc-950",
-        title: "ÇAMURA",
-        subtitle: "DİRENİŞ VE AZİM"
     },
     {
         image: "/images/Başlıksız (2).png",
         fallbackClass: "bg-gradient-to-tl from-slate-900 via-gray-900 to-black",
-        title: "HAYATA",
-        subtitle: "KARANLIĞI DELEN IŞIK"
     }
 ];
 
@@ -124,7 +118,7 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
         : heroBg ? [heroBg] : [];
 
     const activeSlides = cmsImages.length > 0
-        ? cmsImages.map((img, i) => ({ image: img, fallbackClass: slides[i % slides.length].fallbackClass, title: slides[i % slides.length].title, subtitle: slides[i % slides.length].subtitle }))
+        ? cmsImages.map((img, i) => ({ image: img, fallbackClass: slides[i % slides.length].fallbackClass }))
         : slides;
 
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -193,32 +187,19 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                             </div>
                         </motion.div>
 
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={`text-${currentSlide}`}
-                                initial={{ opacity: 0, y: 50, filter: "blur(10px)" }}
-                                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                                exit={{ opacity: 0, y: -50, filter: "blur(10px)", transition: { duration: 0.5 } }}
-                                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                                className="mb-6"
-                            >
-                                <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 tracking-tighter leading-[0.85] mb-4 sm:mb-6 uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
-                                    {title || activeSlides[currentSlide].title}
-                                </h1>
-                                {/* Subtitle: ince, küçük, zarif — sadece CMS'den geliyorsa göster */}
-                                {subtitle && (
-                                    <p className="text-sm md:text-base text-neutral-400 font-light leading-relaxed max-w-sm tracking-normal normal-case border-l-2 border-red-600/60 pl-4 ml-1 mt-4">
-                                        {subtitle}
-                                    </p>
-                                )}
-                                {/* Slide subtitle: dinamik, şik */}
-                                {!subtitle && (
-                                    <p className="text-lg sm:text-xl md:text-2xl font-light text-neutral-300 tracking-[0.15em] uppercase max-w-xl leading-snug drop-shadow-xl">
-                                        {activeSlides[currentSlide].subtitle}
-                                    </p>
-                                )}
-                            </motion.div>
-                        </AnimatePresence>
+                        <motion.div
+                            initial={{ opacity: 0, y: 50, filter: "blur(10px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                            className="mb-6"
+                        >
+                            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 tracking-tighter leading-[0.85] mb-4 sm:mb-6 uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                                {title || "M1G ARAMA KURTARMA"}
+                            </h1>
+                            <p className="text-lg sm:text-xl md:text-2xl font-light text-neutral-300 tracking-[0.15em] uppercase max-w-xl leading-snug drop-shadow-xl">
+                                {subtitle || "ASLA GERİDE BIRAKMA"}
+                            </p>
+                        </motion.div>
 
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}

@@ -8,10 +8,6 @@ export default function IcerikYonetimi() {
     const [redCodeActive, setRedCodeActive] = useState(false);
     const [newsTitle, setNewsTitle] = useState("");
     const [newsContent, setNewsContent] = useState("");
-    
-    const [iban, setIban] = useState("TR99 0001 0000 0000 0000 0000 00");
-    const [bankName, setBankName] = useState("Ziraat Bankası");
-    const [savingSettings, setSavingSettings] = useState(false);
 
     // Ayarları yükle — useEffect ile doğru side-effect pattern
     useEffect(() => {
@@ -19,26 +15,11 @@ export default function IcerikYonetimi() {
             .then(res => res.json())
             .then(data => {
                 if (data.redCodeActive !== undefined) setRedCodeActive(data.redCodeActive);
-                if (data.iban) setIban(data.iban);
-                if (data.bankName) setBankName(data.bankName);
             })
             .catch(console.error);
     }, []);
 
-    const handleSaveSettings = async () => {
-        setSavingSettings(true);
-        try {
-            await fetch("/api/settings", {
-                method: "POST",
-                body: JSON.stringify({ iban, bankName, redCodeActive })
-            });
-            alert("Sistem ayarları başarıyla güncellendi.");
-        } catch (error) {
-            alert("Ayarlar kaydedilirken hata oluştu.");
-        } finally {
-            setSavingSettings(false);
-        }
-    };
+
 
     const handleRedCodeToggle = async () => {
         const confirmMsg = redCodeActive
@@ -132,48 +113,7 @@ export default function IcerikYonetimi() {
                         </div>
                     </motion.div>
 
-                    {/* BANKA BİLGİLERİ (IBAN) */}
-                    <div className="bg-[#050B14] border border-white/5 rounded-2xl p-8 relative overflow-hidden">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 bg-emerald-600/10 rounded-xl text-emerald-500">
-                                <Send size={20} />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-white uppercase tracking-tight">Bağış & Banka Bilgileri</h2>
-                                <p className="text-[10px] text-neutral-500 font-black tracking-widest uppercase">CMS / IBAN Yönetimi</p>
-                            </div>
-                        </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Banka Adı</label>
-                                <input
-                                    type="text"
-                                    value={bankName}
-                                    onChange={(e) => setBankName(e.target.value)}
-                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                                    placeholder="Ziraat Bankası, İş Bankası vb."
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">IBAN Numarası</label>
-                                <input
-                                    type="text"
-                                    value={iban}
-                                    onChange={(e) => setIban(e.target.value)}
-                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-emerald-500 transition-colors"
-                                    placeholder="TRXX XXXX XXXX XXXX XXXX XXXX XX"
-                                />
-                            </div>
-                            <button
-                                onClick={handleSaveSettings}
-                                disabled={savingSettings}
-                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] disabled:opacity-50"
-                            >
-                                {savingSettings ? "Kaydediliyor..." : "Banka Bilgilerini Güncelle"}
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 {/* SAĞ KOLON: SAHADAN HABER (DISPATCH) */}
