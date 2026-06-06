@@ -96,6 +96,15 @@ export default function RootLayout({
           <FloatingEmergencyButton />
           <Chatbot />
         </AuthProvider>
+
+        {/* Gerçek kullanıcıları (izin verilen trafik) saymak için görünmez ping */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            setTimeout(function() {
+              fetch('/api/security/track', { method: 'POST', keepalive: true }).catch(console.error);
+            }, 500);
+          `
+        }} />
       </body>
     </html>
   );
