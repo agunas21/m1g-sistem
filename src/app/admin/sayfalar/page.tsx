@@ -7,6 +7,7 @@ import {
     HeartHandshake, Save, LayoutTemplate, Megaphone, UserSquare2, Activity, Star,
     MapPin, Calendar, FileText, Edit3, Newspaper, Tag, Target, Clock, Bell, Globe
 } from "lucide-react";
+import { compressImage } from "@/lib/imageUtils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const REPORT_CATEGORIES = [
@@ -320,8 +321,9 @@ export default function KolaySiteDuzenleyici() {
 
     // ─── FOTOĞRAF YÜKLEME (HARİCİ SUNUCU) ─────────────────────────────────
     const uploadFileToServer = async (file: File): Promise<string> => {
+        const compressedFile = await compressImage(file, 1200, 0.7);
         const fd = new FormData();
-        fd.append('file', file);
+        fd.append('file', compressedFile);
         const res = await fetch('/api/upload', { method: 'POST', body: fd });
         const data = await res.json();
         if (data.success && data.url) return data.url;
