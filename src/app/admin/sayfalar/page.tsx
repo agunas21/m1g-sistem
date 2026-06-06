@@ -135,7 +135,18 @@ export default function KolaySiteDuzenleyici() {
         {
             id: "SEC-04",
             stepNumber: "04",
-            metrics: [{ label: "GÖREV", value: "150+" }, { label: "KURTARILAN", value: "HAYATLAR" }]
+            title: "LOJİSTİK VE TEKNOLOJİ",
+            subtitle: "HIZLI VE ORGANİZE",
+            desc: "Modern lojistik altyapımız ve kesintisiz veri takibimiz sayesinde kriz bölgelerine hızlı intikal ediyoruz.",
+            img: "/images/about/m1g-arama-kurtarma-lojistik-drone.jpg"
+        },
+        {
+            id: "SEC-05",
+            stepNumber: "05",
+            title: "GÜVEN VE TOPLULUK",
+            subtitle: "GÖNÜLLÜ ORDUMUZ",
+            desc: "Profesyonel donanıma sahip gönüllü ordumuzla Türkiye'nin afet yönetim gücüne omuz vermeye devam ediyoruz.",
+            img: "/images/about/m1g-arama-kurtarma-topluluk-kamp.jpg"
         }
     ];
     const [aboutSections, setAboutSections]   = useState<any[]>(defaultAboutSections);
@@ -922,35 +933,6 @@ export default function KolaySiteDuzenleyici() {
                                             }} 
                                             className="cms-input resize-none" 
                                         />
-                                    </div>
-                                    
-                                    {/* Metrics Editing */}
-                                    <div>
-                                        <label className="cms-label">Metrikler (İstatistikler)</label>
-                                        {section.metrics && section.metrics.map((metric: any, mIdx: number) => (
-                                            <div key={mIdx} className="flex gap-2 mb-2">
-                                                <input 
-                                                    value={metric.value} 
-                                                    onChange={e => {
-                                                        const newArr = [...aboutSections];
-                                                        newArr[idx].metrics[mIdx].value = e.target.value;
-                                                        setAboutSections(newArr);
-                                                    }} 
-                                                    placeholder="Değer (Örn: 300+)" 
-                                                    className="cms-input w-1/3" 
-                                                />
-                                                <input 
-                                                    value={metric.label} 
-                                                    onChange={e => {
-                                                        const newArr = [...aboutSections];
-                                                        newArr[idx].metrics[mIdx].label = e.target.value;
-                                                        setAboutSections(newArr);
-                                                    }} 
-                                                    placeholder="Etiket (Örn: EĞİTİMLİ GÖNÜLLÜ)" 
-                                                    className="cms-input w-2/3" 
-                                                />
-                                            </div>
-                                        ))}
                                     </div>
                                 </div>
                             ))}
