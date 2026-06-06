@@ -27,31 +27,11 @@ async function getSiteSettings() {
 }
 
 
-async function getLiveEarthquakes() {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
-
-    const res = await fetch("https://api.orhanaydogdu.com.tr/deprem/kandilli/live", {
-      next: { revalidate: 60 },
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.result ? data.result.slice(0, 10) : [];
-  } catch {
-    return [];
-  }
-}
-
 export default async function Home() {
   const boardRoles = ["Yönetim Kurulu Başkanı", "Başkan Yardımcısı", "Genel Sekreter", "Sayman", "Yönetim Kurulu Üyesi"];
 
   // Perform parallel fetching for faster load times
-  const [earthquakes, s, boardMembers] = await Promise.all([
-    getLiveEarthquakes(),
+  const [s, boardMembers] = await Promise.all([
     getSiteSettings(),
     prisma.member.findMany({
       where: { 
@@ -133,10 +113,10 @@ export default async function Home() {
               <Radio size={14} className="animate-pulse" /> Sismik İzleme Merkezi
             </span>
             <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter">
-              AFAD & Kandilli <span className="text-neutral-600">Canlı İzleme</span>
+              AFAD <span className="text-neutral-600">Canlı İzleme</span>
             </h2>
           </div>
-          <SeismicTracker initialData={earthquakes} />
+          <SeismicTracker />
         </div>
       </section>
 

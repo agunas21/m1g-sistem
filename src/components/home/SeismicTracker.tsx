@@ -3,49 +3,52 @@
 import { useEffect, useState } from "react";
 import { Radio, AlertTriangle, RefreshCw } from "lucide-react";
 
-export default function SeismicTracker({ initialData }: { initialData: any[] }) {
-    const [earthquakes, setEarthquakes] = useState<any[]>(initialData || []);
+export default function SeismicTracker() {
+    const [earthquakes, setEarthquakes] = useState<any[]>([]);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-    useEffect(() => {
-        const fetchLive = async () => {
-            setIsRefreshing(true);
-            try {
-                // CORS aşmak için kendi sunucumuzdaki Proxy rotamızı kullanıyoruz
-                const res = await fetch("/api/afad");
+    const fetchLive = async () => {
+        if (isRefreshing) return;
+        setIsRefreshing(true);
+        try {
+            const res = await fetch("/api/afad");
 
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        setEarthquakes(data.slice(0, 10));
-                        setError(false);
-                    } else {
-                        setError(true);
-                    }
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    setEarthquakes(data.slice(0, 10));
+                    setError(false);
+                    setLastUpdated(new Date());
                 } else {
                     setError(true);
                 }
-            } catch (err) {
-                console.error("AFAD Live Seismic Fetch Error", err);
+            } else {
                 setError(true);
-            } finally {
-                setTimeout(() => setIsRefreshing(false), 500);
             }
-        };
+        } catch (err) {
+            console.error("AFAD Live Seismic Fetch Error", err);
+            setError(true);
+        } finally {
+            setTimeout(() => setIsRefreshing(false), 500);
+        }
+    };
 
+    useEffect(() => {
         // Sadece sayfa ilk açıldığında bir kez AFAD'ı çeker
         fetchLive();
+
+        // 1 dakikada (60000ms) bir otomatik yenile
+        const interval = setInterval(fetchLive, 60000);
+        return () => clearInterval(interval);
     }, []);
 
     // Format date string (AFAD UTC to GMT+3 TR Time)
     const formatTime = (dateStr: string) => {
         if (!dateStr) return "N/A";
         try {
-            // AFAD returns UTC without the Z (e.g. 2026-04-03T00:40:36)
             const dateObj = new Date((dateStr.includes('Z') ? dateStr : dateStr + "Z"));
-
-            // Add exactly 3 hours for Turkey Time (GMT+3)
             const trTime = new Date(dateObj.getTime() + (3 * 60 * 60 * 1000));
 
             const yyyy = trTime.getUTCFullYear();
@@ -65,7 +68,7 @@ export default function SeismicTracker({ initialData }: { initialData: any[] }) 
         <div className="bg-[#050B14] border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative">
 
             {/* OTONOM TAKİP HEADER */}
-            <div className="bg-[#0e1628] px-6 py-4 flex justify-between items-center border-b border-t border-blue-500/30">
+            <div className="bg-[#0e1628] px-6 py-4 flex flex-col sm:flex-row justify-between items-center border-b border-t border-blue-500/30 gap-4 sm:gap-0">
                 <div className="flex items-center gap-3">
                     <span className="font-black text-white bg-blue-600 px-2 py-0.5 rounded text-xs tracking-widest hidden sm:inline-block">AFAD</span>
                     <div className={`w-3 h-3 rounded-full ${error ? 'bg-red-500' : 'bg-blue-500'} animate-pulse shadow-[0_0_10px_currentColor]`}></div>
@@ -73,9 +76,18 @@ export default function SeismicTracker({ initialData }: { initialData: any[] }) 
                         AFAD ANA MERKEZ {error ? 'BAĞLANTISI KOPTU' : 'SENKRONİZE'}
                     </span>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
-                    <RefreshCw size={14} className={isRefreshing ? "animate-spin text-blue-500" : ""} />
-                    {isRefreshing ? <span className="text-blue-500">Uyduyla Haberleşiliyor...</span> : 'SİSTEME SENKRONİZE EDİLDİ'}
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
+                        <RefreshCw size={14} className={isRefreshing ? "animate-spin text-blue-500" : ""} />
+                        {isRefreshing ? <span className="text-blue-500">Haberleşiliyor...</span> : (lastUpdated ? `Son: ${lastUpdated.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : 'Bekleniyor...')}
+                    </div>
+                    <button 
+                        onClick={fetchLive}
+                        disabled={isRefreshing}
+                        className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/30 px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Yenile
+                    </button>
                 </div>
             </div>
 
