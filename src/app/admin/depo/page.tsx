@@ -913,9 +913,8 @@ export default function DepoYonetimi() {
                                 <button 
                                     onClick={async () => {
                                         if (confirm(`DIKKAT: "${selectedItem.name}" adlı ekipmanı sistemden tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) {
-                                            const res = await fetch("/api/inventory", {
-                                                method: "DELETE",
-                                                body: JSON.stringify({ id: selectedItem.id })
+                                            const res = await fetch(`/api/inventory?id=${selectedItem.id}`, {
+                                                method: "DELETE"
                                             });
                                             if (res.ok) {
                                                 setInventory(inventory.filter(i => i.id !== selectedItem.id));
