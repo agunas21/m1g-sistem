@@ -294,7 +294,7 @@ export default function DepoYonetimi() {
 
     const assignItemToMember = async (itemId: string, memberId: string, memberName: string) => {
         if(confirm(`"${selectedItem.name}" adlı ekipman "${memberName}" isimli personele zimmetlenecektir. Onaylıyor musunuz?`)) {
-            const updated = { ...selectedItem, status: "Zimmetli", assignedTo: memberId };
+            const updated = { ...selectedItem, status: "Zimmetli", assignedToId: memberId };
             const res = await fetch("/api/inventory", {
                 method: "PUT",
                 body: JSON.stringify(updated)
@@ -341,7 +341,7 @@ export default function DepoYonetimi() {
 
     const returnItem = async (itemId: string) => {
         if(confirm("Bu ekipmanı depoya geri almak istediğinize emin misiniz?")) {
-            const updated = { ...selectedItem, status: "Depoda", assignedTo: null };
+            const updated = { ...selectedItem, status: "Depoda", assignedToId: null };
             const res = await fetch("/api/inventory", {
                 method: "PUT",
                 body: JSON.stringify(updated)
@@ -370,7 +370,7 @@ export default function DepoYonetimi() {
             name: newItemName,
             category: newItemCategory,
             status: "Depoda",
-            assignedTo: null,
+            assignedToId: null,
             lastMaintenance: "-",
             condition: "Yeni",
             type: newItemType,
@@ -439,7 +439,7 @@ export default function DepoYonetimi() {
     const renderItemDrawer = () => {
         if (!selectedItem || !mounted) return null;
 
-        const assignedMember = selectedItem.assignedTo ? membersData.find(m => m.id === selectedItem.assignedTo) : null;
+        const assignedMember = selectedItem.assignedToId ? membersData.find(m => m.id === selectedItem.assignedToId) : null;
         const expWarning = selectedItem.expirationDate ? getExpirationWarning(selectedItem.expirationDate) : null;
         const maintWarning = selectedItem.maintenanceDate ? getMaintenanceWarning(selectedItem.maintenanceDate) : null;
 
@@ -681,7 +681,7 @@ export default function DepoYonetimi() {
                                                     >
                                                         <div>
                                                             <span className="text-white font-semibold group-hover:text-purple-200 transition-colors">{i.name}</span>
-                                                            <span className="text-neutral-600 font-mono block text-[9px]">{i.id} • {i.category} {i.isContainer ? '📦 Kit' : ''}</span>
+                                                            <span className="text-neutral-600 font-mono block text-[9px]">{i.id} • {i.category} {i.isContainer ? '• Kit' : ''}</span>
                                                         </div>
                                                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                                                             i.status === 'Depoda' ? 'bg-emerald-500/10 text-emerald-400' :
@@ -1145,11 +1145,11 @@ export default function DepoYonetimi() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        {item.status === "Zimmetli" && item.assignedTo ? (
+                                        {item.status === "Zimmetli" && item.assignedToId ? (
                                             <div className="flex items-center gap-2">
                                                 <User size={14} className="text-blue-500" />
                                                 <span className="text-white text-xs font-medium">
-                                                    {membersData.find(m => m.id === item.assignedTo)?.fullName || item.assignedTo}
+                                                    {membersData.find(m => m.id === item.assignedToId)?.fullName || item.assignedToId}
                                                 </span>
                                             </div>
                                         ) : (

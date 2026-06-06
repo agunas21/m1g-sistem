@@ -39,7 +39,7 @@ export default function MalzemeArsivi() {
     const myInventory = useMemo(() => {
         if (!user || !inventoryData.length) return [];
         return inventoryData.filter(item =>
-            item.assignedTo === (user as any).username || item.assignedTo === (user as any).name || item.assignedTo === (user as any).displayName
+            item.assignedToId === (user as any).realId || item.assignedToId === (user as any).id
         );
     }, [user, inventoryData]);
 
@@ -158,8 +158,8 @@ export default function MalzemeArsivi() {
                                             item.status === "Bakımda"  ? "bg-amber-500/10 text-amber-400" :
                                                                           "bg-emerald-500/10 text-emerald-400"
                                         }`}>{item.status}</span>
-                                        {item.assignedTo && (
-                                            <span className="text-[9px] text-neutral-600">→ {item.assignedTo}</span>
+                                        {item.assignedToId && (
+                                            <span className="text-[9px] text-neutral-600">→ {item.assignedToId}</span>
                                         )}
                                     </div>
                                 </li>

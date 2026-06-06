@@ -125,6 +125,14 @@ export default function UyeYonetimi() {
 
     // JSON Veritabanından üyeleri yükleme (API'den dinamik çekilecek)
     const [members, setMembers] = useState<any[]>([]);
+    const [inventoryData, setInventoryData] = useState<any[]>([]);
+
+    useEffect(() => {
+        fetch('/api/inventory')
+            .then(res => res.json())
+            .then(data => setInventoryData(data))
+            .catch(console.error);
+    }, []);
 
     const filteredMembers = members.filter(m => {
         const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase()) || m.email.toLowerCase().includes(search.toLowerCase()) || m.phone.includes(search);
@@ -710,28 +718,31 @@ export default function UyeYonetimi() {
                                     </div>
                                 )}
 
-                                {activeTab === 'zimmet' && (
-                                    <div className="space-y-4">
-                                        {selectedMember.inventory && selectedMember.inventory.length > 0 ? (
-                                            selectedMember.inventory.map((inv: any, idx: number) => (
-                                                <div key={idx} className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="p-2 bg-blue-500/20 text-blue-500 rounded-lg"><PackageOpen size={20} /></div>
-                                                        <div>
-                                                            <div className="text-white font-bold text-sm">{inv.item}</div>
-                                                            <div className="text-neutral-500 text-[10px] mt-1">{inv.date} - {inv.status}</div>
+                                {activeTab === 'zimmet' && (() => {
+                                    const memberInventory = inventoryData.filter(item => item.assignedToId === selectedMember.realId || item.assignedToId === selectedMember.id);
+                                    return (
+                                        <div className="space-y-4">
+                                            {memberInventory.length > 0 ? (
+                                                memberInventory.map((inv: any, idx: number) => (
+                                                    <div key={idx} className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-2 bg-blue-500/20 text-blue-500 rounded-lg"><PackageOpen size={20} /></div>
+                                                            <div>
+                                                                <div className="text-white font-bold text-sm">{inv.name}</div>
+                                                                <div className="text-neutral-500 text-[10px] mt-1">{inv.category} - {inv.status}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-center p-8 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                                                    <PackageOpen size={32} className="mx-auto text-neutral-600 mb-3" />
+                                                    <p className="text-neutral-500 text-sm">Üyeye zimmetli ekipman bulunmuyor.</p>
                                                 </div>
-                                            ))
-                                        ) : (
-                                            <div className="text-center p-8 bg-white/5 rounded-xl border border-white/5 border-dashed">
-                                                <PackageOpen size={32} className="mx-auto text-neutral-600 mb-3" />
-                                                <p className="text-neutral-500 text-sm">Üyeye zimmetli ekipman bulunmuyor.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                            )}
+                                        </div>
+                                    );
+                                })()}
 
                                 {activeTab === 'operasyon' && (
                                     <div className="space-y-4">
