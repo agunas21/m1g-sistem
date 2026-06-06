@@ -8,9 +8,16 @@ import { motion } from "framer-motion";
 const calculateTeamWorkingHours = (deployments: any[]) => {
     let totalMs = 0;
     deployments.forEach(d => {
-        const start = Date.parse(d.deployTime.replace(' ', 'T'));
+        let normalizedStart = d.deployTime.replace(' ', 'T');
+        if (!normalizedStart.endsWith('Z')) normalizedStart += 'Z';
+        const start = Date.parse(normalizedStart);
         if (!isNaN(start)) {
-            const end = d.returnTime ? Date.parse(d.returnTime.replace(' ', 'T')) : Date.now();
+            let end = Date.now();
+            if (d.returnTime) {
+                let normalizedEnd = d.returnTime.replace(' ', 'T');
+                if (!normalizedEnd.endsWith('Z')) normalizedEnd += 'Z';
+                end = Date.parse(normalizedEnd);
+            }
             totalMs += Math.max(0, end - start);
         }
     });
@@ -109,15 +116,9 @@ export default function OperasyonPano() {
                 teams: op.teams || [],
                 baseCamp: op.baseCamp || { members: [], equipment: [] },
                 supplies: op.supplies || { 
-                    tentCount: 0, 
-                    waterLiters: 0, 
+                    ppeCount: 0, 
                     mealsCount: 0, 
-                    blanketCount: 0, 
-                    rakeCount: 0, 
-                    pumpCount: 0, 
-                    electrolyteLiters: 0,
-                    flashlightCount: 0,
-                    gpsCount: 0
+                    firstAidKits: 0
                 },
                 logs: op.logs || [],
                 radioFrequency: op.radioFrequency || '',
@@ -363,22 +364,18 @@ export default function OperasyonPano() {
                                     {/* Dynamic Lojistik Supplies Slip */}
                                     <div className="bg-white/5 border border-white/5 p-4 rounded-2xl space-y-2">
                                         <span className="text-[9px] text-amber-500 font-extrabold uppercase tracking-widest block flex items-center gap-1"><Box size={10}/> Lojistik Sarfiyat İkmal Deposu</span>
-                                        <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
-                                            <div className="bg-white/5 p-2 rounded-xl">
-                                                <span className="text-neutral-500 block">Çadır</span>
-                                                <span className="text-xs font-bold text-white">{op.supplies?.tentCount || 0}</span>
+                                        <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
+                                            <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                                                <span className="text-neutral-500 block text-[8px] font-bold tracking-widest">KKD DONANIMI</span>
+                                                <span className="text-xs font-black text-white">{op.supplies?.ppeCount || 0} ADET</span>
                                             </div>
-                                            <div className="bg-white/5 p-2 rounded-xl">
-                                                <span className="text-neutral-500 block">Su (L)</span>
-                                                <span className="text-xs font-bold text-white">{op.supplies?.waterLiters || 0}</span>
+                                            <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                                                <span className="text-neutral-500 block text-[8px] font-bold tracking-widest">KUMANYA STOĞU</span>
+                                                <span className="text-xs font-black text-white">{op.supplies?.mealsCount || 0} ÖĞÜN</span>
                                             </div>
-                                            <div className="bg-white/5 p-2 rounded-xl">
-                                                <span className="text-neutral-500 block">Kumanya</span>
-                                                <span className="text-xs font-bold text-white">{op.supplies?.mealsCount || 0}</span>
-                                            </div>
-                                            <div className="bg-white/5 p-2 rounded-xl">
-                                                <span className="text-neutral-500 block">Ayran (L)</span>
-                                                <span className="text-xs font-bold text-white">{op.supplies?.electrolyteLiters || 0}</span>
+                                            <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                                                <span className="text-neutral-500 block text-[8px] font-bold tracking-widest">İLK YARDIM SETİ</span>
+                                                <span className="text-xs font-black text-white">{op.supplies?.firstAidKits || 0} ADET</span>
                                             </div>
                                         </div>
                                     </div>

@@ -50,15 +50,9 @@ interface ActiveOperation {
         equipment: string[]; 
     };
     supplies: {
-        tentCount: number;
-        waterLiters: number;
+        ppeCount: number;
         mealsCount: number;
-        blanketCount: number;
-        rakeCount: number;
-        pumpCount: number;
-        electrolyteLiters: number;
-        flashlightCount: number;
-        gpsCount: number;
+        firstAidKits: number;
     };
     logs: Array<{ time: string; message: string }>;
     isEvacuationActive: boolean;
@@ -69,17 +63,22 @@ interface ActiveOperation {
     };
 }
 
-// Global clock formatting helper (HH:MM:SS)
 const formatDuration = (startTimeStr: string, endTimeStr: string | null = null) => {
     if (!startTimeStr) return "00:00:00";
     
-    let parsedTime = Date.parse(startTimeStr);
-    if (isNaN(parsedTime)) {
-        parsedTime = Date.parse(startTimeStr.replace(' ', 'T'));
-    }
+    let normalizedStart = startTimeStr.replace(' ', 'T');
+    if (!normalizedStart.endsWith('Z')) normalizedStart += 'Z';
+    let parsedTime = Date.parse(normalizedStart);
+    
     if (isNaN(parsedTime)) return "00:00:00";
 
-    const end = endTimeStr ? Date.parse(endTimeStr.replace(' ', 'T')) : Date.now();
+    let end = Date.now();
+    if (endTimeStr) {
+        let normalizedEnd = endTimeStr.replace(' ', 'T');
+        if (!normalizedEnd.endsWith('Z')) normalizedEnd += 'Z';
+        end = Date.parse(normalizedEnd);
+    }
+    
     const diffMs = Math.max(0, end - parsedTime);
 
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -109,7 +108,8 @@ export default function Operasyonlar() {
         name: "",
         type: "Deprem" as "Deprem" | "Yangın" | "Doğada Arama" | "Eğitim" | "Kamp",
         location: "",
-        radioFrequency: "145.550"
+        radioFrequency: "145.550",
+        personnelCount: 10
     });
 
     // Unified command bar input
@@ -293,15 +293,9 @@ export default function Operasyonlar() {
                 teams: op.teams || [],
                 baseCamp: op.baseCamp || { members: [], equipment: [] },
                 supplies: op.supplies || { 
-                    tentCount: 0, 
-                    waterLiters: 0, 
+                    ppeCount: 0, 
                     mealsCount: 0, 
-                    blanketCount: 0, 
-                    rakeCount: 0, 
-                    pumpCount: 0, 
-                    electrolyteLiters: 0,
-                    flashlightCount: 0,
-                    gpsCount: 0
+                    firstAidKits: 0
                 },
                 postMortemReport: op.postMortemReport || { completed: false, notes: '', memberNotes: {} },
                 logs: op.logs || [],
@@ -467,7 +461,7 @@ export default function Operasyonlar() {
             radioFrequency: newOpData.radioFrequency,
             teams: [],
             baseCamp: { members: [], equipment: [] },
-            supplies: calculateInitialSupplies(newOpData.type),
+            supplies: calculateInitialSupplies(newOpData.type, newOpData.personnelCount),
             logs: [
                 { time: timestampStr, message: `Operasyon kaydı oluşturuldu. Tür: ${newOpData.type}` }
             ],
@@ -476,7 +470,7 @@ export default function Operasyonlar() {
         };
 
         await saveOperation(newOp);
-        setNewOpData({ name: "", type: "Deprem", location: "", radioFrequency: "145.550" });
+        setNewOpData({ name: "", type: "Deprem", location: "", radioFrequency: "145.550", personnelCount: 10 });
         setShowNewOp(false);
         setSelectedOp(newOp);
 
@@ -485,44 +479,19 @@ export default function Operasyonlar() {
         }
     };
 
-    const calculateInitialSupplies = (type: string) => {
-        if (type === "Yangın") {
-            return {
-                tentCount: 2,
-                waterLiters: 150,
-                mealsCount: 40,
-                blanketCount: 25,
-                rakeCount: 15,
-                pumpCount: 8,
-                electrolyteLiters: 80,
-                flashlightCount: 10,
-                gpsCount: 2
-            };
-        } else if (type === "Deprem") {
-            return {
-                tentCount: 6,
-                waterLiters: 100,
-                mealsCount: 60,
-                blanketCount: 10,
-                rakeCount: 0,
-                pumpCount: 0,
-                electrolyteLiters: 20,
-                flashlightCount: 12,
-                gpsCount: 2
-            };
-        } else {
-            return {
-                tentCount: 3,
-                waterLiters: 80,
-                mealsCount: 30,
-                blanketCount: 10,
-                rakeCount: 2,
-                pumpCount: 1,
-                electrolyteLiters: 10,
-                flashlightCount: 8,
-                gpsCount: 4
-            };
+    const calculateInitialSupplies = (type: string, personnelCount: number = 10) => {
+        let firstAidRatio = 1;
+        if (type === "Deprem" || type === "Yangın") {
+            firstAidRatio = 3; // Ağır travma ve yanıklar için daha fazla ilk yardım seti
+        } else if (type === "Doğada Arama") {
+            firstAidRatio = 2;
         }
+
+        return {
+            ppeCount: personnelCount * 1,
+            mealsCount: personnelCount * 2,
+            firstAidKits: Math.ceil(personnelCount / firstAidRatio)
+        };
     };
 
     // Panic Mode
@@ -541,7 +510,7 @@ export default function Operasyonlar() {
             radioFrequency: "145.550",
             teams: [],
             baseCamp: { members: [], equipment: [] },
-            supplies: calculateInitialSupplies("Deprem"),
+            supplies: calculateInitialSupplies("Deprem", 25), // Panik modu: 25 kişilik hızlı lojistik
             logs: [
                 { time: timestampStr, message: "⚠️ PANİK GÖNDERİM MODU AKTİFLEŞTİRİLDİ!" }
             ],
@@ -1252,32 +1221,17 @@ export default function Operasyonlar() {
 
         const totalActivePeople = selectedOp.teams.reduce((acc, t) => acc + t.members.length, 0) + selectedOp.baseCamp.members.length;
 
-        if (selectedOp.type === "Yangın") {
+        if (selectedOp.type === "Yangın" || selectedOp.type === "Deprem") {
             return (
                 <div className="bg-red-950/20 border border-red-500/20 p-4 rounded-2xl space-y-2 animate-pulse">
                     <div className="flex items-center gap-2 text-red-400 font-extrabold text-xs uppercase tracking-wider">
-                        <Flame size={16} /> Yangın Lojistik İkmal Önerisi
+                        <Flame size={16} /> Ağır Afet Lojistik İkmal Önerisi
                     </div>
-                    <p className="text-[10px] text-neutral-400">Orman yangınlarında yanmaz battaniye, tırmık, sırt pompası ve yüksek içme suyu/ayran önceliklidir.</p>
+                    <p className="text-[10px] text-neutral-400">Deprem ve yangın operasyonlarında ağır KKD donanımı ve travma odaklı ilk yardım setleri kritik öneme sahiptir.</p>
                     <ul className="text-xs space-y-1 text-neutral-300 font-mono">
-                        <li>• Yanmaz Battaniye: <span className="text-white font-bold">{Math.max(5, totalActivePeople * 1)} adet</span></li>
-                        <li>• Yangın Tırmığı: <span className="text-white font-bold">{Math.max(4, Math.ceil(totalActivePeople * 0.5))} adet</span></li>
-                        <li>• Sırt Pompası: <span className="text-white font-bold">{Math.max(2, Math.ceil(totalActivePeople * 0.3))} adet</span></li>
-                        <li>• Su & Elektrolit (Ayran): <span className="text-emerald-400 font-bold">{Math.max(40, totalActivePeople * 6)} Litre</span></li>
-                    </ul>
-                </div>
-            );
-        } else if (selectedOp.type === "Deprem") {
-            return (
-                <div className="bg-orange-950/20 border border-orange-500/20 p-4 rounded-2xl space-y-2 animate-pulse">
-                    <div className="flex items-center gap-2 text-orange-400 font-extrabold text-xs uppercase tracking-wider">
-                        <Activity size={16} /> Deprem/Enkaz Lojistik İkmal Önerisi
-                    </div>
-                    <p className="text-[10px] text-neutral-400">Deprem enkaz çalışmalarında kırıcı hiltiler, jeneratörler ve çadır/aydınlatma önceliklidir.</p>
-                    <ul className="text-xs space-y-1 text-neutral-300 font-mono">
-                        <li>• Kırıcı Hiltiler: <span className="text-white font-bold">En az 2 adet (Jeneratör ile)</span></li>
-                        <li>• Projektör/Aydınlatma: <span className="text-white font-bold">{Math.max(4, Math.ceil(totalActivePeople * 0.4))} takım</span></li>
-                        <li>• Çadır & Battaniye: <span className="text-white font-bold">{Math.ceil(totalActivePeople / 4)} Adet Çadır ({totalActivePeople} Battaniye)</span></li>
+                        <li>• Kritik KKD Donanımı: <span className="text-white font-bold">En az {Math.max(5, totalActivePeople * 1)} adet (Kişi Başı)</span></li>
+                        <li>• Ağır Travma İlk Yardım Kiti: <span className="text-white font-bold">{Math.ceil(totalActivePeople / 3)} Adet Minimum</span></li>
+                        <li>• Kumanya (Öğün): <span className="text-white font-bold">{totalActivePeople * 2} Öğün Asgari Tüketim</span></li>
                     </ul>
                 </div>
             );
@@ -1287,11 +1241,11 @@ export default function Operasyonlar() {
                     <div className="flex items-center gap-2 text-blue-400 font-extrabold text-xs uppercase tracking-wider">
                         <Compass size={16} /> Doğa/Eğitim İkmal Önerisi
                     </div>
-                    <p className="text-[10px] text-neutral-400">Doğa aramaları ve kamp eğitimlerinde GPS, el feneri ve iaşe önceliklidir.</p>
+                    <p className="text-[10px] text-neutral-400">Doğa aramaları ve kamp eğitimlerinde standart ilk yardım ve iaşe planlaması yeterlidir.</p>
                     <ul className="text-xs space-y-1 text-neutral-300 font-mono">
-                        <li>• GPS & Pusula: <span className="text-white font-bold">{Math.max(2, Math.ceil(totalActivePeople * 0.2))} adet</span></li>
-                        <li>• El Feneri: <span className="text-white font-bold">{totalActivePeople} adet</span></li>
-                        <li>• İaşe (Konserve/Meals): <span className="text-white font-bold">{totalActivePeople * 3} öğün</span></li>
+                        <li>• Standart KKD Donanımı: <span className="text-white font-bold">{totalActivePeople * 1} adet</span></li>
+                        <li>• İlk Yardım Çantası: <span className="text-white font-bold">{Math.ceil(totalActivePeople / 2)} Adet Minimum</span></li>
+                        <li>• İaşe (Kumanya): <span className="text-white font-bold">{totalActivePeople * 2} Öğün Asgari</span></li>
                     </ul>
                 </div>
             );
@@ -1967,13 +1921,9 @@ export default function Operasyonlar() {
 
                                     <div className="grid grid-cols-2 gap-3 text-xs">
                                         {[
-                                            { key: "tentCount" as const, label: "Çadır (Adet)" },
-                                            { key: "waterLiters" as const, label: "İçme Suyu (Litre)" },
+                                            { key: "ppeCount" as const, label: "KKD Donanımı (Adet)" },
                                             { key: "mealsCount" as const, label: "Kumanya (Öğün)" },
-                                            { key: "blanketCount" as const, label: "Battaniye (Adet)" },
-                                            { key: "rakeCount" as const, label: "Tırmık (Adet)" },
-                                            { key: "pumpCount" as const, label: "Sırt Pompası (Adet)" },
-                                            { key: "electrolyteLiters" as const, label: "Elektrolit/Ayran (Litre)" }
+                                            { key: "firstAidKits" as const, label: "İlk Yardım Seti (Adet)" }
                                         ].map(item => (
                                             <div key={item.key} className="bg-white/5 border border-white/5 rounded-xl p-3.5 flex justify-between items-center">
                                                 <div>
@@ -2087,6 +2037,15 @@ export default function Operasyonlar() {
                                 <input 
                                     type="text" required placeholder="145.550"
                                     value={newOpData.radioFrequency} onChange={(e) => setNewOpData({ ...newOpData, radioFrequency: e.target.value })}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="block text-neutral-400 font-bold uppercase tracking-wider text-[9px]">Katılımcı Sayısı (Kişi)</label>
+                                <input 
+                                    type="number" required min="1" max="1000" placeholder="10"
+                                    value={newOpData.personnelCount || ""} onChange={(e) => setNewOpData({ ...newOpData, personnelCount: parseInt(e.target.value) || 0 })}
                                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500"
                                 />
                             </div>

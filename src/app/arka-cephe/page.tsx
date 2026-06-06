@@ -8,9 +8,16 @@ import { motion } from "framer-motion";
 const calculateTeamWorkingHours = (deployments: any[]) => {
     let totalMs = 0;
     deployments.forEach(d => {
-        const start = Date.parse(d.deployTime.replace(' ', 'T'));
+        let normalizedStart = d.deployTime.replace(' ', 'T');
+        if (!normalizedStart.endsWith('Z')) normalizedStart += 'Z';
+        const start = Date.parse(normalizedStart);
         if (!isNaN(start)) {
-            const end = d.returnTime ? Date.parse(d.returnTime.replace(' ', 'T')) : Date.now();
+            let end = Date.now();
+            if (d.returnTime) {
+                let normalizedEnd = d.returnTime.replace(' ', 'T');
+                if (!normalizedEnd.endsWith('Z')) normalizedEnd += 'Z';
+                end = Date.parse(normalizedEnd);
+            }
             totalMs += Math.max(0, end - start);
         }
     });
@@ -21,13 +28,19 @@ const calculateTeamWorkingHours = (deployments: any[]) => {
 const formatDuration = (startTimeStr: string, endTimeStr: string | null = null) => {
     if (!startTimeStr) return "00:00:00";
     
-    let parsedTime = Date.parse(startTimeStr);
-    if (isNaN(parsedTime)) {
-        parsedTime = Date.parse(startTimeStr.replace(' ', 'T'));
-    }
+    let normalizedStart = startTimeStr.replace(' ', 'T');
+    if (!normalizedStart.endsWith('Z')) normalizedStart += 'Z';
+    let parsedTime = Date.parse(normalizedStart);
+    
     if (isNaN(parsedTime)) return "00:00:00";
 
-    const end = endTimeStr ? Date.parse(endTimeStr.replace(' ', 'T')) : Date.now();
+    let end = Date.now();
+    if (endTimeStr) {
+        let normalizedEnd = endTimeStr.replace(' ', 'T');
+        if (!normalizedEnd.endsWith('Z')) normalizedEnd += 'Z';
+        end = Date.parse(normalizedEnd);
+    }
+    
     const diffMs = Math.max(0, end - parsedTime);
 
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -138,15 +151,9 @@ export default function ArkaCephePano() {
                 teams: op.teams || [],
                 baseCamp: op.baseCamp || { members: [], equipment: [] },
                 supplies: op.supplies || { 
-                    tentCount: 0, 
-                    waterLiters: 0, 
+                    ppeCount: 0, 
                     mealsCount: 0, 
-                    blanketCount: 0, 
-                    rakeCount: 0, 
-                    pumpCount: 0, 
-                    electrolyteLiters: 0,
-                    flashlightCount: 0,
-                    gpsCount: 0
+                    firstAidKits: 0
                 },
                 logs: op.logs || [],
                 radioFrequency: op.radioFrequency || '',
@@ -392,7 +399,7 @@ export default function ArkaCephePano() {
                                     </div>
                                     <div className="text-right">
                                         <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Kritik Lojistik Sevk</span>
-                                        <span className="text-neutral-300">Çadır: {op.supplies?.tentCount || 0} • Su: {op.supplies?.waterLiters || 0}L • Kumanya: {op.supplies?.mealsCount || 0}Ö</span>
+                                        <span className="text-neutral-300">KKD: {op.supplies?.ppeCount || 0} • Kumanya: {op.supplies?.mealsCount || 0}Ö • İlk Yardım: {op.supplies?.firstAidKits || 0}</span>
                                     </div>
                                 </div>
 
