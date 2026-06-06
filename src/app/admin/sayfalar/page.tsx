@@ -111,33 +111,30 @@ export default function KolaySiteDuzenleyici() {
         {
             id: "SEC-01",
             stepNumber: "01",
-            title: "KURULUŞUMUZ",
-            subtitle: "BİR UMUT YOLCULUĞU",
-            desc: "M1G Arama Kurtarma Derneği, 2023 yılında, afetlere karşı en zorlu koşullarda bile bir cana daha ulaşabilmek sevdasıyla, tamamen gönüllülük esasıyla kuruldu.",
-            metrics: []
+            title: "MİSYONUMUZ",
+            subtitle: "M1G ARAMA KURTARMA",
+            desc: "Doğal afetler ve acil durumlarda en ileri operasyonel standartlarla hayata tutunan bir köprü inşa ediyoruz.",
+            img: "/images/about/m1g-arama-kurtarma-misyon-enkaz.jpg"
         },
         {
             id: "SEC-02",
             stepNumber: "02",
-            title: "KARARLILIK",
-            subtitle: "BİLİNÇ VE EĞİTİM",
-            desc: "Sadece sahada olmakla yetinmedik. Doğada, kentsel alanlarda ve su altındaki her türlü senaryoya karşı profesyonel uluslararası standartlarda eğitimlerimizi tamamladık.",
-            metrics: [{ label: "EĞİTİMLİ GÖNÜLLÜ", value: "300+" }, { label: "BRANŞ", value: "5" }]
+            title: "YANGIN MÜDAHALESİ",
+            subtitle: "ALEVLERİN GÖLGESİNDE",
+            desc: "Orman yangınları ve zorlu doğa koşullarındaki öncü müdahalelerimizle yaşam alanlarımızı koruyoruz.",
+            img: "/images/about/m1g-arama-kurtarma-yangin-mudahalesi.jpg"
         },
         {
             id: "SEC-03",
             stepNumber: "03",
-            title: "GÜCÜMÜZ",
-            subtitle: "OPERASYONEL KAPASİTE",
-            desc: "Özel donanımlı araçlarımız, sismik dinleme cihazlarımız, termal dronlarımız ve medikal müdahale kitlerimiz ile karanlığın çöktüğü her yerde ışık olmaya hazırız.",
-            metrics: [{ label: "HAZIRLIK SÜRESİ", value: "7/24" }, { label: "MÜDAHALE EKİPMANI", value: "FULL" }]
+            title: "EĞİTİM VE DİSİPLİN",
+            subtitle: "ASLA GERİDE BIRAKMA",
+            desc: "Saha eğitimleri ve tatbikatlar, afet anlarındaki reflekslerimizi ve ekip koordinasyonumuzu en üst seviyede tutar.",
+            img: "/images/about/m1g-arama-kurtarma-sualti-dalis-egitimi.jpg"
         },
         {
             id: "SEC-04",
             stepNumber: "04",
-            title: "OPERASYONLAR",
-            subtitle: "SAHADA İZİMİZ VAR",
-            desc: "Depremler, kayıp vakaları ve büyük doğa felaketlerinde yüzlerce arama kurtarma faaliyetine katıldık. Geri dönmeyen tek bir can kalmayana dek durmayacağız.",
             metrics: [{ label: "GÖREV", value: "150+" }, { label: "KURTARILAN", value: "HAYATLAR" }]
         }
     ];
@@ -836,7 +833,13 @@ export default function KolaySiteDuzenleyici() {
                         
                         {/* 4 Aşamalı Dinamik İçerik Yönetimi */}
                         <div className="space-y-6 mt-6">
-                            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Horizon Operasyon Ekranı Bölümleri (4 Adım)</h3>
+                            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Horizon Operasyon Ekranı Bölümleri (5 Adım)</h3>
+                            <button 
+                                onClick={() => setAboutSections([...aboutSections, { id: `SEC-0${aboutSections.length + 1}`, stepNumber: `0${aboutSections.length + 1}`, title: "YENİ", subtitle: "YENİ", desc: "Yeni açıklama", img: "" }])}
+                                className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-white float-right -mt-8"
+                            >
+                                + Bölüm Ekle
+                            </button>
                             {aboutSections.map((section, idx) => (
                                 <div key={idx} className="bg-black/30 border border-white/5 rounded-xl p-5 space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
@@ -893,6 +896,20 @@ export default function KolaySiteDuzenleyici() {
                                         </div>
                                     </div>
                                     
+                                    <div>
+                                        <label className="cms-label text-blue-400">Arka Plan Resmi (URL / Dosya Yolu)</label>
+                                        <input 
+                                            value={section.img || ''} 
+                                            onChange={e => {
+                                                const newArr = [...aboutSections];
+                                                newArr[idx].img = e.target.value;
+                                                setAboutSections(newArr);
+                                            }} 
+                                            placeholder="/images/about/resim-adi.jpg"
+                                            className="cms-input border-blue-500/30 bg-blue-500/5 text-blue-300" 
+                                        />
+                                    </div>
+
                                     <div>
                                         <label className="cms-label">Açıklama (Desc)</label>
                                         <textarea 

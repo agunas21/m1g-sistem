@@ -1,13 +1,13 @@
 "use client";
 import React, { useEffect, useRef, useState } from 'react';
 
-export const HorizonHeroSection = () => {
+export const HorizonHeroSection = ({ sections }: { sections?: any[] | null }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
   const [coords, setCoords] = useState("38.4237° N, 27.1428° E");
 
-  const sectionsData = [
+  const sectionsData = sections || [
     {
       id: "SEC-01",
       stepNumber: "01",
@@ -87,15 +87,42 @@ export const HorizonHeroSection = () => {
   }, [totalSections]);
 
   return (
-    <div ref={containerRef} style={{ height: '700vh' }} className="w-full bg-[#01030b] relative">
+    <div ref={containerRef} style={{ height: `${totalSections * 150}vh` }} className="w-full bg-[#01030b] relative">
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden text-white font-sans bg-[#01030b]">
         
+        {/* AMBIENT GLOW EFEKTİ (Dinamik Bulanık Arka Plan) */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {sectionsData.map((data, i) => {
+            const sectionStart = i / totalSections;
+            const sectionEnd = (i + 1) / totalSections;
+            const center = (sectionStart + sectionEnd) / 2;
+            const dist = Math.abs(scrollProgress - center);
+            const threshold = 1 / (totalSections * 1.2);
+            let opacity = 1 - (dist / threshold);
+            if (opacity < 0) opacity = 0;
+            if (opacity > 1) opacity = 1;
+
+            return (
+              <div 
+                key={`glow-${i}`}
+                className="absolute inset-0 transition-opacity duration-700 ease-out bg-cover bg-center"
+                style={{ 
+                  backgroundImage: `url(${data.img})`,
+                  opacity: opacity * 0.4, // Parlaklığı ayarla
+                  filter: 'blur(100px) saturate(200%)', // Muazzam erime efekti
+                  transform: 'scale(1.1)' // Kenar taşmalarını engeller
+                }}
+              />
+            );
+          })}
+        </div>
+
         {/* DEV LOGO WATERMARK (Arkaplan) */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.03] md:opacity-[0.05]">
+        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.03] md:opacity-[0.06] mix-blend-overlay">
           <img 
             src="/images/m1g-logo-watermark.png" 
             alt="M1G Logo Watermark" 
-            className="w-[150%] max-w-none md:w-[800px] md:max-w-[800px] object-contain grayscale blur-[2px]"
+            className="w-[150%] max-w-none md:w-[800px] md:max-w-[800px] object-contain grayscale blur-[1px]"
           />
         </div>
         
