@@ -41,20 +41,23 @@ async function getLiveEarthquakes() {
 }
 
 export default async function Home() {
-  const earthquakes = await getLiveEarthquakes();
-  const s = await getSiteSettings();
-
   const boardRoles = ["Yönetim Kurulu Başkanı", "Başkan Yardımcısı", "Genel Sekreter", "Sayman", "Yönetim Kurulu Üyesi"];
-  const boardMembers = await prisma.member.findMany({
-    where: { 
-      OR: [
-        { role: { in: boardRoles } },
-        { memberType: { in: boardRoles } }
-      ],
-      isSuperAdmin: false,
-      status: { notIn: ["Pasif", "Banlı"] }
-    }
-  });
+
+  // Perform parallel fetching for faster load times
+  const [earthquakes, s, boardMembers] = await Promise.all([
+    getLiveEarthquakes(),
+    getSiteSettings(),
+    prisma.member.findMany({
+      where: { 
+        OR: [
+          { role: { in: boardRoles } },
+          { memberType: { in: boardRoles } }
+        ],
+        isSuperAdmin: false,
+        status: { notIn: ["Pasif", "Banlı"] }
+      }
+    })
+  ]);
 
   // Sıralama
   boardMembers.sort((a, b) => {
