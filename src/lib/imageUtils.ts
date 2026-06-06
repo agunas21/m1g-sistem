@@ -32,13 +32,16 @@ export const compressImage = async (file: File, maxWidth = 1920, quality = 0.7):
                 canvas.toBlob(
                     (blob) => {
                         if (!blob) return resolve(file);
-                        const newFile = new File([blob], file.name, {
-                            type: 'image/jpeg', // convert to jpeg for better compression
+                        
+                        // Preserve transparency by using webp (or png if preferred, but webp is much smaller)
+                        // webp supports both transparency and lossy compression!
+                        const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                            type: 'image/webp', 
                             lastModified: Date.now(),
                         });
                         resolve(newFile);
                     },
-                    'image/jpeg',
+                    'image/webp',
                     quality
                 );
             };
