@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { 
     PackageSearch, PackagePlus, ScanBarcode, Search, Filter, 
-    Box, Wrench, PackageCheck, AlertTriangle, X, User, CheckCircle, QrCode, PenTool
+    Box, Wrench, PackageCheck, AlertTriangle, X, User, CheckCircle, QrCode, PenTool, Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Html5Qrcode } from "html5-qrcode";
