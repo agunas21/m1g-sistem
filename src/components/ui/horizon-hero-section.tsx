@@ -3,6 +3,14 @@ import React, { useEffect, useRef, useState } from 'react';
 // @ts-ignore
 import * as THREE from 'three';
 
+const themes = [
+  { terrain: 0xea1d2c, beam: 0xea1d2c, pColor: 0xffffff, pSpeed: 1, yWave: 250 }, // 0: Misyon (Kırmızı - Standart)
+  { terrain: 0xff4500, beam: 0xff2200, pColor: 0xffaa00, pSpeed: 3, yWave: 350 }, // 1: Yangın (Turuncu - Alevli ve Hızlı)
+  { terrain: 0x0066ff, beam: 0x00aaff, pColor: 0x00ffff, pSpeed: 0.5, yWave: 150 }, // 2: Dalış/Eğitim (Mavi - Dalgalı ve Sakin)
+  { terrain: 0x00ff44, beam: 0x00ff88, pColor: 0xaaffaa, pSpeed: 5, yWave: 100 }, // 3: Lojistik (Yeşil - Matrix hızlı)
+  { terrain: 0xffcc00, beam: 0xffaa00, pColor: 0xffffee, pSpeed: 0.8, yWave: 200 }  // 4: Ekip/Kamp (Altın - Huzurlu)
+];
+
 export const HorizonHeroSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -18,41 +26,36 @@ export const HorizonHeroSection = () => {
       id: "SEC-01",
       stepNumber: "01",
       title: "MİSYONUMUZ",
-      subtitle: "M1G ARAMA KURTARMA DERNEĞİ",
-      desc: "M1G Arama Kurtarma Derneği olarak, doğal afetler ve acil durumlarda en ileri operasyonel standartlarla hayata tutunan bir köprü inşa ediyoruz.",
-      metrics: [{ label: "OPERASYONEL", value: "STANDART" }, { label: "MÜDAHALE", value: "GÜCÜ" }]
+      subtitle: "M1G ARAMA KURTARMA",
+      desc: "Doğal afetler ve acil durumlarda en ileri operasyonel standartlarla hayata tutunan bir köprü inşa ediyoruz."
     },
     {
       id: "SEC-02",
       stepNumber: "02",
       title: "YANGIN MÜDAHALESİ",
       subtitle: "ALEVLERİN GÖLGESİNDE",
-      desc: "Orman yangınları ve zorlu doğa koşullarındaki öncü müdahalelerimizle, yaşam alanlarımızı korumak için alevlerin gölgesinde sarsılmaz bir irade ortaya koyuyoruz.",
-      metrics: [{ label: "DOĞA", value: "KORUMA" }, { label: "SARSILMAZ", value: "İRADE" }]
+      desc: "Orman yangınları ve zorlu doğa koşullarındaki öncü müdahalelerimizle yaşam alanlarımızı koruyoruz."
     },
     {
       id: "SEC-03",
       stepNumber: "03",
       title: "EĞİTİM VE DİSİPLİN",
       subtitle: "ASLA GERİDE BIRAKMA",
-      desc: "'Asla geride bırakma' disipliniyle yürüttüğümüz kesintisiz saha eğitimleri ve tatbikatlar, afet anlarındaki reflekslerimizi ve ekip koordinasyonumuzu en üst seviyede tutar.",
-      metrics: [{ label: "SAHA EĞİTİMİ", value: "7/24" }, { label: "REFLEKS", value: "MAKSİMUM" }]
+      desc: "Saha eğitimleri ve tatbikatlar, afet anlarındaki reflekslerimizi ve ekip koordinasyonumuzu en üst seviyede tutar."
     },
     {
       id: "SEC-04",
       stepNumber: "04",
-      title: "TEKNOLOJİ VE LOJİSTİK",
+      title: "LOJİSTİK VE TEKNOLOJİ",
       subtitle: "HIZLI VE ORGANİZE",
-      desc: "Modern lojistik altyapımız, kesintisiz haberleşme sistemlerimiz ve anlık veri takibimiz sayesinde kriz bölgelerine en hızlı ve organize intikali gerçekleştiriyoruz.",
-      metrics: [{ label: "HABERLEŞME", value: "KESİNTİSİZ" }, { label: "İNTİKAL", value: "HIZLI" }]
+      desc: "Modern lojistik altyapımız ve kesintisiz veri takibimiz sayesinde kriz bölgelerine hızlı intikal ediyoruz."
     },
     {
       id: "SEC-05",
       stepNumber: "05",
       title: "GÜVEN VE TOPLULUK",
       subtitle: "GÖNÜLLÜ ORDUMUZ",
-      desc: "Profesyonel donanıma sahip gönüllü ordumuzla, her bir can için umut olmaya ve Türkiye'nin afet yönetim gücüne omuz vermeye devam edeceğiz.",
-      metrics: [{ label: "AFET YÖNETİMİ", value: "TÜRKİYE" }, { label: "GÖNÜLLÜ", value: "GÜCÜ" }]
+      desc: "Profesyonel donanıma sahip gönüllü ordumuzla Türkiye'nin afet yönetim gücüne omuz vermeye devam ediyoruz."
     }
   ];
   
@@ -64,10 +67,18 @@ export const HorizonHeroSection = () => {
     renderer: THREE.WebGLRenderer | null;
     particles: THREE.Points | null;
     terrain: THREE.Mesh | null;
-    radarLine: THREE.Mesh | null;
+    terrainMat: THREE.MeshBasicMaterial | null;
+    particlesMat: THREE.PointsMaterial | null;
+    beamsMats: THREE.MeshBasicMaterial[];
+    framesMats: THREE.LineBasicMaterial[];
     animationId: number | null;
+    progress: number;
+    clock: THREE.Clock;
+    terrainGeo: THREE.PlaneGeometry | null;
   }>({
-    scene: null, camera: null, renderer: null, particles: null, terrain: null, radarLine: null, animationId: null
+    scene: null, camera: null, renderer: null, particles: null, terrain: null, 
+    terrainMat: null, particlesMat: null, beamsMats: [], framesMats: [],
+    animationId: null, progress: 0, clock: new THREE.Clock(), terrainGeo: null
   });
 
   useEffect(() => {
@@ -86,7 +97,7 @@ export const HorizonHeroSection = () => {
     const initThree = () => {
       const refs = threeRefs.current;
       refs.scene = new THREE.Scene();
-      refs.scene.fog = new THREE.FogExp2(0x020617, 0.0004); // Sis azaltıldı ki uzaklar daha net görünsün
+      refs.scene.fog = new THREE.FogExp2(0x01030b, 0.0004); 
 
       refs.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 8000);
       refs.camera.position.z = 1000;
@@ -94,87 +105,56 @@ export const HorizonHeroSection = () => {
       refs.camera.lookAt(0, 0, 0);
 
       refs.renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current!, antialias: true, alpha: false });
-      refs.renderer.setClearColor(0x020617);
+      refs.renderer.setClearColor(0x01030b);
       refs.renderer.setSize(window.innerWidth, window.innerHeight);
       refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-      // 1. Topografik Arazi (Daha derin ve yayılan bir zemin)
-      const terrainGeo = new THREE.PlaneGeometry(8000, 10000, 120, 150);
-      const pos = terrainGeo.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i);
-        const y = pos.getY(i);
-        let z = Math.sin(x * 0.002) * Math.cos(y * 0.002) * 250;
-        z += Math.sin(x * 0.01 + y * 0.01) * 60;
-        z += (Math.random() - 0.5) * 10;
-        pos.setZ(i, z);
-      }
-      terrainGeo.computeVertexNormals();
-
-      const terrainMat = new THREE.MeshBasicMaterial({ color: 0xea1d2c, wireframe: true, transparent: true, opacity: 0.1 });
-      refs.terrain = new THREE.Mesh(terrainGeo, terrainMat);
+      // 1. Dinamik Topografik Arazi
+      refs.terrainGeo = new THREE.PlaneGeometry(8000, 10000, 120, 150);
+      refs.terrainMat = new THREE.MeshBasicMaterial({ color: 0xea1d2c, wireframe: true, transparent: true, opacity: 0.15 });
+      refs.terrain = new THREE.Mesh(refs.terrainGeo, refs.terrainMat);
       refs.terrain.rotation.x = -Math.PI / 2;
       refs.terrain.position.y = -200;
       refs.terrain.position.z = -2000; 
       refs.scene.add(refs.terrain);
 
-      // 2. Radar Tarama Çizgisi
-      const radarGeo = new THREE.PlaneGeometry(8000, 50);
-      const radarMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending });
-      refs.radarLine = new THREE.Mesh(radarGeo, radarMat);
-      refs.radarLine.rotation.x = -Math.PI / 2;
-      refs.radarLine.position.y = -199;
-      refs.scene.add(refs.radarLine);
-
-      // 3. Estetik Hologramlar (Kavisli Ekranlar)
+      // 2. Hologram Resimler (Kavisli)
       const images = [
-        "/images/about/m1g-arama-kurtarma-misyon.jpg",
-        "/images/about/m1g-arama-kurtarma-orman-yangini.jpg",
-        "/images/about/sualti.jpeg",
-        "/images/about/m1g-arama-kurtarma-lojistik.jpg",
-        "/images/about/m1gekip.png"
+        "/images/about/m1g-arama-kurtarma-misyon-enkaz.jpg",
+        "/images/about/m1g-arama-kurtarma-yangin-mudahalesi.jpg",
+        "/images/about/m1g-arama-kurtarma-sualti-dalis-egitimi.jpg",
+        "/images/about/m1g-arama-kurtarma-lojistik-drone.jpg",
+        "/images/about/m1g-arama-kurtarma-topluluk-kamp.jpg"
       ];
 
       const textureLoader = new THREE.TextureLoader();
       images.forEach((url, i) => {
         textureLoader.load(url, (texture: THREE.Texture) => {
-          // Kavisli, teknolojik hologram ekran hissi
           const material = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
-            opacity: 0.7, // Şeffaf ki hologram hissi versin
-            blending: THREE.AdditiveBlending, // Siyahlar silinir, aydınlıklar parlar!
-            color: 0xffdddd, // Hafif kırmızımsı bir filtre
+            opacity: 0.75, 
+            blending: THREE.AdditiveBlending,
             side: THREE.DoubleSide
           });
           
-          // Kavisli Ekran Geometrisi (Radius, Height, RadialSegments, HeightSegments, OpenEnded, ThetaStart, ThetaLength)
-          const geometry = new THREE.CylinderGeometry(500, 500, 200, 32, 1, true, -0.25, 0.5);
+          const geometry = new THREE.CylinderGeometry(400, 400, 160, 32, 1, true, -0.3, 0.6);
           const mesh = new THREE.Mesh(geometry, material);
           
-          // Kameraya çarpmaması için Z ekseninde çok daha geriye yerleştiriyoruz
-          const zPos = -800 - (i * 1500); 
-          
-          // Alternatif X ekseni (biri solda, biri sağda asılı)
-          const xPos = i % 2 === 0 ? -250 : 250;
-          
-          // Daha yüksekte asılı dursun, drone altından/yanından geçsin
-          const yPos = 120; 
+          const zPos = -500 - (i * 1500); 
+          const xPos = i % 2 === 0 ? -300 : 300;
+          const yPos = 100; 
           
           mesh.position.set(xPos, yPos, zPos);
-          
-          // Kameraya doğru biraz eğik dursun
-          mesh.rotation.y = i % 2 === 0 ? 0.3 : -0.3;
-          
+          mesh.rotation.y = i % 2 === 0 ? 0.4 : -0.4;
           refs.scene!.add(mesh);
           
-          // Çerçeve Kenarları (Glow)
           const edges = new THREE.EdgesGeometry(geometry);
-          const lineMat = new THREE.LineBasicMaterial({ color: 0xff0033, transparent: true, opacity: 0.8 });
+          const lineMat = new THREE.LineBasicMaterial({ color: 0xff0033, transparent: true, opacity: 0.6 });
           const line = new THREE.LineSegments(edges, lineMat);
           mesh.add(line);
+          refs.framesMats.push(lineMat);
 
-          // Dağdan yukarı vuran "Projeksiyon Işını" (Hologram kaynağı)
           const beamGeo = new THREE.CylinderGeometry(200, 10, 400, 16, 1, true);
           const beamMat = new THREE.MeshBasicMaterial({ 
             color: 0xea1d2c, 
@@ -184,23 +164,24 @@ export const HorizonHeroSection = () => {
             side: THREE.DoubleSide
           });
           const beam = new THREE.Mesh(beamGeo, beamMat);
-          beam.position.y = -200; // Ekrandan dağa doğru iniyor
+          beam.position.y = -200; 
           mesh.add(beam);
+          refs.beamsMats.push(beamMat);
         });
       });
 
-      // 4. Yıldız / Veri Partikülleri
-      const particleCount = 1500;
+      // 3. Tematik Partiküller
+      const particleCount = 2000;
       const pGeo = new THREE.BufferGeometry();
       const pPos = new Float32Array(particleCount * 3);
       for (let i = 0; i < particleCount; i++) {
         pPos[i * 3] = (Math.random() - 0.5) * 6000;
-        pPos[i * 3 + 1] = Math.random() * 1500 - 200;
+        pPos[i * 3 + 1] = Math.random() * 2000 - 500;
         pPos[i * 3 + 2] = (Math.random() - 0.5) * 8000 - 2000;
       }
       pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-      const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending });
-      refs.particles = new THREE.Points(pGeo, pMat);
+      refs.particlesMat = new THREE.PointsMaterial({ color: 0xffffff, size: 3, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
+      refs.particles = new THREE.Points(pGeo, refs.particlesMat);
       refs.scene.add(refs.particles);
 
       animate();
@@ -209,10 +190,53 @@ export const HorizonHeroSection = () => {
     const animate = () => {
       const refs = threeRefs.current;
       refs.animationId = requestAnimationFrame(animate);
-      const time = Date.now() * 0.001;
+      const delta = refs.clock.getDelta();
+      const time = refs.clock.getElapsedTime();
 
-      if (refs.particles) refs.particles.rotation.y = time * 0.01;
-      if (refs.radarLine) refs.radarLine.position.z = (time * 400) % 8000 - 4000;
+      // DİNAMİK TEMA İNTERPOLASYONU
+      const themeProgress = refs.progress * (totalSections - 1);
+      const sectionIdx = Math.floor(themeProgress);
+      const nextSectionIdx = Math.min(sectionIdx + 1, totalSections - 1);
+      const lerpFactor = themeProgress - sectionIdx;
+
+      const currentTheme = themes[sectionIdx];
+      const nextTheme = themes[nextSectionIdx];
+
+      const cTerrain = new THREE.Color(currentTheme.terrain).lerp(new THREE.Color(nextTheme.terrain), lerpFactor);
+      const cBeam = new THREE.Color(currentTheme.beam).lerp(new THREE.Color(nextTheme.beam), lerpFactor);
+      const cParticle = new THREE.Color(currentTheme.pColor).lerp(new THREE.Color(nextTheme.pColor), lerpFactor);
+      const pSpeed = currentTheme.pSpeed + (nextTheme.pSpeed - currentTheme.pSpeed) * lerpFactor;
+      const yWaveAmp = currentTheme.yWave + (nextTheme.yWave - currentTheme.yWave) * lerpFactor;
+
+      if (refs.terrainMat) refs.terrainMat.color.copy(cTerrain);
+      if (refs.particlesMat) refs.particlesMat.color.copy(cParticle);
+      refs.beamsMats.forEach(mat => mat.color.copy(cBeam));
+      refs.framesMats.forEach(mat => mat.color.copy(cBeam));
+
+      // Dağ Dalgası Dinamik Hız/Genlik
+      if (refs.terrainGeo) {
+        const pos = refs.terrainGeo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          // Hız ve dalga boyutları temaya göre değişiyor
+          let z = Math.sin(x * 0.002 + time * pSpeed * 0.5) * Math.cos(y * 0.002 + time * pSpeed * 0.5) * yWaveAmp;
+          z += Math.sin(x * 0.01 + y * 0.01) * 60;
+          pos.setZ(i, z);
+        }
+        refs.terrainGeo.attributes.position.needsUpdate = true;
+      }
+
+      // Partikül Dinamik Hareketi (Örn: Yangında yukarı uçar)
+      if (refs.particles) {
+         // Partiküller time'a göre rotation veya pozisyonla hareket edebilir
+         refs.particles.rotation.y = time * 0.01 * pSpeed;
+         if(currentTheme.pSpeed > 2) {
+            refs.particles.position.y = (time * 100 * pSpeed) % 1000;
+         } else {
+            refs.particles.position.y = Math.sin(time) * 50;
+         }
+      }
 
       if (refs.renderer && refs.scene && refs.camera) {
         refs.renderer.render(refs.scene, refs.camera);
@@ -255,6 +279,7 @@ export const HorizonHeroSection = () => {
       if (progress > 1) progress = 1;
       
       setScrollProgress(progress);
+      threeRefs.current.progress = progress; // Update ref for animation loop
       
       const newSection = Math.floor(progress * totalSections);
       setCurrentSection(newSection >= totalSections ? totalSections - 1 : newSection);
@@ -262,28 +287,22 @@ export const HorizonHeroSection = () => {
       const refs = threeRefs.current;
       if (refs.camera) {
         // İleri uçuş (Drone)
-        // Başlangıç 1000'den, en son -6500'e gidiyor.
         const targetZ = 1000 - (progress * 7500); 
         
-        // Kamera yüksekliği: Dağa yakın uçuyor ama fotoğrafların hizasına tam çarpmıyor (altlarından / yanlarından geçiyor)
-        const targetY = 80 + Math.sin(progress * Math.PI * 6) * 40;
+        // Kamera yüksekliği
+        const targetY = 120 + Math.sin(progress * Math.PI * 6) * 40;
         
-        // Sağa Sola yavaş kavisler (Panoramik his)
+        // Sağa Sola yavaş kavisler
         const targetX = Math.cos(progress * Math.PI * 4) * 150;
 
         refs.camera.position.z += (targetZ - refs.camera.position.z) * 0.08;
         refs.camera.position.y += (targetY - refs.camera.position.y) * 0.08;
         refs.camera.position.x += (targetX - refs.camera.position.x) * 0.05;
         
-        // Kamera hafif yukarı bakıyor ki haşmetli hologramları görelim
-        const targetRotX = 0.15; 
+        const targetRotX = 0.1; 
         const targetRotY = (targetX * 0.0005);
         refs.camera.rotation.x += (targetRotX - refs.camera.rotation.x) * 0.1;
         refs.camera.rotation.y += (targetRotY - refs.camera.rotation.y) * 0.1;
-        
-        // Drone türbülans sarsıntısı
-        refs.camera.position.x += Math.sin(Date.now() * 0.003) * 0.5;
-        refs.camera.position.y += Math.cos(Date.now() * 0.004) * 0.5;
       }
     };
 
@@ -293,37 +312,37 @@ export const HorizonHeroSection = () => {
   }, [totalSections]);
 
   return (
-    <div ref={containerRef} style={{ height: '700vh' }} className="w-full bg-[#020617] relative">
+    <div ref={containerRef} style={{ height: '700vh' }} className="w-full bg-[#01030b] relative">
       <div ref={stickyRef} className="sticky top-0 left-0 w-full h-screen overflow-hidden text-white font-sans bg-black">
         <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full z-0" />
         
         {/* HUD Sistem Arayüzü */}
         <div className="absolute inset-0 z-20 pointer-events-none select-none">
-          <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-red-600/30" />
-          <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-red-600/30" />
-          <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-red-600/30" />
-          <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-red-600/30" />
+          <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-white/20" />
+          <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-white/20" />
+          <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-white/20" />
+          <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-white/20" />
 
           <div className="absolute top-10 left-10 flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]" />
-              <span className="text-red-500 font-mono text-[10px] tracking-widest font-bold">M1G_SYS // HOLOGRAPHIC_MODE</span>
+              <div className="w-2.5 h-2.5 bg-white/70 rounded-full animate-pulse shadow-[0_0_10px_white]" />
+              <span className="text-white/70 font-mono text-[10px] tracking-widest font-bold">M1G_SYS // DYNAMIC_ENV</span>
             </div>
             <span className="text-white/40 font-mono text-[10px] tracking-wider pl-4">{coords}</span>
           </div>
 
           <div className="absolute bottom-10 right-10 flex flex-col items-end gap-1">
-            <span className="text-white/30 font-mono text-[10px] tracking-[0.3em]">DRONE SPD: {Math.floor(scrollProgress * 450)} KNOTS</span>
+            <span className="text-white/40 font-mono text-[10px] tracking-[0.3em]">DRONE SPD: {Math.floor(scrollProgress * 450)} KNOTS</span>
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className={`w-6 h-1 rounded-sm ${i < (scrollProgress * 5) ? 'bg-red-600 shadow-[0_0_8px_#ea1d2c]' : 'bg-white/10'}`} />
+                <div key={i} className={`w-6 h-1 rounded-sm ${i <= currentSection ? 'bg-white/70 shadow-[0_0_8px_white]' : 'bg-white/10'}`} />
               ))}
             </div>
           </div>
         </div>
         
         {/* Sinematik Metinler */}
-        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none px-4 sm:px-8">
+        <div className="absolute inset-0 z-10 flex items-end justify-center pb-24 pointer-events-none px-4 sm:px-8">
           {sectionsData.map((data, i) => {
             const sectionStart = i / totalSections;
             const sectionEnd = (i + 1) / totalSections;
@@ -336,37 +355,36 @@ export const HorizonHeroSection = () => {
             if (opacity < 0) opacity = 0;
             if (opacity > 1) opacity = 1;
             
-            const translateZ = (scrollProgress - center) * 300;
-            const scale = 1 + (opacity * 0.05);
+            const translateZ = (scrollProgress - center) * 150; // Daha sakin hareket
+            const scale = 1 + (opacity * 0.02);
 
-            // Resimler sağda/soldaysa, metin ortada ama estetik dursun
+            // Yazı kutusu boyutunu küçült (max-w-2xl) ve ekranın daha altına hizala (pb-24 ile parent'tan yapıldı)
             return (
               <div 
                 key={i} 
-                className="absolute w-full max-w-4xl flex flex-col items-center justify-center"
+                className="absolute w-full max-w-2xl flex flex-col items-center justify-center"
                 style={{ 
                   opacity: opacity,
-                  transform: `translateZ(${translateZ}px) scale(${scale})`,
+                  transform: `translateY(${-translateZ}px) scale(${scale})`, // Z yerine Y'de hafif kaysın
                   transition: 'opacity 0.1s linear, transform 0.1s linear'
                 }}
               >
                 {/* Taktiksel Metin Kutusu (Cam Efekti / Glassmorphism) */}
-                <div className="text-center bg-[#020617]/60 p-8 md:p-12 rounded-3xl backdrop-blur-md border border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.8)] w-full relative overflow-hidden">
+                <div className="text-center bg-[#01030b]/70 p-6 md:p-8 rounded-2xl backdrop-blur-md border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.8)] w-full relative overflow-hidden">
                   
-                  {/* Dekoratif Işık Yansıması */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-50" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-50" />
                   
-                  <div className="flex flex-col items-center mb-6">
-                    <span className="text-red-500 font-mono text-xl md:text-2xl font-black mb-2 tracking-widest">{data.stepNumber}</span>
-                    <h3 className="text-white/60 font-mono tracking-[0.3em] uppercase text-xs md:text-sm">
+                  <div className="flex flex-col items-center mb-4">
+                    <span className="text-white/80 font-mono text-lg md:text-xl font-black mb-1 tracking-widest">{data.stepNumber}</span>
+                    <h3 className="text-white/50 font-mono tracking-[0.2em] uppercase text-[10px] md:text-xs">
                       {data.subtitle}
                     </h3>
                   </div>
 
-                  <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-white mb-6 drop-shadow-lg">
+                  <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tight text-white mb-3 drop-shadow-md">
                     {data.title}
                   </h2>
-                  <p className="text-base md:text-lg font-light text-slate-300 leading-relaxed max-w-2xl mx-auto drop-shadow-md">
+                  <p className="text-sm md:text-base font-light text-slate-300 leading-relaxed mx-auto">
                     {data.desc}
                   </p>
                 </div>
