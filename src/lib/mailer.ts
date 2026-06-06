@@ -101,6 +101,39 @@ const MAIL_TEMPLATES = {
             <hr style="border: 0; border-top: 1px solid #222; margin: 24px 0;" />
             <p style="color: #444; font-size: 11px; text-align: center;">Bu e-posta otomatik olarak gönderilmiştir. © M1G Arama ve Kurtarma Derneği</p>
         </div>
+    `,
+
+    birthday: (fullName: string) => `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #050b14; color: #fff; padding: 30px; border-radius: 12px; border: 1px solid #222;">
+            <div style="text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #333;">
+                <h1 style="color: #ef4444; margin: 0; font-size: 22px; letter-spacing: 2px;">M1G ARAMA & KURTARMA</h1>
+                <p style="color: #666; font-size: 11px; letter-spacing: 3px; margin: 4px 0 0;">OPERASYON YÖNETİM MERKEZİ</p>
+            </div>
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🎂🎉</div>
+                <h2 style="color: #fff; font-size: 24px;">Doğum Gününüz Kutlu Olsun!</h2>
+                <h3 style="color: #ef4444; font-size: 20px; margin-top: 8px;">Sayın ${fullName},</h3>
+            </div>
+            <p style="color: #ccc; line-height: 1.7; font-size: 15px; text-align: center;">
+                M1G Arama ve Kurtarma Derneği ailesi olarak yeni yaşınızı en içten dileklerimizle kutlarız.<br/><br/>
+                Sağlıklı, mutlu, huzurlu ve hayat kurtardığımız operasyonlarda omuz omuza olduğumuz nice güzel yıllara!
+            </p>
+            <hr style="border: 0; border-top: 1px solid #222; margin: 32px 0 24px 0;" />
+            <p style="color: #444; font-size: 11px; text-align: center;">Bu e-posta otomatik olarak gönderilmiştir. © M1G Arama ve Kurtarma Derneği</p>
+        </div>
+    `,
+
+    customMail: (title: string, message: string) => `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #050b14; color: #fff; padding: 30px; border-radius: 12px; border: 1px solid #222;">
+            <div style="text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #333;">
+                <h1 style="color: #ef4444; margin: 0; font-size: 22px; letter-spacing: 2px;">M1G ARAMA & KURTARMA</h1>
+                <p style="color: #666; font-size: 11px; letter-spacing: 3px; margin: 4px 0 0;">OPERASYON YÖNETİM MERKEZİ</p>
+            </div>
+            <h2 style="color: #fff; font-size: 18px; border-left: 4px solid #ef4444; padding-left: 12px;">${title}</h2>
+            <div style="color: #ccc; line-height: 1.7; font-size: 14px; margin-top: 20px; white-space: pre-wrap;">${message}</div>
+            <hr style="border: 0; border-top: 1px solid #222; margin: 32px 0 24px 0;" />
+            <p style="color: #444; font-size: 11px; text-align: center;">Bu e-posta otomatik olarak gönderilmiştir. © M1G Arama ve Kurtarma Derneği</p>
+        </div>
     `
 };
 

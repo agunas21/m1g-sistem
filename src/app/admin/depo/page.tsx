@@ -1142,6 +1142,7 @@ export default function DepoYonetimi() {
                                 <th className="px-6 py-5 font-bold">Kategori</th>
                                 <th className="px-6 py-5 font-bold">Mevcut Durum</th>
                                 <th className="px-6 py-5 font-bold">Zimmet / Lokasyon</th>
+                                <th className="px-6 py-5 font-bold text-right">İşlem</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -1198,7 +1199,7 @@ export default function DepoYonetimi() {
                                             {item.status}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 flex items-center justify-between">
                                         {item.status === "Zimmetli" && item.assignedToId ? (
                                             <div className="flex items-center gap-2">
                                                 <User size={14} className="text-blue-500" />
@@ -1209,6 +1210,26 @@ export default function DepoYonetimi() {
                                         ) : (
                                             <span className="text-neutral-600 text-xs italic">Merkez Depo</span>
                                         )}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                if (confirm(`DİKKAT: "${item.name}" adlı ekipmanı sistemden tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) {
+                                                    const res = await fetch(`/api/inventory?id=${item.id}`, { method: "DELETE" });
+                                                    if (res.ok) {
+                                                        setInventory(inventory.filter((inv: any) => inv.id !== item.id));
+                                                        if (selectedItem?.id === item.id) setSelectedItem(null);
+                                                    } else {
+                                                        alert("Silme başarısız.");
+                                                    }
+                                                }
+                                            }}
+                                            className="p-2 text-neutral-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors inline-flex items-center justify-center"
+                                            title="Hızlı Sil"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

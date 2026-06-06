@@ -27,6 +27,12 @@ export default function UyeYonetimi() {
     const [medicalData, setMedicalData] = useState({ bloodType: "", emergencyContact: "" });
     const [currentUser, setCurrentUser] = useState<any>(null); // Giriş yapan kullanıcı
 
+    // Toplu Mail States
+    const [showMailModal, setShowMailModal] = useState(false);
+    const [mailSubject, setMailSubject] = useState("");
+    const [mailMessage, setMailMessage] = useState("");
+    const [mailLoading, setMailLoading] = useState(false);
+
     useEffect(() => {
         setMounted(true);
         if (typeof window !== 'undefined') {
@@ -169,10 +175,68 @@ export default function UyeYonetimi() {
         const emails = filteredMembers
             .filter(m => m.status !== 'Banlı' && m.status !== 'Pasif')
             .map(m => m.email)
-            .filter(e => e && e !== "Belirtilmemiş")
-            .join(",");
-        if(emails) window.location.href = `mailto:${emails}?subject=M1G Operasyon Merkezi Bildirimi`;
-        else alert("Seçili kriterde e-posta bulunamadı.");
+            .filter(e => e && e !== "Belirtilmemiş");
+            
+        if(emails.length > 0) {
+            setShowMailModal(true);
+        } else {
+            alert("Seçili kriterde e-posta bulunamadı.");
+        }
+    };
+
+    const sendMassEmail = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const emails = filteredMembers
+            .filter(m => m.status !== 'Banlı' && m.status !== 'Pasif')
+            .map(m => m.email)
+            .filter(e => e && e !== "Belirtilmemiş");
+            
+        if(emails.length === 0) return alert("E-posta gönderilecek üye bulunamadı.");
+        if(!mailSubject || !mailMessage) return alert("Lütfen konu ve mesaj alanlarını doldurun.");
+
+        setMailLoading(true);
+        try {
+            const res = await fetch('/api/mail/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emails, subject: mailSubject, message: mailMessage })
+            });
+            const data = await res.json();
+            if(res.ok) {
+                alert(`✅ ${data.message}`);
+                setShowMailModal(false);
+                setMailSubject("");
+                setMailMessage("");
+            } else {
+                alert(`❌ Hata: ${data.error}`);
+            }
+        } catch (error) {
+            alert('Sunucu hatası.');
+        } finally {
+            setMailLoading(false);
+        }
+    };
+
+    const handleBirthdayMail = async () => {
+        if(!confirm("Bugün doğan üyelere otomatik M1G doğum günü mesajı gönderilecek. Onaylıyor musunuz?")) return;
+        setActionLoading(true);
+        try {
+            const res = await fetch('/api/mail/birthday', { method: 'POST' });
+            const data = await res.json();
+            if(res.ok) {
+                if(data.sentTo && data.sentTo.length > 0) {
+                    alert(`✅ Doğum Günü Mailleri Gönderildi!\n\nAlıcılar:\n${data.sentTo.join('\\n')}`);
+                } else {
+                    alert('ℹ️ Bugün doğum günü olan bir üye bulunamadı.');
+                }
+            } else {
+                alert(`❌ Hata: ${data.error}`);
+            }
+        } catch (error) {
+            alert('Sunucu bağlantı hatası.');
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     const handleMassWhatsApp = () => {
@@ -819,9 +883,65 @@ export default function UyeYonetimi() {
         }
     };
 
+    const renderMailModal = () => {
+        if (!showMailModal) return null;
+        return createPortal(
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="bg-[#050b14] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
+                    <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40">
+                        <h2 className="text-white font-bold uppercase tracking-widest text-sm flex items-center gap-2">
+                            <Mail className="text-blue-500" size={18} /> Toplu / Seçili Mail Gönder
+                        </h2>
+                        <button onClick={() => setShowMailModal(false)} className="text-neutral-500 hover:text-white transition-colors">
+                            <X size={20} />
+                        </button>
+                    </div>
+                    <form onSubmit={sendMassEmail} className="p-6 flex flex-col gap-4">
+                        <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg">
+                            <p className="text-xs text-blue-400 font-bold uppercase tracking-widest">Alıcı Sayısı: <span className="text-white">{filteredMembers.filter(m => m.status !== 'Banlı' && m.status !== 'Pasif' && m.email && m.email !== "Belirtilmemiş").length} Personel</span></p>
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-1 block">Konu</label>
+                            <input 
+                                type="text"
+                                required
+                                value={mailSubject}
+                                onChange={(e) => setMailSubject(e.target.value)}
+                                placeholder="E-posta konusu..."
+                                className="w-full bg-[#020617] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-blue-500 outline-none transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-1 block">Mesajınız</label>
+                            <textarea 
+                                required
+                                value={mailMessage}
+                                onChange={(e) => setMailMessage(e.target.value)}
+                                placeholder="E-posta içeriği..."
+                                rows={6}
+                                className="w-full bg-[#020617] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-blue-500 outline-none transition-colors resize-none"
+                            ></textarea>
+                            <p className="text-[9px] text-neutral-500 mt-2">Mesajınız kurumsal şablon içine yerleştirilecektir.</p>
+                        </div>
+                        <button 
+                            type="submit"
+                            disabled={mailLoading}
+                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(37,99,235,0.3)] mt-2 flex justify-center items-center gap-2"
+                        >
+                            {mailLoading ? <Loader2 className="animate-spin" size={18} /> : <Mail size={18} />}
+                            {mailLoading ? 'Gönderiliyor...' : 'Şimdi Gönder'}
+                        </button>
+                    </form>
+                </div>
+            </div>,
+            document.body
+        );
+    };
+
     return (
         <div className="space-y-8 pb-20">
             {renderDrawer()}
+            {renderMailModal()}
 
             {/* HAREKAT YÖNETİM HEADER */}
             <div>
@@ -873,6 +993,19 @@ export default function UyeYonetimi() {
                         <div className="text-left">
                             <h3 className="text-white font-bold uppercase tracking-wider text-xs md:text-sm">Filtrelenenlere E-Posta</h3>
                             <p className="text-[10px] text-neutral-500 truncate max-w-[150px]">Resmi bildirim sistemi.</p>
+                        </div>
+                    </button>
+
+                    <button
+                        onClick={handleBirthdayMail}
+                        className="bg-amber-600/5 hover:bg-amber-600/10 border border-amber-500/20 p-4 rounded-xl flex items-center gap-4 transition-all group"
+                    >
+                        <div className="bg-amber-500 p-3 rounded-lg text-white group-hover:scale-110 shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-transform">
+                            <span className="text-xl leading-none">🎂</span>
+                        </div>
+                        <div className="text-left">
+                            <h3 className="text-amber-400 font-bold uppercase tracking-wider text-xs md:text-sm">Doğum Günü Kutla</h3>
+                            <p className="text-[10px] text-amber-500/60 truncate max-w-[150px]">Bugün doğanlara otomatik mail.</p>
                         </div>
                     </button>
 
