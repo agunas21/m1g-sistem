@@ -11,7 +11,6 @@ export const HorizonHeroSection = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
   
-  // Koordinat simülasyonu
   const [coords, setCoords] = useState("38.4237° N, 27.1428° E");
 
   const sectionsData = [
@@ -80,18 +79,18 @@ export const HorizonHeroSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize Three.js - Drone Flight & Hologram Photos
+  // Initialize Three.js
   useEffect(() => {
     if (typeof window === "undefined" || !canvasRef.current) return;
 
     const initThree = () => {
       const refs = threeRefs.current;
       refs.scene = new THREE.Scene();
-      refs.scene.fog = new THREE.FogExp2(0x020617, 0.0006); // Daha derin görüş mesafesi
+      refs.scene.fog = new THREE.FogExp2(0x020617, 0.0004); // Sis azaltıldı ki uzaklar daha net görünsün
 
-      refs.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
-      refs.camera.position.z = 800;
-      refs.camera.position.y = 200;
+      refs.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 8000);
+      refs.camera.position.z = 1000;
+      refs.camera.position.y = 300;
       refs.camera.lookAt(0, 0, 0);
 
       refs.renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current!, antialias: true, alpha: false });
@@ -99,35 +98,35 @@ export const HorizonHeroSection = () => {
       refs.renderer.setSize(window.innerWidth, window.innerHeight);
       refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-      // 1. Topografik Arazi (Uzun Z Eksenli)
-      const terrainGeo = new THREE.PlaneGeometry(6000, 8000, 100, 150);
+      // 1. Topografik Arazi (Daha derin ve yayılan bir zemin)
+      const terrainGeo = new THREE.PlaneGeometry(8000, 10000, 120, 150);
       const pos = terrainGeo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
         const y = pos.getY(i);
-        let z = Math.sin(x * 0.003) * Math.cos(y * 0.003) * 200;
-        z += Math.sin(x * 0.01 + y * 0.01) * 50;
+        let z = Math.sin(x * 0.002) * Math.cos(y * 0.002) * 250;
+        z += Math.sin(x * 0.01 + y * 0.01) * 60;
         z += (Math.random() - 0.5) * 10;
         pos.setZ(i, z);
       }
       terrainGeo.computeVertexNormals();
 
-      const terrainMat = new THREE.MeshBasicMaterial({ color: 0xea1d2c, wireframe: true, transparent: true, opacity: 0.15 });
+      const terrainMat = new THREE.MeshBasicMaterial({ color: 0xea1d2c, wireframe: true, transparent: true, opacity: 0.1 });
       refs.terrain = new THREE.Mesh(terrainGeo, terrainMat);
       refs.terrain.rotation.x = -Math.PI / 2;
-      refs.terrain.position.y = -150;
-      refs.terrain.position.z = -1500; // Dağı ileriye doğru uzat
+      refs.terrain.position.y = -200;
+      refs.terrain.position.z = -2000; 
       refs.scene.add(refs.terrain);
 
       // 2. Radar Tarama Çizgisi
-      const radarGeo = new THREE.PlaneGeometry(6000, 40);
+      const radarGeo = new THREE.PlaneGeometry(8000, 50);
       const radarMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending });
       refs.radarLine = new THREE.Mesh(radarGeo, radarMat);
       refs.radarLine.rotation.x = -Math.PI / 2;
-      refs.radarLine.position.y = -149;
+      refs.radarLine.position.y = -199;
       refs.scene.add(refs.radarLine);
 
-      // 3. 3D Fotoğraf Hologramları (Bayraklar)
+      // 3. Estetik Hologramlar (Kavisli Ekranlar)
       const images = [
         "/images/about/m1g-arama-kurtarma-misyon.jpg",
         "/images/about/m1g-arama-kurtarma-orman-yangini.jpg",
@@ -139,57 +138,68 @@ export const HorizonHeroSection = () => {
       const textureLoader = new THREE.TextureLoader();
       images.forEach((url, i) => {
         textureLoader.load(url, (texture: THREE.Texture) => {
+          // Kavisli, teknolojik hologram ekran hissi
           const material = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
-            opacity: 0.95,
+            opacity: 0.7, // Şeffaf ki hologram hissi versin
+            blending: THREE.AdditiveBlending, // Siyahlar silinir, aydınlıklar parlar!
+            color: 0xffdddd, // Hafif kırmızımsı bir filtre
             side: THREE.DoubleSide
           });
           
-          // 16:9 Oranında Devasa Tablolar
-          const geometry = new THREE.PlaneGeometry(320, 180);
+          // Kavisli Ekran Geometrisi (Radius, Height, RadialSegments, HeightSegments, OpenEnded, ThetaStart, ThetaLength)
+          const geometry = new THREE.CylinderGeometry(500, 500, 200, 32, 1, true, -0.25, 0.5);
           const mesh = new THREE.Mesh(geometry, material);
           
-          // Z'de geriye doğru dizilim: Drone'un uçuş rotasında.
-          const zPos = 500 - (i * 1200); 
+          // Kameraya çarpmaması için Z ekseninde çok daha geriye yerleştiriyoruz
+          const zPos = -800 - (i * 1500); 
           
-          // X ekseninde sağa-sola yerleştirme
-          const xPos = i % 2 === 0 ? -280 : 280;
+          // Alternatif X ekseni (biri solda, biri sağda asılı)
+          const xPos = i % 2 === 0 ? -250 : 250;
           
-          // Y ekseninde (dağın üzerinde)
-          const yPos = 50; 
+          // Daha yüksekte asılı dursun, drone altından/yanından geçsin
+          const yPos = 120; 
           
           mesh.position.set(xPos, yPos, zPos);
-          // Hafifçe merkeze (kameraya) dönük dursun
-          mesh.rotation.y = i % 2 === 0 ? 0.2 : -0.2;
+          
+          // Kameraya doğru biraz eğik dursun
+          mesh.rotation.y = i % 2 === 0 ? 0.3 : -0.3;
           
           refs.scene!.add(mesh);
           
-          // Kırmızı Çerçeve
+          // Çerçeve Kenarları (Glow)
           const edges = new THREE.EdgesGeometry(geometry);
-          const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xea1d2c, linewidth: 2 }));
+          const lineMat = new THREE.LineBasicMaterial({ color: 0xff0033, transparent: true, opacity: 0.8 });
+          const line = new THREE.LineSegments(edges, lineMat);
           mesh.add(line);
 
-          // Altında dikme (direk) hissi vermek için ince bir çizgi (Bayrak direği)
-          const poleGeo = new THREE.CylinderGeometry(2, 2, 200, 8);
-          const poleMat = new THREE.MeshBasicMaterial({ color: 0xea1d2c, wireframe: true, transparent: true, opacity: 0.5 });
-          const pole = new THREE.Mesh(poleGeo, poleMat);
-          pole.position.y = -100;
-          mesh.add(pole);
+          // Dağdan yukarı vuran "Projeksiyon Işını" (Hologram kaynağı)
+          const beamGeo = new THREE.CylinderGeometry(200, 10, 400, 16, 1, true);
+          const beamMat = new THREE.MeshBasicMaterial({ 
+            color: 0xea1d2c, 
+            transparent: true, 
+            opacity: 0.05, 
+            blending: THREE.AdditiveBlending,
+            side: THREE.DoubleSide
+          });
+          const beam = new THREE.Mesh(beamGeo, beamMat);
+          beam.position.y = -200; // Ekrandan dağa doğru iniyor
+          mesh.add(beam);
         });
       });
 
-      // 4. Partiküller
-      const particleCount = 2000;
+      // 4. Yıldız / Veri Partikülleri
+      const particleCount = 1500;
       const pGeo = new THREE.BufferGeometry();
       const pPos = new Float32Array(particleCount * 3);
       for (let i = 0; i < particleCount; i++) {
-        pPos[i * 3] = (Math.random() - 0.5) * 4000;
-        pPos[i * 3 + 1] = Math.random() * 1000 - 200;
-        pPos[i * 3 + 2] = (Math.random() - 0.5) * 6000 - 1500;
+        pPos[i * 3] = (Math.random() - 0.5) * 6000;
+        pPos[i * 3 + 1] = Math.random() * 1500 - 200;
+        pPos[i * 3 + 2] = (Math.random() - 0.5) * 8000 - 2000;
       }
       pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-      const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
+      const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending });
       refs.particles = new THREE.Points(pGeo, pMat);
       refs.scene.add(refs.particles);
 
@@ -201,13 +211,8 @@ export const HorizonHeroSection = () => {
       refs.animationId = requestAnimationFrame(animate);
       const time = Date.now() * 0.001;
 
-      if (refs.particles) {
-        refs.particles.rotation.y = time * 0.02;
-      }
-
-      if (refs.radarLine) {
-        refs.radarLine.position.z = (time * 400) % 6000 - 3000;
-      }
+      if (refs.particles) refs.particles.rotation.y = time * 0.01;
+      if (refs.radarLine) refs.radarLine.position.z = (time * 400) % 8000 - 4000;
 
       if (refs.renderer && refs.scene && refs.camera) {
         refs.renderer.render(refs.scene, refs.camera);
@@ -224,7 +229,6 @@ export const HorizonHeroSection = () => {
         refs.renderer.setSize(window.innerWidth, window.innerHeight);
       }
     };
-
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -236,7 +240,7 @@ export const HorizonHeroSection = () => {
     };
   }, []);
 
-  // Sticky Kaydırma Mantığı ve Kamera Uçuşu
+  // Smooth Scroll & Cinematic Flight
   useEffect(() => {
     const handleScroll = () => {
       if (!containerRef.current) return;
@@ -255,39 +259,31 @@ export const HorizonHeroSection = () => {
       const newSection = Math.floor(progress * totalSections);
       setCurrentSection(newSection >= totalSections ? totalSections - 1 : newSection);
 
-      // Scroll'a bağlı Drone Kamera Hareketi (İleri Uçuş)
       const refs = threeRefs.current;
       if (refs.camera) {
-        // Z Ekseninde uçuş: 800'den başlayıp -4000'e kadar gitsin.
-        const targetZ = 800 - (progress * 5000); 
+        // İleri uçuş (Drone)
+        // Başlangıç 1000'den, en son -6500'e gidiyor.
+        const targetZ = 1000 - (progress * 7500); 
         
-        // Y ekseni (yükseklik): Başlangıçta yüksekte, aralarda hafif inip kalksın
-        // Drone'un süzülme hissi
-        const targetY = 150 + Math.sin(progress * Math.PI * 4) * 30;
+        // Kamera yüksekliği: Dağa yakın uçuyor ama fotoğrafların hizasına tam çarpmıyor (altlarından / yanlarından geçiyor)
+        const targetY = 80 + Math.sin(progress * Math.PI * 6) * 40;
         
-        // X ekseni (sağ-sol): Hedef tabloya (bayrağa) doğru hafif kavis yapsın
-        // i=0 (-280), i=1 (+280), i=2 (-280)...
-        const currentZone = progress * totalSections;
-        let targetX = 0;
-        
-        if (currentZone < 1) targetX = -100; // İlk tabloya (sola) hafif yaklaş
-        else if (currentZone < 2) targetX = 100; // Sağa yaklaş
-        else if (currentZone < 3) targetX = -100;
-        else if (currentZone < 4) targetX = 100;
-        else targetX = -100;
+        // Sağa Sola yavaş kavisler (Panoramik his)
+        const targetX = Math.cos(progress * Math.PI * 4) * 150;
 
-        // Smooth geçiş (Lerp)
-        refs.camera.position.z += (targetZ - refs.camera.position.z) * 0.1;
-        refs.camera.position.y += (targetY - refs.camera.position.y) * 0.1;
+        refs.camera.position.z += (targetZ - refs.camera.position.z) * 0.08;
+        refs.camera.position.y += (targetY - refs.camera.position.y) * 0.08;
         refs.camera.position.x += (targetX - refs.camera.position.x) * 0.05;
         
-        // Kamera hafifçe tabloya baksın
-        const targetRotY = (targetX * 0.001);
+        // Kamera hafif yukarı bakıyor ki haşmetli hologramları görelim
+        const targetRotX = 0.15; 
+        const targetRotY = (targetX * 0.0005);
+        refs.camera.rotation.x += (targetRotX - refs.camera.rotation.x) * 0.1;
         refs.camera.rotation.y += (targetRotY - refs.camera.rotation.y) * 0.1;
         
-        // Kamera sarsıntısı (türbülans)
-        refs.camera.position.x += Math.sin(Date.now() * 0.005) * 0.5;
-        refs.camera.position.y += Math.cos(Date.now() * 0.003) * 0.5;
+        // Drone türbülans sarsıntısı
+        refs.camera.position.x += Math.sin(Date.now() * 0.003) * 0.5;
+        refs.camera.position.y += Math.cos(Date.now() * 0.004) * 0.5;
       }
     };
 
@@ -297,32 +293,27 @@ export const HorizonHeroSection = () => {
   }, [totalSections]);
 
   return (
-    // 600vh ile uçuş süresini uzatıyoruz
     <div ref={containerRef} style={{ height: '700vh' }} className="w-full bg-[#020617] relative">
-      
-      {/* Sabit (Sticky) Alan */}
       <div ref={stickyRef} className="sticky top-0 left-0 w-full h-screen overflow-hidden text-white font-sans bg-black">
-        
-        {/* Three.js Arkaplanı */}
         <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full z-0" />
         
-        {/* HUD (Heads Up Display) */}
+        {/* HUD Sistem Arayüzü */}
         <div className="absolute inset-0 z-20 pointer-events-none select-none">
-          <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-red-600/60" />
-          <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-red-600/60" />
-          <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-red-600/60" />
-          <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-red-600/60" />
+          <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-red-600/30" />
+          <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-red-600/30" />
+          <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-red-600/30" />
+          <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-red-600/30" />
 
           <div className="absolute top-10 left-10 flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 bg-red-600 rounded-full animate-pulse" />
-              <span className="text-red-500 font-mono text-[10px] tracking-widest font-bold">M1G_SYS // DRONE_MODE_ACTIVE</span>
+              <div className="w-2.5 h-2.5 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]" />
+              <span className="text-red-500 font-mono text-[10px] tracking-widest font-bold">M1G_SYS // HOLOGRAPHIC_MODE</span>
             </div>
             <span className="text-white/40 font-mono text-[10px] tracking-wider pl-4">{coords}</span>
           </div>
 
           <div className="absolute bottom-10 right-10 flex flex-col items-end gap-1">
-            <span className="text-white/30 font-mono text-[10px] tracking-[0.3em]">SPD: {Math.floor(scrollProgress * 250)} KNOTS</span>
+            <span className="text-white/30 font-mono text-[10px] tracking-[0.3em]">DRONE SPD: {Math.floor(scrollProgress * 450)} KNOTS</span>
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className={`w-6 h-1 rounded-sm ${i < (scrollProgress * 5) ? 'bg-red-600 shadow-[0_0_8px_#ea1d2c]' : 'bg-white/10'}`} />
@@ -331,7 +322,7 @@ export const HorizonHeroSection = () => {
           </div>
         </div>
         
-        {/* Yazıların Ekranda Belirmesi */}
+        {/* Sinematik Metinler */}
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none px-4 sm:px-8">
           {sectionsData.map((data, i) => {
             const sectionStart = i / totalSections;
@@ -345,37 +336,37 @@ export const HorizonHeroSection = () => {
             if (opacity < 0) opacity = 0;
             if (opacity > 1) opacity = 1;
             
-            const translateZ = (scrollProgress - center) * 500;
+            const translateZ = (scrollProgress - center) * 300;
             const scale = 1 + (opacity * 0.05);
 
-            // Yazıları resmin Zıt yönüne yerleştirelim ki drone fotoğrafın yanından geçerken yazı öbür tarafta kalsın
-            // Resimler (i%2==0) soldaydı, o zaman yazı sağda çıksın.
-            const isImageLeft = i % 2 === 0;
-
+            // Resimler sağda/soldaysa, metin ortada ama estetik dursun
             return (
               <div 
                 key={i} 
-                className={`absolute w-full max-w-5xl flex flex-col lg:flex-row items-center gap-8 lg:gap-16 ${isImageLeft ? 'lg:justify-end' : 'lg:justify-start'}`}
+                className="absolute w-full max-w-4xl flex flex-col items-center justify-center"
                 style={{ 
                   opacity: opacity,
                   transform: `translateZ(${translateZ}px) scale(${scale})`,
                   transition: 'opacity 0.1s linear, transform 0.1s linear'
                 }}
               >
-                {/* Ana Metin Kutusu (Sadeleştirilmiş Taktiksel Görünüm) */}
-                <div className="text-center lg:text-left mt-[-20px] lg:mt-6 bg-black/40 p-6 md:p-8 rounded-2xl backdrop-blur-md border border-red-600/30 shadow-[0_0_30px_rgba(234,29,44,0.1)] w-full max-w-xl">
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="text-red-500 font-mono text-2xl md:text-3xl font-black">{data.stepNumber}</span>
-                    <div className="h-px flex-1 bg-gradient-to-r from-red-600 to-transparent" />
+                {/* Taktiksel Metin Kutusu (Cam Efekti / Glassmorphism) */}
+                <div className="text-center bg-[#020617]/60 p-8 md:p-12 rounded-3xl backdrop-blur-md border border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.8)] w-full relative overflow-hidden">
+                  
+                  {/* Dekoratif Işık Yansıması */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-50" />
+                  
+                  <div className="flex flex-col items-center mb-6">
+                    <span className="text-red-500 font-mono text-xl md:text-2xl font-black mb-2 tracking-widest">{data.stepNumber}</span>
+                    <h3 className="text-white/60 font-mono tracking-[0.3em] uppercase text-xs md:text-sm">
+                      {data.subtitle}
+                    </h3>
                   </div>
 
-                  <h3 className="text-red-500 font-bold tracking-[0.2em] uppercase text-sm md:text-base mb-2">
-                    {data.subtitle}
-                  </h3>
-                  <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight text-white mb-4">
+                  <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-white mb-6 drop-shadow-lg">
                     {data.title}
                   </h2>
-                  <p className="text-sm md:text-base font-light text-slate-300 leading-relaxed border-l-2 border-red-600/50 pl-4">
+                  <p className="text-base md:text-lg font-light text-slate-300 leading-relaxed max-w-2xl mx-auto drop-shadow-md">
                     {data.desc}
                   </p>
                 </div>
