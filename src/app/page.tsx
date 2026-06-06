@@ -29,9 +29,15 @@ async function getSiteSettings() {
 
 async function getLiveEarthquakes() {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+
     const res = await fetch("https://api.orhanaydogdu.com.tr/deprem/kandilli/live", {
-      next: { revalidate: 60 }
+      next: { revalidate: 60 },
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
+
     if (!res.ok) return [];
     const data = await res.json();
     return data.result ? data.result.slice(0, 10) : [];
