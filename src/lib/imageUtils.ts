@@ -1,7 +1,12 @@
-export const compressImage = async (file: File, maxWidth = 1920, quality = 0.7): Promise<File> => {
-    return new Promise((resolve, reject) => {
+export const compressImage = async (file: File, maxWidth = 1920, quality = 0.8): Promise<File> => {
+    return new Promise((resolve) => {
         if (!file.type.startsWith('image/')) {
-            return resolve(file); // Only compress images
+            return resolve(file);
+        }
+
+        // Eğer dosya 500KB'den küçükse hiç dokunma (Logo ve favikonların orjinalliği bozulmasın)
+        if (file.size < 500 * 1024) {
+            return resolve(file);
         }
 
         const reader = new FileReader();
@@ -23,26 +28,31 @@ export const compressImage = async (file: File, maxWidth = 1920, quality = 0.7):
                 canvas.height = height;
 
                 const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    return resolve(file);
-                }
+                if (!ctx) return resolve(file);
 
+                // Şeffaflığı korumak için canvas'ı temizle
+                ctx.clearRect(0, 0, width, height);
                 ctx.drawImage(img, 0, 0, width, height);
+
+                // Orijinal format PNG veya WEBP ise koru, değilse WEBP'ye çevir
+                let outType = file.type;
+                if (outType !== 'image/png' && outType !== 'image/webp') {
+                    outType = 'image/webp';
+                }
 
                 canvas.toBlob(
                     (blob) => {
                         if (!blob) return resolve(file);
                         
-                        // Preserve transparency by using webp (or png if preferred, but webp is much smaller)
-                        // webp supports both transparency and lossy compression!
-                        const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
-                            type: 'image/webp', 
+                        const ext = outType === 'image/png' ? '.png' : '.webp';
+                        const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ext, {
+                            type: outType, 
                             lastModified: Date.now(),
                         });
                         resolve(newFile);
                     },
-                    'image/webp',
-                    quality
+                    outType,
+                    outType === 'image/png' ? undefined : quality
                 );
             };
             img.onerror = () => resolve(file);
