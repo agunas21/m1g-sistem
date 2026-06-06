@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
         })
     } catch (e: any) {
         console.error('Backup error:', e)
-        return NextResponse.json({ error: 'Yedekleme sırasında hata oluştu.' }, { status: 500 })
+        return NextResponse.json({ error: 'Yedekleme sırasında hata oluştu: ' + (e.message || '') }, { status: 500 })
     }
 }
 

@@ -33,8 +33,8 @@ export default function SistemYedekleme() {
         setLoading(true);
         try {
             const res = await fetch("/api/backup?sendEmail=true");
-            if (!res.ok) throw new Error("E-posta gönderilemedi. Lütfen sunucu SMTP ayarlarını kontrol edin.");
             const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "E-posta gönderilemedi. Lütfen sunucu SMTP ayarlarını kontrol edin.");
             setMessage(data.message || "Yedek e-posta adresinize gönderildi.");
         } catch (error: any) {
             setMessage(error.message || "Bir hata oluştu.");
