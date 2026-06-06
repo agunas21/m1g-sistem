@@ -40,7 +40,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     if (res.ok) {
                         const data = await res.json();
                         if (data.authenticated && data.user) {
-                            setUser({ uid: data.user.uid, email: data.user.email, displayName: data.user.fullName, username: data.user.uid, status: data.user.status, kimlikToken: data.user.kimlikToken } as any);
+                            setUser({ 
+                                uid: data.user.uid, 
+                                email: data.user.email, 
+                                displayName: data.user.fullName, 
+                                username: data.user.uid, 
+                                status: data.user.status, 
+                                kimlikToken: data.user.kimlikToken,
+                                isSuperAdmin: data.user.isSuperAdmin,
+                                role: data.user.role
+                            } as any);
                             setIsAdmin(data.user.isAdmin);
                         } else {
                             setUser(null);

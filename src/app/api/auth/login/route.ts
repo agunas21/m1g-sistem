@@ -264,7 +264,7 @@ async function completeLogin(member: any, ip: string, _needsUpgrade: boolean) {
         fullName: member.fullName,
         phone:    member.phone,
         isAdmin,
-        isSuperAdmin: false,
+        isSuperAdmin: member.isSuperAdmin === true,
         role:     member.memberType || 'Gönüllü',
         status:   member.status,
         hasMfa:   !!member.totpEnabled,
