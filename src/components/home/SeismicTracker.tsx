@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Radio, AlertTriangle, RefreshCw } from "lucide-react";
 
 export default function SeismicTracker({ initialData }: { initialData: any[] }) {
-    const [earthquakes, setEarthquakes] = useState<any[]>([]);
+    const [earthquakes, setEarthquakes] = useState<any[]>(initialData || []);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState(false);
 
@@ -34,12 +34,8 @@ export default function SeismicTracker({ initialData }: { initialData: any[] }) 
             }
         };
 
-        // İlk yüklemede Kandilli verisini es geçip direkt AFAD'ı çeker
+        // Sadece sayfa ilk açıldığında bir kez AFAD'ı çeker
         fetchLive();
-
-        // 15 saniyede bir OTONOM RENEW
-        const interval = setInterval(fetchLive, 15000);
-        return () => clearInterval(interval);
     }, []);
 
     // Format date string (AFAD UTC to GMT+3 TR Time)
@@ -79,7 +75,7 @@ export default function SeismicTracker({ initialData }: { initialData: any[] }) 
                 </div>
                 <div className="flex items-center gap-2 text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
                     <RefreshCw size={14} className={isRefreshing ? "animate-spin text-blue-500" : ""} />
-                    {isRefreshing ? <span className="text-blue-500">Uyduyla Haberleşiliyor...</span> : '15sn CANLI DÖNGÜ'}
+                    {isRefreshing ? <span className="text-blue-500">Uyduyla Haberleşiliyor...</span> : 'SİSTEME SENKRONİZE EDİLDİ'}
                 </div>
             </div>
 
