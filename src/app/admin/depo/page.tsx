@@ -70,6 +70,8 @@ export default function DepoYonetimi() {
     const [mounted, setMounted] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
     const [kitItemSearch, setKitItemSearch] = useState(""); // Kit içeriği arama filtresi
+    const [manualMemberSearch, setManualMemberSearch] = useState("");
+    const [isManualMemberDropdownOpen, setIsManualMemberDropdownOpen] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -756,28 +758,54 @@ export default function DepoYonetimi() {
                                             </button>
 
                                             <div className="relative">
-                                                <select
-                                                    className="w-full py-3 pl-4 pr-10 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-neutral-300 text-xs font-semibold tracking-wider uppercase outline-none focus:border-blue-500/50 appearance-none cursor-pointer transition-colors"
-                                                    onChange={(e) => {
-                                                        const memberId = e.target.value;
-                                                        if (!memberId) return;
-                                                        const member = membersData.find(m => m.id === memberId);
-                                                        if (member) {
-                                                            assignItemToMember(selectedItem.id, member.id, member.fullName);
-                                                        }
-                                                        e.target.value = "";
-                                                    }}
+                                                <div 
+                                                    className="w-full py-3 px-4 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-neutral-300 text-xs font-semibold tracking-wider uppercase cursor-pointer transition-colors flex items-center justify-between"
+                                                    onClick={() => setIsManualMemberDropdownOpen(!isManualMemberDropdownOpen)}
                                                 >
-                                                    <option value="" className="bg-[#050B14]">Manuel Personel Seç...</option>
-                                                    {membersData.map(m => (
-                                                        <option key={m.id} value={m.id} className="bg-[#050B14] text-white">
-                                                            {m.fullName}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <span>Listeden Personel Seçerek Zimmetle</span>
                                                     <User size={14} className="text-neutral-500" />
                                                 </div>
+                                                
+                                                {isManualMemberDropdownOpen && (
+                                                    <div className="absolute top-full left-0 right-0 mt-2 bg-[#050B14] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                                                        <div className="p-2 border-b border-white/10 bg-black/50">
+                                                            <div className="relative">
+                                                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                                                                <input 
+                                                                    type="text" 
+                                                                    autoFocus
+                                                                    placeholder="İsim veya harf yazın..." 
+                                                                    value={manualMemberSearch}
+                                                                    onChange={e => setManualMemberSearch(e.target.value)}
+                                                                    className="w-full bg-white/5 border border-white/5 rounded-lg py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-blue-500/50"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="max-h-48 overflow-y-auto">
+                                                            {membersData
+                                                                .filter(m => m.fullName?.toLowerCase().includes(manualMemberSearch.toLowerCase()))
+                                                                .map(m => (
+                                                                    <button
+                                                                        key={m.id}
+                                                                        onClick={() => {
+                                                                            assignItemToMember(selectedItem.id, m.id, m.fullName);
+                                                                            setIsManualMemberDropdownOpen(false);
+                                                                            setManualMemberSearch("");
+                                                                        }}
+                                                                        className="w-full text-left px-4 py-2.5 text-xs text-white hover:bg-blue-600/20 hover:text-blue-400 border-b border-white/5 last:border-0 transition-colors"
+                                                                    >
+                                                                        {m.fullName}
+                                                                    </button>
+                                                                ))
+                                                            }
+                                                            {membersData.filter(m => m.fullName?.toLowerCase().includes(manualMemberSearch.toLowerCase())).length === 0 && (
+                                                                <div className="px-4 py-4 text-xs text-neutral-500 text-center italic">
+                                                                    Personel bulunamadı
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
