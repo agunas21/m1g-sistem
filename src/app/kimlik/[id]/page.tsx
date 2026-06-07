@@ -119,6 +119,15 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
     }
 
     const bloodType = memberRaw.bloodType || "Belirtilmemiş";
+    const tcNo = memberRaw.tcNo || "";
+    let maskedTc = "Belirtilmemiş";
+    if (tcNo) {
+        if (tcNo.length === 11) {
+            maskedTc = "*******" + tcNo.slice(-4);
+        } else {
+            maskedTc = "*".repeat(Math.max(0, tcNo.length - 4)) + tcNo.slice(-4);
+        }
+    }
 
     const cardUrl = typeof window !== "undefined"
         ? window.location.href
@@ -216,9 +225,9 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top Right Logo */}
-                        <div style={{ position: "absolute", top: 20, right: 20 }}>
+                        <div style={{ position: "absolute", top: 16, right: 16 }}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 60, height: 60, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 85, height: 85, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                         </div>
 
                         {/* Center Photo */}
@@ -236,9 +245,9 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         {/* Below Photo Info */}
                         <div style={{ position: "absolute", top: 265, left: 0, right: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <span style={{ fontSize: 18, fontWeight: 900, color: "white", textTransform: "uppercase", paddingLeft: 10, paddingRight: 10 }}>{member.name}</span>
-                            <span style={{ fontSize: 11, fontWeight: 500, color: "#d1d5db", marginTop: 6 }}>Üyelik No: {member.serial}</span>
-                            <span style={{ color: "#ef4444", fontSize: 11, marginTop: 4, fontWeight: 900, textTransform: "uppercase" }}>{role}</span>
-                            <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 4 }}>Kan Grubu: {bloodType}</span>
+                            <span style={{ color: "#ef4444", fontSize: 12, marginTop: 6, fontWeight: 900, textTransform: "uppercase" }}>{role}</span>
+                            <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 6 }}>TC No: {maskedTc}</span>
+                            <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 2 }}>Kan Grubu: {bloodType}</span>
                         </div>
 
                         {/* Red Shape on the right bottom */}
@@ -275,9 +284,9 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top Right Logo */}
-                        <div style={{ position: "absolute", top: 20, right: 20 }}>
+                        <div style={{ position: "absolute", top: 16, right: 16 }}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 60, height: 60, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 85, height: 85, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                         </div>
 
                         {/* Middle Content */}

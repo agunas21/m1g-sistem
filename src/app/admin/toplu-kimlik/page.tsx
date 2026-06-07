@@ -84,6 +84,18 @@ export default function TopluKimlik() {
                         }
                     }
 
+                    let maskedTc = "Belirtilmemiş";
+                    if (member.tcNo) {
+                        const cleanTc = member.tcNo.replace(/\*/g, '');
+                        if (cleanTc.length >= 4) {
+                            maskedTc = "*******" + cleanTc.slice(-4);
+                        } else if (member.tcNo.includes('*')) {
+                            maskedTc = member.tcNo; // already heavily masked
+                        } else {
+                            maskedTc = "*".repeat(Math.max(0, cleanTc.length - 4)) + cleanTc.slice(-4);
+                        }
+                    }
+
                     return (
                         <div key={index} className="flex gap-4 mb-4" style={{ pageBreakInside: 'avoid' }}>
                             {/* ÖN YÜZ */}
@@ -97,8 +109,8 @@ export default function TopluKimlik() {
                                     <span style={{ fontSize: 9, fontWeight: 500, color: "#a3a3a3", marginTop: 4 }}>(Search & Rescue Association)</span>
                                 </div>
                                 
-                                <div style={{ position: "absolute", top: 20, right: 20 }}>
-                                    <img src="/m1g-logo.png" alt="Logo" style={{ width: 60, height: 60, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                                <div style={{ position: "absolute", top: 16, right: 16 }}>
+                                    <img src="/m1g-logo.png" alt="Logo" style={{ width: 85, height: 85, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                                 </div>
                                 
                                 <div style={{ position: "absolute", top: 115, left: "50%", transform: "translateX(-50%)", width: 110, height: 135, background: "#e5e7eb", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", padding: 4 }}>
@@ -113,9 +125,9 @@ export default function TopluKimlik() {
                                 
                                 <div style={{ position: "absolute", top: 265, left: 0, right: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
                                     <span style={{ fontSize: 18, fontWeight: 900, color: "white", textTransform: "uppercase", paddingLeft: 10, paddingRight: 10 }}>{member.fullName}</span>
-                                    <span style={{ fontSize: 11, fontWeight: 500, color: "#d1d5db", marginTop: 6 }}>Üyelik No: M1G-{member.id.substring(0, 4).toUpperCase()}</span>
-                                    <span style={{ color: "#ef4444", fontSize: 11, marginTop: 4, fontWeight: 900, textTransform: "uppercase" }}>{role}</span>
-                                    <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 4 }}>Kan Grubu: {member.bloodType || 'Belirtilmemiş'}</span>
+                                    <span style={{ color: "#ef4444", fontSize: 12, marginTop: 6, fontWeight: 900, textTransform: "uppercase" }}>{role}</span>
+                                    <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 6 }}>TC No: {maskedTc}</span>
+                                    <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 2 }}>Kan Grubu: {member.bloodType || 'Belirtilmemiş'}</span>
                                 </div>
 
                                 <div style={{ position: "absolute", bottom: 0, right: 0, left: "30%", height: 85, backgroundColor: "#cb2027", borderTopLeftRadius: 16 }} />
@@ -139,8 +151,8 @@ export default function TopluKimlik() {
                                     <span style={{ fontSize: 9, fontWeight: 500, color: "#a3a3a3", marginTop: 4 }}>(Search & Rescue Association)</span>
                                 </div>
                                 
-                                <div style={{ position: "absolute", top: 20, right: 20 }}>
-                                    <img src="/m1g-logo.png" alt="Logo" style={{ width: 60, height: 60, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                                <div style={{ position: "absolute", top: 16, right: 16 }}>
+                                    <img src="/m1g-logo.png" alt="Logo" style={{ width: 85, height: 85, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                                 </div>
                                 
                                 <div style={{ position: "absolute", top: 120, left: 24, right: 24, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
