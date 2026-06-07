@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 const SidebarContent = ({ setSidebarOpen, pathname, navItems, logout }: any) => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pb-8 md:pb-0">
         {/* Başlık */}
         <div className="mb-8 flex items-center justify-between">
             <div>
@@ -30,7 +30,7 @@ const SidebarContent = ({ setSidebarOpen, pathname, navItems, logout }: any) => 
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar space-y-1 pr-2">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden space-y-1 pr-2 pb-6">
             {navItems.map((item: any) => (
                 <Link
                     key={item.href}
@@ -137,7 +137,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     return (
         <ProtectedRoute adminOnly={true}>
-            <div className="min-h-screen bg-[#020617] flex flex-col">
+            <div className="min-h-[100dvh] bg-[#020617] flex flex-col">
 
 
                 {/* MOBİL HEADER BAR */}
@@ -177,7 +177,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 <div className="flex flex-1 pt-[57px] md:pt-0">
                     {/* DESKTOP SIDEBAR — sabit */}
-                    <aside className="hidden md:flex w-60 bg-[#050B14] border-r border-white/5 flex-shrink-0 flex-col p-4 sticky top-0 h-screen overflow-y-auto">
+                    <aside className="hidden md:flex w-60 bg-[#050B14] border-r border-white/5 flex-shrink-0 flex-col p-4 sticky top-0 h-[100dvh] overflow-y-auto">
                         <SidebarContent 
                             setSidebarOpen={setSidebarOpen} 
                             pathname={pathname} 
@@ -188,7 +188,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                     {/* MOBİL DRAWER SIDEBAR — slide-in */}
                     <aside className={clsx(
-                        "md:hidden fixed top-0 left-0 h-full w-72 z-[60] bg-[#050B14] border-r border-white/10 p-5 flex flex-col",
+                        "md:hidden fixed top-0 left-0 h-[100dvh] w-72 z-[60] bg-[#050B14] border-r border-white/10 p-5 flex flex-col overflow-y-auto",
                         "transition-transform duration-300 ease-in-out shadow-2xl",
                         sidebarOpen ? "translate-x-0" : "-translate-x-full"
                     )}>
