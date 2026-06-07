@@ -58,6 +58,16 @@ function MapEventHandler({ onClick }: { onClick?: (lat: number, lng: number) => 
   return null;
 }
 
+function LocateControl({ pos }: { pos: [number, number] | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (pos) {
+      map.setView(pos, 16);
+    }
+  }, [pos, map]);
+  return null;
+}
+
 interface OfflineMapProps {
   center?: [number, number];
   zoom?: number;
@@ -85,17 +95,38 @@ export default function OfflineMap({
 }: OfflineMapProps) {
   const [mounted, setMounted] = useState(false);
   const [myPos, setMyPos] = useState<[number, number] | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
+  const startTracking = () => {
     if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            setMyPos([pos.coords.latitude, pos.coords.longitude]);
+            setGpsError(null);
+        },
+        (err) => {
+            console.log("Konum hatası:", err);
+            setGpsError("Konum izni verilmedi veya GPS kapalı.");
+            alert("Konum alınamadı. Lütfen cihazınızın GPS'ini açın veya tarayıcı ayarlarından siteye konum izni verin.");
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+      
       const watchId = navigator.geolocation.watchPosition(
         (pos) => setMyPos([pos.coords.latitude, pos.coords.longitude]),
         (err) => console.log("Canlı konum alınamadı:", err),
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
       return () => navigator.geolocation.clearWatch(watchId);
+    } else {
+        alert("Cihazınız GPS desteklemiyor.");
     }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    // Auto-start tracking on mount if possible
+    startTracking();
   }, []);
 
   if (!mounted) {
@@ -103,6 +134,7 @@ export default function OfflineMap({
   }
 
   return (
+    <div className="relative w-full h-full">
     <MapContainer 
       center={center} 
       zoom={zoom} 
@@ -189,6 +221,18 @@ export default function OfflineMap({
           </Popup>
         </Marker>
       )}
+      
+      <LocateControl pos={myPos} />
     </MapContainer>
+
+    {/* GPS Butonu Overlay */}
+    <button 
+        onClick={startTracking}
+        className="absolute bottom-6 right-6 z-[400] bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.5)] flex items-center justify-center transition-all active:scale-95"
+        title="Konumumu Bul"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+    </button>
+    </div>
   );
 }
