@@ -22,7 +22,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-import PWARegister from "@/components/layout/PWARegister";
 
 async function getSiteSettings() {
   return await getSiteSettingsDB();
@@ -87,7 +86,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/m1g-logo.png" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-red-600/50">
-        <PWARegister />
+
         <SplashScreen />
         <AuthProvider>
           <Navbar />
