@@ -140,13 +140,15 @@ const MAIL_TEMPLATES = {
 // Transporter'ı bir kez oluştur (connection pool)
 function createTransporter() {
     const pass = (process.env.SMTP_PASS || '').replace(/^["']|["']$/g, ''); // Başındaki/sonundaki tırnak işaretlerini temizle
+    const user = process.env.SMTP_USER || 'info@m1g.org.tr';
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
 
-    if (host === 'smtp.gmail.com') {
+    // Vercel'deki host yanlış girilse bile Gmail ise Gmail servisini kullan
+    if (host === 'smtp.gmail.com' || user.toLowerCase().includes('@gmail.com')) {
         return nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.SMTP_USER || 'info@m1g.org.tr',
+                user: user,
                 pass: pass,
             }
         });
