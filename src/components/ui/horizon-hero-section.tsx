@@ -198,32 +198,32 @@ export const HorizonHeroSection = ({ sections }: { sections?: any[] | null }) =>
                 
                 {/* 2) ŞIK METİN KUTUSU (Uçuş Animasyonlu) */}
                 <div 
-                  className="absolute inset-0 z-10 flex items-center justify-center px-6 md:px-16 lg:px-24"
+                  className="absolute inset-0 z-10 flex items-end pb-20 md:pb-0 md:items-center justify-center px-4 md:px-16 lg:px-24"
                   style={{ transform: `translateZ(${translateZ}px) scale(${1 + opacity * 0.02})` }}
                 >
                   {/* Kutu, resmin ters tarafına yaslanır */}
-                  <div className={`w-full max-w-7xl flex ${isImageLeft ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`w-full max-w-7xl flex justify-center ${isImageLeft ? 'md:justify-end' : 'md:justify-start'}`}>
                     
                     {/* Cam Efektli Modern Kutu */}
-                    <div className="text-left bg-black/60 p-8 md:p-12 rounded-2xl backdrop-blur-md border border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.5)] w-full max-w-lg lg:max-w-xl relative overflow-hidden">
+                    <div className="text-left bg-black/70 md:bg-black/60 p-6 md:p-12 rounded-2xl backdrop-blur-md border border-white/10 md:border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.5)] w-full max-w-lg lg:max-w-xl relative overflow-hidden">
                       
                       {/* Accent Line */}
-                      <div className={`absolute top-0 bottom-0 ${isImageLeft ? 'left-0' : 'right-0'} w-1 bg-gradient-to-b from-red-600 to-transparent opacity-80`} />
+                      <div className={`absolute top-0 bottom-0 left-0 md:${isImageLeft ? 'left-0' : 'right-0'} w-1 bg-gradient-to-b from-red-600 to-transparent opacity-80`} />
 
-                      <div className="flex items-center gap-4 mb-4">
-                        <span className="text-red-500 font-mono text-2xl font-black">{data.stepNumber}</span>
+                      <div className="flex items-center gap-4 mb-3 md:mb-4">
+                        <span className="text-red-500 font-mono text-xl md:text-2xl font-black">{data.stepNumber}</span>
                         <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent" />
                       </div>
 
-                      <h3 className="text-white/50 font-mono tracking-[0.2em] uppercase text-xs mb-2">
+                      <h3 className="text-white/50 font-mono tracking-[0.2em] uppercase text-[10px] md:text-xs mb-1.5 md:mb-2">
                         {data.subtitle}
                       </h3>
                       
-                      <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white mb-4 drop-shadow-lg">
+                      <h2 className="text-2xl md:text-5xl font-black uppercase tracking-tight text-white mb-2 md:mb-4 drop-shadow-lg leading-tight">
                         {data.title}
                       </h2>
                       
-                      <p className="text-base md:text-lg font-light text-slate-300 leading-relaxed drop-shadow-md">
+                      <p className="text-sm md:text-lg font-light text-slate-300 leading-relaxed drop-shadow-md">
                         {data.desc}
                       </p>
                     </div>
