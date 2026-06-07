@@ -17,7 +17,7 @@ export default function TopluKimlik() {
                 setAllMembers(data);
                 // Sadece aktif ve geçerli üyeleri al
                 const activeMembers = data.filter((m: any) => {
-                    const isPasif = (m.dir && (m.dir.includes("PASİF") || m.dir.includes("İPTAL"))) || m.status === "Pasif";
+                    const isPasif = (m.dir?.includes("PASİF") || m.dir?.includes("İPTAL")) || m.status === "Pasif" || m.status === "Banlı";
                     return !isPasif && m.fullName && m.memberType;
                 });
                 setMembers(activeMembers);

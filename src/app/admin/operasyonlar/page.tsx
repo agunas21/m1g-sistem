@@ -261,6 +261,7 @@ export default function Operasyonlar() {
         
         // Members not already inside baseCamp or inside teams
         const matchedMembers = membersData.filter(m => {
+            if (m.status === 'Banlı' || m.status === 'Pasif') return false;
             const inOp = selectedOp?.baseCamp?.members?.includes(m.id) || 
                          selectedOp?.teams?.some(t => t.members.some(mem => mem.id === m.id));
             return !inOp && (m.fullName.toLowerCase().includes(query) || m.id.toLowerCase().includes(query));
