@@ -29,6 +29,7 @@ export default function PortalDashboard() {
     const [activeVideo, setActiveVideo] = useState<VideoData | null>(null);
     const [isClient, setIsClient] = useState(false);
     const [gpsStatus, setGpsStatus] = useState<string>("Bilinmiyor");
+    const [showGpsHelp, setShowGpsHelp] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -55,7 +56,7 @@ export default function PortalDashboard() {
                     console.error("GPS Error:", err.code, err.message);
                     if (err.code === 1) { // PERMISSION_DENIED
                         setGpsStatus("denied");
-                        alert("Konum izni telefonunuz tarafından engellendi. Lütfen Ayarlar'dan M1G sitesi için konum izni verdiğinizden emin olun.");
+                        setShowGpsHelp(true);
                     } else if (err.code === 2) { // POSITION_UNAVAILABLE
                         setGpsStatus("prompt");
                         alert("Konumunuz tespit edilemedi (Sinyal yok). Lütfen açık bir alana geçin veya cihazınızın GPS'ini açıp tekrar deneyin.");
@@ -240,7 +241,7 @@ export default function PortalDashboard() {
                                 onClick={requestGpsPermission}
                                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]"
                             >
-                                Konum İzni Ver
+                                {gpsStatus === "denied" ? "NASIL İZİN VERİLİR? (YARDIM)" : "KONUM İZNİ VER"}
                             </button>
                         )}
                     </div>
@@ -358,6 +359,71 @@ export default function PortalDashboard() {
 
                 </div>
             )}
+
+            {/* GPS YARDIM MODALI */}
+            <AnimatePresence>
+                {showGpsHelp && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-[#0A101C] border border-red-500/30 rounded-2xl p-6 max-w-md w-full relative shadow-2xl"
+                        >
+                            <button 
+                                onClick={() => setShowGpsHelp(false)}
+                                className="absolute top-4 right-4 text-neutral-500 hover:text-white"
+                            >
+                                <X size={24} />
+                            </button>
+
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-12 h-12 bg-red-500/20 text-red-500 rounded-xl flex items-center justify-center border border-red-500/20">
+                                    <MapPin size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-bold text-lg">Konum İzni Engellendi!</h3>
+                                    <p className="text-red-400 text-xs">Sistem izni otomatik alamıyor.</p>
+                                </div>
+                            </div>
+
+                            <p className="text-neutral-300 text-sm mb-6 leading-relaxed">
+                                Görünüşe göre telefonunuz bu uygulama için konum erişimini <strong>kalıcı olarak kapatmış</strong>. Güvenlik kuralları gereği, bunu sadece <strong>siz manuel olarak düzeltebilirsiniz.</strong>
+                            </p>
+
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 space-y-4">
+                                <div>
+                                    <h4 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">1</div>
+                                        Android (Samsung, Xiaomi vb.)
+                                    </h4>
+                                    <p className="text-neutral-400 text-xs leading-relaxed">
+                                        Telefonunuzun <strong>Ayarlar &gt; Uygulamalar</strong> menüsüne girin. Listeden <strong>M1G Arama Kurtarma</strong> (veya Chrome) uygulamasını bulup tıklayın. <strong>İzinler &gt; Konum</strong> sekmesine girip <strong>"İzin Ver"</strong> seçeneğini işaretleyin.
+                                    </p>
+                                </div>
+                                <div className="h-px w-full bg-white/10 my-2"></div>
+                                <div>
+                                    <h4 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">2</div>
+                                        iPhone (iOS)
+                                    </h4>
+                                    <p className="text-neutral-400 text-xs leading-relaxed">
+                                        Telefonunuzun <strong>Ayarlar &gt; Gizlilik ve Güvenlik &gt; Konum Servisleri</strong> menüsüne girin. Listeden <strong>Safari</strong> uygulamasını bulup <strong>"Uygulamayı Kullanırken"</strong> seçeneğini işaretleyin.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => setShowGpsHelp(false)}
+                                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all"
+                            >
+                                Anladım, Ayarları Düzelteceğim
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

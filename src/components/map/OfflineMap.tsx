@@ -113,7 +113,7 @@ export default function OfflineMap({
         <LayersControl.BaseLayer name="Uydu & Arazi (Hibrit)" checked>
           <TileLayer
             attribution='&copy; Google Maps'
-            url="http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
+            url="https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
             maxZoom={20}
           />
         </LayersControl.BaseLayer>
@@ -126,7 +126,7 @@ export default function OfflineMap({
         <LayersControl.BaseLayer name="Google Arazi (Topoğrafik)">
           <TileLayer
             attribution='&copy; Google Maps'
-            url="http://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}"
+            url="https://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}"
             maxZoom={20}
           />
         </LayersControl.BaseLayer>
