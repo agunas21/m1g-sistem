@@ -52,11 +52,22 @@ export default function PortalDashboard() {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setGpsStatus("granted"),
                 (err) => {
-                    console.error("GPS Error:", err);
-                    setGpsStatus("denied");
-                    alert("Konum izni reddedildi veya alınamadı. Lütfen telefonunuzun Ayarlar > Gizlilik kısmından bu site için konum izni verdiğinizden emin olun.");
+                    console.error("GPS Error:", err.code, err.message);
+                    if (err.code === 1) { // PERMISSION_DENIED
+                        setGpsStatus("denied");
+                        alert("Konum izni telefonunuz tarafından engellendi. Lütfen Ayarlar'dan M1G sitesi için konum izni verdiğinizden emin olun.");
+                    } else if (err.code === 2) { // POSITION_UNAVAILABLE
+                        setGpsStatus("prompt");
+                        alert("Konumunuz tespit edilemedi (Sinyal yok). Lütfen açık bir alana geçin veya cihazınızın GPS'ini açıp tekrar deneyin.");
+                    } else if (err.code === 3) { // TIMEOUT
+                        setGpsStatus("prompt");
+                        alert("Konum bulma işlemi zaman aşımına uğradı. Cihazınız uydulara bağlanamıyor olabilir. Lütfen tekrar deneyin.");
+                    } else {
+                        setGpsStatus("prompt");
+                        alert("Bilinmeyen bir konum hatası oluştu: " + err.message);
+                    }
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         } else {
             alert("Cihazınız GPS desteklemiyor.");
