@@ -40,8 +40,19 @@ export default function InstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  if (!isReadyForInstall || isDismissed) return null;
+  if (!isReadyForInstall) return null;
 
+  if (isDismissed) {
+      return (
+          <button 
+              onClick={() => setIsDismissed(false)}
+              className="fixed bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white rounded-full p-3 shadow-2xl z-[9999] flex items-center justify-center transition-transform hover:scale-110"
+              title="Uygulamayı İndir"
+          >
+              <Download size={20} />
+          </button>
+      );
+  }
   return (
     <AnimatePresence>
       <motion.div

@@ -34,7 +34,7 @@ function getFaviconVersion() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSiteSettings();
-  const titleVal = s.siteTitle || "M1G Arama Kurtarma Derneği | Resmi Web Sitesi";
+  const titleVal = "M1G ARAMA VE KURTARMA DERNEĞİ";
   const descVal = s.siteDesc || "M1G Arama Kurtarma Derneği - 2023 yılında kurulan, tamamı gönüllülerden oluşan profesyonel arama kurtarma, ekoloji ve insani yardım derneği. Ulusal ve uluslararası operasyonlar.";
   const shortTitle = titleVal.split('|')[0]?.trim() || "M1G Arama Kurtarma";
   
