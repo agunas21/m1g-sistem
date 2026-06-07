@@ -32,19 +32,31 @@ export default function PortalDashboard() {
 
     useEffect(() => {
         setIsClient(true);
-        if (navigator.permissions) {
-            navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' as PermissionName }).then((result) => {
                 setGpsStatus(result.state);
                 result.onchange = () => setGpsStatus(result.state);
+            }).catch(() => {
+                // Safari iOS doesn't support querying geolocation permission
+                setGpsStatus("prompt");
             });
+        } else {
+            // Safari fallback
+            setGpsStatus("prompt");
         }
     }, []);
 
     const requestGpsPermission = () => {
         if ("geolocation" in navigator) {
+            setGpsStatus("loading"); // Show loading state while waiting for user to click allow
             navigator.geolocation.getCurrentPosition(
                 (pos) => setGpsStatus("granted"),
-                (err) => setGpsStatus("denied")
+                (err) => {
+                    console.error("GPS Error:", err);
+                    setGpsStatus("denied");
+                    alert("Konum izni reddedildi veya alınamadı. Lütfen telefonunuzun Ayarlar > Gizlilik kısmından bu site için konum izni verdiğinizden emin olun.");
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         } else {
             alert("Cihazınız GPS desteklemiyor.");
