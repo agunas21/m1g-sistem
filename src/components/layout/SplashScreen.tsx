@@ -165,7 +165,7 @@ export default function SplashScreen() {
                             <img
                                 src="/m1g-logo.png"
                                 alt="M1G Logo"
-                                className="w-[90px] h-[90px] md:w-[120px] md:h-[120px] object-contain absolute z-10"
+                                className="w-[65px] h-[65px] md:w-[80px] md:h-[80px] object-contain absolute z-10"
                             />
                             <svg className="loader-svg" viewBox="0 0 120 120" style={{ width: '140px', height: '140px' }}>
                                 <circle
@@ -186,9 +186,9 @@ export default function SplashScreen() {
                         >
                             <div className="splash-text-container">
                                 <span className="splash-hover-text">
-                                    M1G ARAMA VE KURTARMA DERNEĞİ
+                                    M1G ARAMA KURTARMA
                                 </span>
-                                M1G ARAMA VE KURTARMA DERNEĞİ
+                                M1G ARAMA KURTARMA
                             </div>
                         </motion.div>
                     </div>
