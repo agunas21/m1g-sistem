@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 // Kendi ikonumuzu CSS ile çizelim (unpkg yasaklamalarına karşı ve daha şık)
-const customIcon = new L.divIcon({
+const customIcon = L.divIcon({
   className: 'custom-div-icon',
   html: `<div style="background-color: #dc2626; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative;">
           <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: white; border-radius: 50%;"></div>
@@ -22,7 +22,7 @@ const getPinIcon = (type: string) => {
   if (type === "Tehlike") bgColor = "#f97316"; // orange
   if (type === "Toplanma") bgColor = "#8b5cf6"; // purple
 
-  return new L.divIcon({
+  return L.divIcon({
     className: 'custom-pin-icon',
     html: `<div style="background-color: ${bgColor}; width: 24px; height: 24px; border-radius: 50% 50% 50% 0; border: 2px solid white; transform: rotate(-45deg); box-shadow: 2px 2px 5px rgba(0,0,0,0.4); position: relative;">
             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: white; border-radius: 50%;"></div>
@@ -33,7 +33,7 @@ const getPinIcon = (type: string) => {
   });
 };
 
-const myLocationIcon = new L.divIcon({
+const myLocationIcon = L.divIcon({
   className: 'my-location-icon',
   html: `<div style="background-color: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(59,130,246,0.8); position: relative;">
           <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; background-color: #3b82f6; border-radius: 50%; opacity: 0.5; animation: pulse 2s infinite;"></div>
