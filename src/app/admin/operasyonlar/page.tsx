@@ -11,6 +11,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Html5Qrcode } from "html5-qrcode";
 import { createPortal } from "react-dom";
+import { offlineDB } from "@/lib/offline-db";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 // Types
 interface TeamMember {
@@ -100,7 +102,9 @@ export default function Operasyonlar() {
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [showNewOp, setShowNewOp] = useState(false);
+    const isOnline = useNetworkStatus();
     const [isOffline, setIsOffline] = useState(false);
+    const [offlineQueueCount, setOfflineQueueCount] = useState(0);
     const [tick, setTick] = useState(0);
 
     // Form states for new operation
@@ -225,28 +229,27 @@ export default function Operasyonlar() {
     // Setup network and ticker
     useEffect(() => {
         setMounted(true);
-        setIsOffline(typeof navigator !== "undefined" ? !navigator.onLine : false);
+        setIsOffline(!isOnline);
         
-        const handleOnline = () => {
-            setIsOffline(false);
+        // Sadece isOnline true olduğunda ve offline queue'da eleman varsa sync yap
+        if (isOnline) {
             syncOfflineQueue();
-        };
-        const handleOffline = () => {
-            setIsOffline(true);
-        };
-        
-        window.addEventListener("online", handleOnline);
-        window.addEventListener("offline", handleOffline);
+        }
 
+        const checkQueue = async () => {
+            const queue = await offlineDB.getPendingLogs();
+            setOfflineQueueCount(queue.length);
+        };
+        checkQueue();
+        
         const timer = setInterval(() => {
             setTick(t => t + 1);
-        }, 1000);
+            checkQueue();
+        }, 3000);
 
         fetchData();
 
         return () => {
-            window.removeEventListener("online", handleOnline);
-            window.removeEventListener("offline", handleOffline);
             clearInterval(timer);
         };
     }, []);
@@ -321,20 +324,27 @@ export default function Operasyonlar() {
         }
     };
 
-    // Save state helper
     const saveOperation = async (updatedOp: ActiveOperation) => {
-        if (isOffline) {
-            const queue = JSON.parse(localStorage.getItem("m1g_offline_op_queue") || "[]");
-            const existingIdx = queue.findIndex((item: any) => item.id === updatedOp.id);
-            if (existingIdx !== -1) {
-                queue[existingIdx] = updatedOp;
-            } else {
-                queue.push(updatedOp);
-            }
-            localStorage.setItem("m1g_offline_op_queue", JSON.stringify(queue));
+        if (!isOnline || isOffline) {
+            // Çevrimdışıysak localforage'e at
+            const queue = await offlineDB.getPendingLogs();
+            
+            // Eğer bu operasyon için zaten pending bir kayıt varsa onu güncelle
+            // PendingLog formatına uyduruyoruz:
+            const pendingData = {
+                operationId: updatedOp.id,
+                type: 'UPDATE_OPERATION',
+                category: 'OPERATION',
+                message: JSON.stringify(updatedOp)
+            };
+            
+            await offlineDB.addPendingLog(pendingData);
             
             setOperations(operations.map(o => o.id === updatedOp.id ? updatedOp : o));
             setSelectedOp(updatedOp);
+            
+            const newQueue = await offlineDB.getPendingLogs();
+            setOfflineQueueCount(newQueue.length);
             return;
         }
 
@@ -354,22 +364,31 @@ export default function Operasyonlar() {
     };
 
     const syncOfflineQueue = async () => {
-        const queue = JSON.parse(localStorage.getItem("m1g_offline_op_queue") || "[]");
+        const queue = await offlineDB.getPendingLogs();
         if (queue.length === 0) return;
 
-        for (const op of queue) {
-            try {
-                await fetch("/api/settings/operations/active", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(op)
-                });
-            } catch (e) {
-                console.error("Failed to sync offline op", op.id, e);
+        // Queue'daki en güncel operasyon verilerini al (aynı operasyon için son güncellemeyi baz alıyoruz)
+        // message içinde stringify edilmiş ActiveOperation var
+        for (const pending of queue) {
+            if (pending.type === 'UPDATE_OPERATION') {
+                try {
+                    const op = JSON.parse(pending.message);
+                    await fetch("/api/settings/operations/active", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(op)
+                    });
+                    await offlineDB.removePendingLog(pending.id);
+                } catch (e) {
+                    console.error("Failed to sync offline op", pending.operationId, e);
+                }
             }
         }
-        localStorage.removeItem("m1g_offline_op_queue");
-        alert("Bağlantı algılandı: Çevrimdışı kayıtlar sunucuyla senkronize edildi.");
+        
+        const finalQueue = await offlineDB.getPendingLogs();
+        if (finalQueue.length === 0) {
+             setOfflineQueueCount(0);
+        }
         fetchData();
     };
 
