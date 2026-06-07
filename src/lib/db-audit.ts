@@ -45,6 +45,10 @@ export type AuditAction =
     | 'settings.update'
     | 'document.upload'
     | 'document.delete'
+    // Video
+    | 'video.create'
+    | 'video.update'
+    | 'video.delete'
 
 export type AuditSeverity = 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL'
 
@@ -54,7 +58,7 @@ export interface AuditContext {
     ipAddress?: string
     userAgent?: string
     operationId?: string
-    entityType?: 'Member' | 'Inventory' | 'Operation' | 'Team' | 'System'
+    entityType?: 'Member' | 'Inventory' | 'Operation' | 'Team' | 'System' | 'Video'
     entityId?: string
     severity?: AuditSeverity
 }
