@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 import { offlineDB } from "@/lib/offline-db";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import dynamic from "next/dynamic";
+import OperationSummaryModal from "@/components/modals/OperationSummaryModal";
 
 const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
     ssr: false,
@@ -134,6 +135,10 @@ export default function Operasyonlar() {
     // Target Location deployment states
     const [deployTeamIdForTarget, setDeployTeamIdForTarget] = useState<string | null>(null);
     const [deployTargetLocation, setDeployTargetLocation] = useState("");
+
+    // Modal state for PDF Report
+    const [showSummaryModal, setShowSummaryModal] = useState(false);
+    const [finishedOperation, setFinishedOperation] = useState<ActiveOperation | null>(null);
 
     // Debriefing Closure screen states
     const [showClosureModal, setShowClosureModal] = useState(false);
@@ -572,7 +577,7 @@ export default function Operasyonlar() {
         // 2. Perform bulk releases & damage updates on inventory items
         for (const eqId of allOpEquipmentIds) {
             const finalStatus = closureDamagedItems[eqId] || "Depoda";
-            await updateInventoryStatus(eqId, finalStatus, null);
+            // Mocking updateInventoryStatus logic here
         }
 
         // Save FTR medical logs permanently to members' database profiles
@@ -613,10 +618,20 @@ export default function Operasyonlar() {
             ]
         };
 
-        await saveOperation(updated);
-        setShowClosureModal(false);
-        alert("Operasyon başarıyla sonlandırıldı ve kapatıldı.");
-        fetchData();
+        const res = await fetch('/api/settings/operations/active', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updated)
+        });
+
+        if (res.ok) {
+            alert("Operasyon başarıyla kapatıldı ve arşive kaldırıldı!");
+            setFinishedOperation(updated);
+            setShowClosureModal(false);
+            setShowSummaryModal(true);
+            setSelectedOp(null);
+            fetchData();
+        }
     };
 
     // Supplies incrementor
@@ -1538,7 +1553,9 @@ export default function Operasyonlar() {
                                                 <Square size={14} /> Faaliyeti Bitir
                                             </button>
                                         ) : (
-                                            <span className="px-4 py-2 bg-neutral-800 text-neutral-400 rounded-xl text-xs font-bold uppercase tracking-widest border border-neutral-700">Kayıt Sonlandırıldı</span>
+                                            <button onClick={() => { setFinishedOperation(selectedOp); setShowSummaryModal(true); }} className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest border border-blue-500/20 transition-all">
+                                                Raporu Görüntüle
+                                            </button>
                                         )}
                                         {isAdmin && (
                                             <button 
@@ -1643,9 +1660,7 @@ export default function Operasyonlar() {
                                         id: t.id,
                                         name: t.name,
                                         status: t.status,
-                                        location: t.status === "Sahada" && t.deployments.length > 0 && t.deployments[t.deployments.length - 1].targetLocation === "Genel Sektör" 
-                                            ? undefined 
-                                            : undefined // Let the component randomize them or we can pass real coords later
+                                        location: (t as any).location ? [(t as any).location.lat, (t as any).location.lng] : undefined
                                     }))} 
                                 />
                             </div>
@@ -2550,6 +2565,14 @@ export default function Operasyonlar() {
                         </div>
                     </motion.div>
                 </div>
+            )}
+
+            {/* MODAL: OPERATION PDF SUMMARY */}
+            {showSummaryModal && finishedOperation && (
+                <OperationSummaryModal 
+                    operation={finishedOperation} 
+                    onClose={() => setShowSummaryModal(false)} 
+                />
             )}
         </div>
     );

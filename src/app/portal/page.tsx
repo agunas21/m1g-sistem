@@ -51,6 +51,40 @@ export default function PortalDashboard() {
         }
     };
 
+    // Aşama 3: Canlı Konum Ping Mekanizması
+    useEffect(() => {
+        if (gpsStatus !== "granted" || !user) return;
+
+        const pingLocation = () => {
+            navigator.geolocation.getCurrentPosition(
+                async (pos) => {
+                    try {
+                        await fetch('/api/settings/operations/active/location', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                memberId: user.uid || user.email, // Identify the user
+                                lat: pos.coords.latitude,
+                                lng: pos.coords.longitude
+                            })
+                        });
+                    } catch (e) {
+                        console.error("Konum ping hatası:", e);
+                    }
+                },
+                (err) => console.error("Konum okuma hatası:", err),
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        };
+
+        // İlk ping hemen atılsın
+        pingLocation();
+
+        // 10 saniyede bir ping at
+        const interval = setInterval(pingLocation, 10000);
+        return () => clearInterval(interval);
+    }, [gpsStatus, user]);
+
     useEffect(() => {
         if (isTestMode) {
             const mockVideos = [
