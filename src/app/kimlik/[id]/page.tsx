@@ -96,8 +96,15 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
         status:           memberRaw.status || "Aktif",
     };
 
-    let role = memberRaw.role || "Gönüllü Üye";
-    if (memberRaw.honorary === "Evet") role = "Onur Üyesi";
+    const role = (() => {
+        if (memberRaw.role && memberRaw.role !== "Üye" && memberRaw.role !== "Gönüllü") {
+            return memberRaw.role;
+        }
+        if (['cgorgu', 'taksit', 'mtasli', 'mseyre', 'gakdor', 'agunas'].includes(memberRaw.id)) return "Yönetim Kurulu Üyesi";
+        if (memberRaw.honorary === "Evet") return "Onur Üyesi";
+        if (memberRaw.role === "Üye") return "Asil Üye";
+        return "Gönüllü";
+    })();
 
     let emContactName = "—";
     let emContactPhone = "—";
@@ -112,15 +119,6 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
     }
 
     const bloodType = memberRaw.bloodType || "Belirtilmemiş";
-    const tcNo = memberRaw.tcNo || "";
-    let maskedTc = "";
-    if (tcNo && tcNo.length === 11) {
-        maskedTc = "********" + tcNo.slice(-3);
-    } else if (tcNo) {
-        maskedTc = "*".repeat(Math.max(0, tcNo.length - 3)) + tcNo.slice(-3);
-    } else {
-        maskedTc = "Belirtilmemiş";
-    }
 
     const cardUrl = typeof window !== "undefined"
         ? window.location.href
@@ -236,10 +234,11 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Below Photo Info */}
-                        <div style={{ position: "absolute", top: 270, left: 0, right: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <div style={{ position: "absolute", top: 265, left: 0, right: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <span style={{ fontSize: 18, fontWeight: 900, color: "white", textTransform: "uppercase", paddingLeft: 10, paddingRight: 10 }}>{member.name}</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: "#ef4444", marginTop: 6, textTransform: "uppercase" }}>Kan Grubu: {bloodType}</span>
-                            <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 2 }}>TC No: {maskedTc}</span>
+                            <span style={{ fontSize: 11, fontWeight: 500, color: "#d1d5db", marginTop: 6 }}>Üyelik No: {member.serial}</span>
+                            <span style={{ color: "#ef4444", fontSize: 11, marginTop: 4, fontWeight: 900, textTransform: "uppercase" }}>{role}</span>
+                            <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 4 }}>Kan Grubu: {bloodType}</span>
                         </div>
 
                         {/* Red Shape on the right bottom */}
