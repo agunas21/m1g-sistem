@@ -926,6 +926,34 @@ export default function Operasyonlar() {
         await saveOperation(updated);
     };
 
+    const setTeamLeader = async (teamId: string, memberId: string) => {
+        if (!selectedOp) return;
+        const member = membersData.find(m => m.id === memberId);
+        const team = selectedOp.teams.find(t => t.id === teamId);
+        if (!member || !team) return;
+
+        const updatedTeams = selectedOp.teams.map(t => {
+            if (t.id === teamId) {
+                const updatedMembers = t.members.map(m => {
+                    if (m.id === memberId) return { ...m, role: "Lider" as "Lider" };
+                    return { ...m, role: "Üye" as "Üye" }; // Demote others
+                });
+                return { ...t, members: updatedMembers };
+            }
+            return t;
+        });
+
+        const updated = {
+            ...selectedOp,
+            teams: updatedTeams,
+            logs: [
+                ...selectedOp.logs,
+                { time: new Date().toISOString().replace('T', ' ').substring(0, 16), message: `${member.fullName}, ${team.name} ekibine yeni lider olarak atandı.` }
+            ]
+        };
+        await saveOperation(updated);
+    };
+
     const assignEquipmentToTeam = async (teamId: string, eqId: string) => {
         if (!selectedOp) return;
         const item = inventoryData.find(i => i.id === eqId);
@@ -1708,7 +1736,10 @@ export default function Operasyonlar() {
                                                                 <div key={m.id} className="flex items-center justify-between text-xs bg-white/5 p-2 rounded-lg border border-white/5">
                                                                     <span className="text-neutral-300">{membersData.find(mem => mem.id === m.id)?.fullName || m.id}</span>
                                                                     {selectedOp.status === "Aktif" && (
-                                                                        <button onClick={() => removeMemberFromTeam(team.id, m.id)} className="text-[10px] text-neutral-500 hover:text-red-400">Kaldır</button>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button onClick={() => setTeamLeader(team.id, m.id)} className="text-[10px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded hover:bg-red-500/20 font-bold">Lider Yap</button>
+                                                                            <button onClick={() => removeMemberFromTeam(team.id, m.id)} className="text-[10px] text-neutral-500 hover:text-red-400">Kaldır</button>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                             ))}
@@ -1722,7 +1753,8 @@ export default function Operasyonlar() {
                                                                 <select
                                                                     onChange={(e) => {
                                                                         if (e.target.value) {
-                                                                            assignMemberToTeam(team.id, e.target.value, "Üye");
+                                                                            const role = team.members.length === 0 ? "Lider" : "Üye";
+                                                                            assignMemberToTeam(team.id, e.target.value, role);
                                                                             e.target.value = "";
                                                                         }
                                                                     }}
