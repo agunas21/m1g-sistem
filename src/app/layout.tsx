@@ -10,6 +10,7 @@ import Footer from "@/components/layout/Footer";
 import SplashScreen from "@/components/layout/SplashScreen";
 import FloatingEmergencyButton from "@/components/layout/FloatingEmergencyButton";
 import Chatbot from "@/components/chat/Chatbot";
+import InstallPrompt from "@/components/layout/InstallPrompt";
 import { getSiteSettingsDB } from "@/lib/settings";
 
 const geistSans = Geist({
@@ -86,7 +87,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/m1g-logo.png" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-red-600/50">
-
+        <InstallPrompt />
         <SplashScreen />
         <AuthProvider>
           <Navbar />

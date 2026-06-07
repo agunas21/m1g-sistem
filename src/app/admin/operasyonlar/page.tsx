@@ -13,6 +13,12 @@ import { Html5Qrcode } from "html5-qrcode";
 import { createPortal } from "react-dom";
 import { offlineDB } from "@/lib/offline-db";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import dynamic from "next/dynamic";
+
+const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
+    ssr: false,
+    loading: () => <div className="w-full h-64 bg-[#050B14] rounded-3xl animate-pulse flex items-center justify-center border border-white/5"><Compass className="animate-spin text-neutral-500" size={32} /></div>
+});
 
 // Types
 interface TeamMember {
@@ -1624,6 +1630,24 @@ export default function Operasyonlar() {
                                         <span className="text-lg font-black font-mono tracking-wider text-red-400">{formatDuration(selectedOp.startTime, selectedOp.endTime)}</span>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* OFFLINE MAP (IZMIR TERRAIN) */}
+                            <div className="bg-[#050B14] border border-white/5 rounded-3xl p-2 relative shadow-2xl h-96 w-full overflow-hidden no-print">
+                                <div className="absolute top-4 left-4 z-[400] bg-black/80 backdrop-blur border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-2 pointer-events-none">
+                                    <MapPin size={14} className="text-red-500 animate-bounce" />
+                                    <span className="text-[10px] font-bold text-white tracking-widest uppercase">Canlı Saha Takibi (Aşama 2)</span>
+                                </div>
+                                <OfflineMap 
+                                    teams={selectedOp.teams.map(t => ({
+                                        id: t.id,
+                                        name: t.name,
+                                        status: t.status,
+                                        location: t.status === "Sahada" && t.deployments.length > 0 && t.deployments[t.deployments.length - 1].targetLocation === "Genel Sektör" 
+                                            ? undefined 
+                                            : undefined // Let the component randomize them or we can pass real coords later
+                                    }))} 
+                                />
                             </div>
 
                             {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
