@@ -5,15 +5,15 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Fix for default Leaflet icon paths in Next.js
-const customIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+// Kendi ikonumuzu CSS ile çizelim (unpkg yasaklamalarına karşı ve daha şık)
+const customIcon = new L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: #dc2626; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative;">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: white; border-radius: 50%;"></div>
+         </div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  popupAnchor: [0, -10],
 });
 
 interface OfflineMapProps {
@@ -49,10 +49,10 @@ export default function OfflineMap({
       style={{ height: "100%", width: "100%", borderRadius: "0.75rem", zIndex: 0 }}
       zoomControl={true}
     >
-      {/* Topografik Harita - Dağ, tepe, yükselti bilgilerini gösterir */}
+      {/* OpenStreetMap - Daha hızlı ve güvenilir */}
       <TileLayer
-        attribution='&copy; <a href="https://opentopomap.org">OpenTopoMap</a> contributors'
-        url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
       {teams.map((team, idx) => {
