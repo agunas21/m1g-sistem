@@ -54,11 +54,12 @@ export default function PortalDashboard() {
         const fetchData = async () => {
             try {
                 // Fetch videos
-                const snapshot = await getDocs(collection(db, "videos"));
-                const vids: VideoData[] = [];
-                snapshot.forEach(doc => vids.push({ id: doc.id, ...doc.data() } as VideoData));
-                setVideos(vids);
-                if (vids.length > 0) setActiveVideo(vids[0]);
+                const vidRes = await fetch("/api/videos");
+                if (vidRes.ok) {
+                    const vids = await vidRes.json();
+                    setVideos(vids);
+                    if (vids.length > 0) setActiveVideo(vids[0]);
+                }
 
                 // Fetch Global Live Session from Local API
                 const settingsRes = await fetch("/api/settings/public");

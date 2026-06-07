@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Video, Plus, Trash2, Link as LinkIcon, RefreshCcw, ShieldCheck } from "lucide-react";
-import { collection, addDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useState, useEffect } from "react";
+import { Video, Plus, Trash2, Link as LinkIcon, RefreshCcw, ShieldCheck, Loader2 } from "lucide-react";
 
 type VideoData = {
     id: string;
@@ -13,46 +11,64 @@ type VideoData = {
 };
 
 export default function VideoYonetimi() {
-    const [videos, setVideos] = useState<VideoData[]>([
-        { id: "mock1", title: "İlkyardım Temel Eğitimi - Modül 1", description: "Olay Yeri Güvenliği, Hasta değerlendirme ve temel Triage süreçleri.", url: "https://youtube.com/watch?v=mock1" },
-        { id: "mock2", title: "Dağcılık: İp ve Düğüm Teknikleri", description: "Sekizli düğümü, pursik ve emniyet alma pratikleri.", url: "https://vimeo.com/mock2" }
-    ]);
-    const [loading, setLoading] = useState(false);
+    const [videos, setVideos] = useState<VideoData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
     // Form States
     const [newTitle, setNewTitle] = useState("");
     const [newDesc, setNewDesc] = useState("");
     const [newUrl, setNewUrl] = useState("");
 
+    useEffect(() => {
+        fetchVideos();
+    }, []);
+
+    const fetchVideos = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch("/api/videos");
+            if (res.ok) {
+                const data = await res.json();
+                setVideos(data);
+            }
+        } catch (error) {
+            console.error("Video getirme hatası:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleAddVideo = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newTitle || !newUrl) return;
 
-        setLoading(true);
+        setSubmitting(true);
         try {
-            // Firebase Gerçek Entegrasyonu (Simüle ediliyor ama kod gerçektir)
-            // const docRef = await addDoc(collection(db, "videos"), {
-            //     title: newTitle,
-            //     description: newDesc,
-            //     url: newUrl,
-            //     createdAt: new Date()
-            // });
+            const res = await fetch("/api/videos", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: newTitle,
+                    description: newDesc,
+                    url: newUrl,
+                    order: videos.length
+                })
+            });
 
-            setVideos([...videos, {
-                id: Math.random().toString(), // docRef.id
-                title: newTitle,
-                description: newDesc,
-                url: newUrl
-            }]);
-
-            setNewTitle("");
-            setNewDesc("");
-            setNewUrl("");
-            // alert("Eğitim videosu başarıyla sisteme eklendi. Üyeler portalda görebilir.");
+            if (res.ok) {
+                const addedVideo = await res.json();
+                setVideos([...videos, addedVideo]);
+                setNewTitle("");
+                setNewDesc("");
+                setNewUrl("");
+            } else {
+                alert("Video eklenirken bir hata oluştu.");
+            }
         } catch (error) {
             console.error("Video eklenemedi:", error);
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     };
 
@@ -60,8 +76,12 @@ export default function VideoYonetimi() {
         if (!confirm("Video eğitim portalından kalıcı olarak silinecektir. Onaylıyor musunuz?")) return;
 
         try {
-            // await deleteDoc(doc(db, "videos", id));
-            setVideos(videos.filter(v => v.id !== id));
+            const res = await fetch(`/api/videos/${id}`, { method: "DELETE" });
+            if (res.ok) {
+                setVideos(videos.filter(v => v.id !== id));
+            } else {
+                alert("Video silinirken bir hata oluştu.");
+            }
         } catch (error) {
             console.error("Silme hatası:", error);
         }
@@ -126,10 +146,10 @@ export default function VideoYonetimi() {
 
                             <button
                                 type="submit"
-                                disabled={loading}
+                                disabled={submitting}
                                 className="w-full py-4 bg-red-600 hover:bg-neutral-800 text-white font-black text-sm uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(234,29,44,0.3)] disabled:opacity-50 mt-4"
                             >
-                                {loading ? 'SİSTEME KAYDEDİLİYOR...' : 'VİDEOYU ÜYELERE YAYINLA'}
+                                {submitting ? 'SİSTEME KAYDEDİLİYOR...' : 'VİDEOYU ÜYELERE YAYINLA'}
                             </button>
                         </form>
                     </div>
@@ -145,8 +165,11 @@ export default function VideoYonetimi() {
                             <RefreshCcw size={10} className="animate-spin-slow" /> Senkron
                         </span>
                     </div>
-
-                    {videos.map(video => (
+                    {loading ? (
+                        <div className="flex items-center justify-center py-20 bg-[#050B14] border border-white/5 rounded-2xl">
+                            <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+                        </div>
+                    ) : videos.map(video => (
                         <div key={video.id} className="bg-[#020617] border border-white/5 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row items-center gap-5 md:gap-6 group hover:border-red-500/30 transition-all shadow-lg">
                             <div className="bg-[#050B14] p-3 md:p-4 rounded-xl border border-white/5 flex-shrink-0">
                                 <Video className="text-red-600 w-6 h-6 md:w-8 md:h-8" />
@@ -169,7 +192,7 @@ export default function VideoYonetimi() {
                         </div>
                     ))}
 
-                    {videos.length === 0 && (
+                    {!loading && videos.length === 0 && (
                         <div className="text-center py-20 bg-[#050B14] border border-white/5 rounded-2xl">
                             <Video className="mx-auto block text-neutral-600 mb-4 opacity-50" size={48} />
                             <p className="text-neutral-500 font-bold uppercase tracking-widest">Sistemde Hiç Video Yok</p>

@@ -4,7 +4,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
-import { Video, BookOpen, Star, Box, User, Menu, X, LogOut, ShieldCheck, Home, CreditCard } from "lucide-react";
+import { Video, BookOpen, Star, Box, User, Menu, X, LogOut, ShieldCheck, Home, CreditCard, Activity } from "lucide-react";
 import clsx from "clsx";
 import { useState, useEffect } from "react";
 
@@ -93,6 +93,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
     const navItems = [
         { href: "/portal", label: "Eğitim Videoları", icon: <Video size={20} /> },
+        { href: "/portal/operasyonlar", label: "Canlı Operasyonlar", icon: <Activity size={20} /> },
         { href: "/portal/profil", label: "Profilim", icon: <User size={20} /> },
         { href: "/portal/aidat", label: "Aidat & Bağış", icon: <CreditCard size={20} /> },
         { href: "/portal/sertifikalar", label: "Sertifikalarım", icon: <Star size={20} /> },

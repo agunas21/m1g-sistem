@@ -217,3 +217,16 @@ model SiteConfig {
   value     Json
   updatedAt DateTime @updatedAt
 }
+
+// ─────────────────────────────────────────────
+// VİDEO KÜTÜPHANESİ
+// ─────────────────────────────────────────────
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
