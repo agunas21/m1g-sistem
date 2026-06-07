@@ -70,6 +70,12 @@ interface ActiveOperation {
         notes: string;
         memberNotes: Record<string, string>;
     };
+    pins?: Array<{
+        id: string;
+        name: string;
+        type: "Kamp" | "Toplanma" | "Tehlike" | "Genel";
+        location: [number, number];
+    }>;
 }
 
 const formatDuration = (startTimeStr: string, endTimeStr: string | null = null) => {
@@ -148,6 +154,11 @@ export default function Operasyonlar() {
     const [closureDamagedItems, setClosureDamagedItems] = useState<Record<string, "Depoda" | "Kayıp" | "Hasarlı">>({});
     // Hasar fotoğrafları: key=eqId, value={file, previewUrl, uploadedUrl}
     const [closureDamagePhotos, setClosureDamagePhotos] = useState<Record<string, { file?: File; previewUrl?: string; uploadedUrl?: string; uploading?: boolean }>>({});
+
+    // Map Pinning State
+    const [newPinPos, setNewPinPos] = useState<[number, number] | null>(null);
+    const [newPinName, setNewPinName] = useState("");
+    const [newPinType, setNewPinType] = useState<"Kamp" | "Toplanma" | "Tehlike" | "Genel">("Kamp");
 
     // Manual Log text
     const [manualLogText, setManualLogText] = useState("");
@@ -1662,6 +1673,12 @@ export default function Operasyonlar() {
                                         status: t.status,
                                         location: (t as any).location ? [(t as any).location.lat, (t as any).location.lng] : undefined
                                     }))} 
+                                    pins={selectedOp.pins || []}
+                                    onMapClick={(lat, lng) => {
+                                        if(selectedOp.status === 'Aktif') {
+                                            setNewPinPos([lat, lng]);
+                                        }
+                                    }}
                                 />
                             </div>
 
