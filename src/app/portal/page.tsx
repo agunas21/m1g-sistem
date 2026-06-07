@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import ReactPlayer from "react-player";
-import { Loader2, PlayCircle, BookOpen, User, Signal, Video, ShieldCheck, Mail, Radio, MapPin } from "lucide-react";
+import { Loader2, PlayCircle, BookOpen, User, Signal, Video, ShieldCheck, Mail, Radio, MapPin, X } from "lucide-react";
 
 type VideoData = {
     id: string;
