@@ -185,7 +185,7 @@ export async function sendEmail(
         const htmlContent = MAIL_TEMPLATES[templateKey](...templateArgs);
 
         await transporter.sendMail({
-            from: '"M1G Operasyon Merkezi" <info@m1g.org.tr>',
+            from: `"M1G Operasyon Merkezi" <${process.env.SMTP_USER || 'info@m1g.org.tr'}>`,
             to,
             subject,
             html: htmlContent,
