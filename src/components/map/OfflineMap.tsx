@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, LayersControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -32,6 +32,22 @@ const getPinIcon = (type: string) => {
     popupAnchor: [0, -24],
   });
 };
+
+const myLocationIcon = new L.divIcon({
+  className: 'my-location-icon',
+  html: `<div style="background-color: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(59,130,246,0.8); position: relative;">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; background-color: #3b82f6; border-radius: 50%; opacity: 0.5; animation: pulse 2s infinite;"></div>
+         </div>
+         <style>
+          @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+          }
+         </style>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+  popupAnchor: [0, -8],
+});
 
 function MapEventHandler({ onClick }: { onClick?: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -68,9 +84,18 @@ export default function OfflineMap({
   onMapClick
 }: OfflineMapProps) {
   const [mounted, setMounted] = useState(false);
+  const [myPos, setMyPos] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    if ("geolocation" in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => setMyPos([pos.coords.latitude, pos.coords.longitude]),
+        (err) => console.log("Canlı konum alınamadı:", err),
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
   }, []);
 
   if (!mounted) {
@@ -84,11 +109,34 @@ export default function OfflineMap({
       style={{ height: "100%", width: "100%", borderRadius: "0.75rem", zIndex: 0 }}
       zoomControl={true}
     >
-      {/* OpenStreetMap - Daha hızlı ve güvenilir */}
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <LayersControl position="topright">
+        <LayersControl.BaseLayer name="Uydu & Arazi (Hibrit)" checked>
+          <TileLayer
+            attribution='&copy; Google Maps'
+            url="http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
+            maxZoom={20}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Karanlık Mod (Taktiksel)">
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Google Arazi (Topoğrafik)">
+          <TileLayer
+            attribution='&copy; Google Maps'
+            url="http://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}"
+            maxZoom={20}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Standart Sokak (OSM)">
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+        </LayersControl.BaseLayer>
+      </LayersControl>
 
       <MapEventHandler onClick={onMapClick} />
       
@@ -117,6 +165,17 @@ export default function OfflineMap({
           </Popup>
         </Marker>
       ))}
+
+      {myPos && (
+        <Marker position={myPos} icon={myLocationIcon}>
+          <Popup>
+            <div className="text-neutral-900 text-center">
+              <strong className="block text-sm text-blue-600">Senin Konumun</strong>
+              <span className="text-[10px] text-neutral-500">Mevcut Koordinatların</span>
+            </div>
+          </Popup>
+        </Marker>
+      )}
     </MapContainer>
   );
 }
