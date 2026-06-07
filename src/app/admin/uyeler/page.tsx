@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { QRCodeSVG } from 'qrcode.react';
 import { 
     Mail, MessageCircle, ShieldCheck, Search, UserPlus, FileText, Ban, UserMinus, 
@@ -1049,8 +1050,9 @@ export default function UyeYonetimi() {
                         </div>
                     </button>
                     
-                    <button
-                        onClick={handleBulkCards}
+                    <Link
+                        href="/admin/toplu-kimlik"
+                        target="_blank"
                         className="bg-purple-600/5 hover:bg-purple-600/10 border border-purple-500/20 p-4 rounded-xl flex items-center gap-4 transition-all group"
                     >
                         <div className="bg-purple-600 p-3 rounded-lg text-white group-hover:scale-110 shadow-[0_0_15px_rgba(147,51,234,0.3)] transition-transform">
@@ -1060,7 +1062,7 @@ export default function UyeYonetimi() {
                             <h3 className="text-purple-400 font-bold uppercase tracking-wider text-xs md:text-sm">Toplu Kimlik Yazdır</h3>
                             <p className="text-[10px] text-purple-500/60 truncate max-w-[150px]">Tüm kartları baskıya gönder.</p>
                         </div>
-                    </button>
+                    </Link>
                 </div>
             </div>
 
