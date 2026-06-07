@@ -8,6 +8,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
+    ssr: false,
+    loading: () => <div className="w-full h-48 bg-[#050B14] rounded-3xl animate-pulse flex items-center justify-center border border-white/5"><Compass className="animate-spin text-neutral-500" size={32} /></div>
+});
 
 export default function OperasyonDetayPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -105,6 +111,25 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
                 
+                {/* HARİTA BÖLÜMÜ (YENİ EKLENDİ) */}
+                <div className="lg:col-span-3 space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="text-red-500" size={20} />
+                        <h2 className="text-lg font-bold text-white uppercase tracking-widest">Saha Haritası</h2>
+                    </div>
+                    <div className="bg-[#050B14] border border-white/5 rounded-3xl p-2 relative shadow-2xl h-64 md:h-96 w-full overflow-hidden">
+                        <OfflineMap 
+                            teams={operation.teams?.map((t: any) => ({
+                                id: t.id,
+                                name: t.name,
+                                status: t.status,
+                                location: t.location ? [t.location.lat, t.location.lng] : undefined
+                            })) || []} 
+                            pins={operation.pins || []}
+                        />
+                    </div>
+                </div>
+
                 {/* Sol Taraf: Canlı Log Akışı */}
                 <div className="lg:col-span-2 space-y-4">
                     <div className="flex items-center gap-2 mb-2">
