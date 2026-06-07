@@ -140,9 +140,20 @@ const MAIL_TEMPLATES = {
 // Transporter'ı bir kez oluştur (connection pool)
 function createTransporter() {
     const pass = (process.env.SMTP_PASS || '').replace(/^["']|["']$/g, ''); // Başındaki/sonundaki tırnak işaretlerini temizle
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+
+    if (host === 'smtp.gmail.com') {
+        return nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.SMTP_USER || 'info@m1g.org.tr',
+                pass: pass,
+            }
+        });
+    }
 
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        host: host,
         port: Number(process.env.SMTP_PORT) || 587,
         secure: Number(process.env.SMTP_PORT) === 465, // Port 465 için true, diğerleri (örn 587) için false
         requireTLS: true, // TLS şifrelemesini zorunlu kıl
