@@ -6,7 +6,7 @@ import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import ReactPlayer from "react-player";
-import { Loader2, PlayCircle, BookOpen, User, Signal, Video, ShieldCheck, Mail, Radio } from "lucide-react";
+import { Loader2, PlayCircle, BookOpen, User, Signal, Video, ShieldCheck, Mail, Radio, MapPin } from "lucide-react";
 
 type VideoData = {
     id: string;
@@ -28,10 +28,28 @@ export default function PortalDashboard() {
     const [loading, setLoading] = useState(true);
     const [activeVideo, setActiveVideo] = useState<VideoData | null>(null);
     const [isClient, setIsClient] = useState(false);
+    const [gpsStatus, setGpsStatus] = useState<string>("Bilinmiyor");
 
     useEffect(() => {
         setIsClient(true);
+        if (navigator.permissions) {
+            navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                setGpsStatus(result.state);
+                result.onchange = () => setGpsStatus(result.state);
+            });
+        }
     }, []);
+
+    const requestGpsPermission = () => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => setGpsStatus("granted"),
+                (err) => setGpsStatus("denied")
+            );
+        } else {
+            alert("Cihazınız GPS desteklemiyor.");
+        }
+    };
 
     useEffect(() => {
         if (isTestMode) {
@@ -90,7 +108,7 @@ export default function PortalDashboard() {
             </div>
 
             {/* TOP DASHBOARD GRID */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
 
                 {/* PROFILE SUMMARY */}
                 <div className="bg-[#050B14] border border-white/5 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
@@ -130,6 +148,43 @@ export default function PortalDashboard() {
                                     <ShieldCheck size={14} /> Dijital Kimliğimi Gör
                                 </a>
                             </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* SAHA MODU & İZİNLER */}
+                <div className="bg-[#050B14] border border-white/5 rounded-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col justify-center">
+                    <div className="absolute top-0 right-0 p-4 opacity-5"><MapPin size={150} /></div>
+                    <div className="relative z-10 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-blue-600/20 text-blue-500 rounded-xl border border-blue-500/20">
+                                <MapPin size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Saha Modu İzinleri</h3>
+                                <p className="text-neutral-500 text-xs">GPS & Offline Depolama</p>
+                            </div>
+                        </div>
+                        <p className="text-xs text-neutral-400 font-light leading-relaxed">
+                            Dağlık arazide timlerin canlı takip edilmesi ve offline verilerin saklanması için cihaz izinleri gereklidir.
+                        </p>
+                        <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                            <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">GPS Durumu:</span>
+                            <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase tracking-widest ${
+                                gpsStatus === "granted" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20" :
+                                gpsStatus === "denied" ? "bg-red-500/20 text-red-400 border border-red-500/20" :
+                                "bg-neutral-800 text-neutral-400 border border-white/10"
+                            }`}>
+                                {gpsStatus === "granted" ? "Aktif" : gpsStatus === "denied" ? "Reddedildi" : "Bekleniyor"}
+                            </span>
+                        </div>
+                        {gpsStatus !== "granted" && (
+                            <button 
+                                onClick={requestGpsPermission}
+                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]"
+                            >
+                                Konum İzni Ver
+                            </button>
                         )}
                     </div>
                 </div>
