@@ -126,6 +126,31 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                                 location: t.location ? [t.location.lat, t.location.lng] : undefined
                             })) || []} 
                             pins={operation.pins || []}
+                            onMapClick={async (lat, lng) => {
+                                // Only allow clicking if user is admin or a team leader
+                                const isLeader = operation.teams?.some((t: any) => t.personnel?.some((p: any) => (p.email === user?.email || p.id === user?.uid) && p.role === 'Lider'));
+                                if (isAdmin || isLeader) {
+                                    if(confirm("Tıkladığınız noktayı 'kendi konumunuz' olarak sisteme kaydetmek istiyor musunuz? (Manuel Konum Güncellemesi)")) {
+                                        try {
+                                            await fetch('/api/settings/operations/active/location', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    memberId: user?.uid || user?.email,
+                                                    lat: lat,
+                                                    lng: lng
+                                                })
+                                            });
+                                            alert("Konumunuz başarıyla manuel olarak güncellendi.");
+                                        } catch (e) {
+                                            alert("Konum güncellenemedi.");
+                                        }
+                                    }
+                                } else {
+                                    // If not leader, just show coordinates
+                                    alert(`Tıkladığınız Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+                                }
+                            }}
                         />
                     </div>
                 </div>

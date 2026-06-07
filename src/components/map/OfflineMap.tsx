@@ -110,7 +110,13 @@ export default function OfflineMap({
       zoomControl={true}
     >
       <LayersControl position="topright">
-        <LayersControl.BaseLayer name="Uydu & Arazi (Hibrit)" checked>
+        <LayersControl.BaseLayer name="Standart Sokak (OSM)" checked>
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Uydu & Arazi (Hibrit)">
           <TileLayer
             attribution='&copy; Google Maps'
             url="https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
@@ -130,10 +136,17 @@ export default function OfflineMap({
             maxZoom={20}
           />
         </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Standart Sokak (OSM)">
+        <LayersControl.BaseLayer name="Karanlık Mod (Taktiksel)">
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Google Arazi (Topoğrafik)">
+          <TileLayer
+            attribution='&copy; Google Maps'
+            url="https://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}"
+            maxZoom={20}
           />
         </LayersControl.BaseLayer>
       </LayersControl>
@@ -141,10 +154,10 @@ export default function OfflineMap({
       <MapEventHandler onClick={onMapClick} />
       
       {teams.map((team, idx) => {
-        // If team has no location, create a mock location near Izmir for demonstration
-        const loc = team.location || [38.4237 + (idx * 0.05), 27.1428 + (idx * 0.05)];
+        // Only render marker if team actually has a location
+        if (!team.location || !team.location[0]) return null;
         return (
-          <Marker key={team.id} position={loc as [number, number]} icon={customIcon}>
+          <Marker key={team.id} position={team.location as [number, number]} icon={customIcon}>
             <Popup>
               <div className="text-neutral-900">
                 <strong className="block text-sm">{team.name}</strong>
