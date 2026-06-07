@@ -852,8 +852,18 @@ export default function KolaySiteDuzenleyici() {
                                 + Bölüm Ekle
                             </button>
                             {aboutSections.map((section, idx) => (
-                                <div key={idx} className="bg-black/30 border border-white/5 rounded-xl p-5 space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                                <div key={idx} className="bg-black/30 border border-white/5 rounded-xl p-5 space-y-4 relative">
+                                    <button
+                                        onClick={() => {
+                                            const newArr = aboutSections.filter((_, i) => i !== idx);
+                                            setAboutSections(newArr);
+                                        }}
+                                        className="absolute top-4 right-4 p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"
+                                        title="Bölümü Sil"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2 pr-12">
                                         <div>
                                             <label className="cms-label text-red-400">Bölüm Kodu (Örn: SEC-01)</label>
                                             <input 
@@ -909,16 +919,39 @@ export default function KolaySiteDuzenleyici() {
                                     
                                     <div>
                                         <label className="cms-label text-blue-400">Arka Plan Resmi (URL / Dosya Yolu)</label>
-                                        <input 
-                                            value={section.img || ''} 
-                                            onChange={e => {
-                                                const newArr = [...aboutSections];
-                                                newArr[idx].img = e.target.value;
-                                                setAboutSections(newArr);
-                                            }} 
-                                            placeholder="/images/about/resim-adi.jpg"
-                                            className="cms-input border-blue-500/30 bg-blue-500/5 text-blue-300" 
-                                        />
+                                        <div className="flex gap-2">
+                                            <input 
+                                                value={section.img || ''} 
+                                                onChange={e => {
+                                                    const newArr = [...aboutSections];
+                                                    newArr[idx].img = e.target.value;
+                                                    setAboutSections(newArr);
+                                                }} 
+                                                placeholder="/images/about/resim-adi.jpg"
+                                                className="cms-input border-blue-500/30 bg-blue-500/5 text-blue-300 flex-1" 
+                                            />
+                                            <label className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center text-sm">
+                                                <span>Yükle</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            try {
+                                                                const url = await uploadFileToServer(file);
+                                                                const newArr = [...aboutSections];
+                                                                newArr[idx].img = url;
+                                                                setAboutSections(newArr);
+                                                            } catch (err) {
+                                                                alert('Yükleme başarısız');
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <div>

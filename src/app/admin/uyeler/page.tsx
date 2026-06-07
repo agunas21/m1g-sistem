@@ -26,6 +26,7 @@ export default function UyeYonetimi() {
     const [showMedicalModal, setShowMedicalModal] = useState(false);
     const [medicalData, setMedicalData] = useState({ bloodType: "", emergencyContact: "" });
     const [currentUser, setCurrentUser] = useState<any>(null); // Giriş yapan kullanıcı
+    const [selectedMembers, setSelectedMembers] = useState<string[]>([]); // Seçili üyeler listesi
 
     // Toplu Mail States
     const [showMailModal, setShowMailModal] = useState(false);
@@ -186,7 +187,13 @@ export default function UyeYonetimi() {
 
     const sendMassEmail = async (e: React.FormEvent) => {
         e.preventDefault();
-        const emails = filteredMembers
+        
+        let targetMembers = filteredMembers;
+        if (selectedMembers.length > 0) {
+            targetMembers = filteredMembers.filter(m => selectedMembers.includes(m.id));
+        }
+
+        const emails = targetMembers
             .filter(m => m.status !== 'Banlı' && m.status !== 'Pasif')
             .map(m => m.email)
             .filter(e => e && e !== "Belirtilmemiş");
@@ -203,10 +210,12 @@ export default function UyeYonetimi() {
             });
             const data = await res.json();
             if(res.ok) {
-                alert(`✅ ${data.message}`);
-                setShowMailModal(false);
-                setMailSubject("");
-                setMailMessage("");
+                if (data.results && data.results.failedCount > 0) {
+                    alert(`⚠️ ${data.results.successCount} başarı, ${data.results.failedCount} hata!\nHatalar: \n${data.results.errors.join('\n')}`);
+                } else {
+                    alert(`✅ ${data.message}`);
+                    setShowMailModal(false);
+                }
             } else {
                 alert(`❌ Hata: ${data.error}`);
             }
@@ -898,7 +907,12 @@ export default function UyeYonetimi() {
                     </div>
                     <form onSubmit={sendMassEmail} className="p-6 flex flex-col gap-4">
                         <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg">
-                            <p className="text-xs text-blue-400 font-bold uppercase tracking-widest">Alıcı Sayısı: <span className="text-white">{filteredMembers.filter(m => m.status !== 'Banlı' && m.status !== 'Pasif' && m.email && m.email !== "Belirtilmemiş").length} Personel</span></p>
+                            <p className="text-xs text-blue-400 font-bold uppercase tracking-widest">
+                                Alıcı Sayısı: <span className="text-white">
+                                    {(selectedMembers.length > 0 ? filteredMembers.filter(m => selectedMembers.includes(m.id)) : filteredMembers)
+                                        .filter(m => m.status !== 'Banlı' && m.status !== 'Pasif' && m.email && m.email !== "Belirtilmemiş").length} Personel
+                                </span>
+                            </p>
                         </div>
                         <div>
                             <label className="text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-1 block">Konu</label>
@@ -1093,6 +1107,20 @@ export default function UyeYonetimi() {
                     <table className="w-full text-left text-sm text-neutral-400">
                         <thead className="bg-[#020617] text-neutral-500 uppercase tracking-widest text-[10px]">
                             <tr>
+                                <th className="px-6 py-5 w-12">
+                                    <input 
+                                        type="checkbox" 
+                                        className="w-4 h-4 rounded border-neutral-700 bg-black/50 accent-blue-500 cursor-pointer"
+                                        checked={selectedMembers.length === filteredMembers.length && filteredMembers.length > 0}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedMembers(filteredMembers.map(m => m.id));
+                                            } else {
+                                                setSelectedMembers([]);
+                                            }
+                                        }}
+                                    />
+                                </th>
                                 <th className="px-6 py-5 font-bold">Personel / İletişim</th>
                                 <th className="px-6 py-5 font-bold">Statü / Kayıt Tarihi</th>
                                 <th className="px-6 py-5 font-bold">Özet Profil Bilgisi</th>
@@ -1101,7 +1129,21 @@ export default function UyeYonetimi() {
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {filteredMembers.map((member, index) => (
-                                <tr key={`${member.id}-${index}`} className="hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => setSelectedMember(member)}>
+                                <tr key={`${member.id}-${index}`} className={`hover:bg-white/5 transition-colors group cursor-pointer ${selectedMembers.includes(member.id) ? 'bg-blue-900/10' : ''}`} onClick={() => setSelectedMember(member)}>
+                                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                                        <input 
+                                            type="checkbox" 
+                                            className="w-4 h-4 rounded border-neutral-700 bg-black/50 accent-blue-500 cursor-pointer"
+                                            checked={selectedMembers.includes(member.id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedMembers([...selectedMembers, member.id]);
+                                                } else {
+                                                    setSelectedMembers(selectedMembers.filter(id => id !== member.id));
+                                                }
+                                            }}
+                                        />
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-lg ${roleBadges[member.role]}`}>
