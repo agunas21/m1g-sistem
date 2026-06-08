@@ -1,4 +1,4 @@
-import { Users, Plus, Clock, Trash } from "lucide-react";
+import { Users, Plus, Clock, Trash, MapPin, Compass } from "lucide-react";
 
 export default function TeamListPanel({
     selectedOp,
