@@ -131,7 +131,12 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                                         });
                                         setPinModal(null);
                                         setPinName("");
-                                        fetchOp();
+                                        const r = await fetch("/api/settings/operations/active");
+                                        if (r.ok) {
+                                            const d = await r.json();
+                                            const f = (Array.isArray(d) ? d : []).find(o => o.id === operation?.id);
+                                            if (f) setOperation(f);
+                                        }
                                     } catch(e) {
                                         alert("Hata oluştu.");
                                     }

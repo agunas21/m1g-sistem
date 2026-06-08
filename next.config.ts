@@ -5,11 +5,7 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  skipWaiting: true,
-  clientsClaim: true,
   cacheOnFrontEndNav: false,
-  // SW'nin response header'larını cache'lememesi için:
-  runtimeCaching: [], // varsayılan cache stratejilerini devre dışı bırak
 });
 
 const CSP = [
@@ -48,7 +44,6 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: '**' }
     ],
   },
-  eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   experimental: {
     serverActions: { bodySizeLimit: '60mb' },

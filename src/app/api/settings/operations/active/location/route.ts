@@ -71,7 +71,6 @@ export async function POST(req: Request) {
                         operations[i].teams[t].location = newLocation;
                         updated = true;
                     }
-                }
             }
         }
 
