@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { offlineDB } from "@/lib/offline-db";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
 import OperationSummaryModal from "@/components/modals/OperationSummaryModal";
 import TeamListPanel from "@/components/admin/operasyonlar/TeamListPanel";
@@ -256,6 +257,32 @@ export default function Operasyonlar() {
             syncOfflineQueue();
         }
 
+        // --- Supabase Realtime (WebSockets) ---
+        const channel = supabase.channel('operations-channel');
+        channel.on('broadcast', { event: 'location_update' }, (payload) => {
+            const { memberId, lat, lng } = payload.payload;
+            
+            setSelectedOp((prev: any) => {
+                if (!prev) return prev;
+                let updated = false;
+                const newTeams = prev.teams?.map((t: any) => {
+                    const mIndex = t.members?.findIndex((m: any) => m.id === memberId);
+                    if (mIndex >= 0) {
+                        updated = true;
+                        const members = [...t.members];
+                        members[mIndex] = {
+                            ...members[mIndex],
+                            lastLocation: { lat, lng, timestamp: Date.now() },
+                            path: [...(members[mIndex].path || []), { lat, lng, timestamp: Date.now() }]
+                        };
+                        return { ...t, members };
+                    }
+                    return t;
+                });
+                return updated ? { ...prev, teams: newTeams } : prev;
+            });
+        }).subscribe();
+
         const checkQueue = async () => {
             const queue = await offlineDB.getPendingLogs();
             setOfflineQueueCount(queue.length);
@@ -291,9 +318,10 @@ export default function Operasyonlar() {
 
         return () => {
             clearInterval(timer);
-            clearInterval(liveInterval);
+            if (liveInterval) clearInterval(liveInterval);
+            supabase.removeChannel(channel);
         };
-    }, []);
+    }, [isOnline]);
 
     // Filter command results for adding member/equipment
     useEffect(() => {

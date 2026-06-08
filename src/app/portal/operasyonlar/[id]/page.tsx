@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { supabase } from "@/lib/supabase";
 
 const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
     ssr: false,
@@ -60,8 +61,38 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
         };
 
         init();
+
+        // --- Supabase Realtime (WebSockets) ---
+        const channel = supabase.channel('operations-channel');
+        channel.on('broadcast', { event: 'location_update' }, (payload) => {
+            const { memberId, lat, lng } = payload.payload;
+            
+            setOperation((prev: any) => {
+                if (!prev) return prev;
+                let updated = false;
+                const newTeams = prev.teams?.map((t: any) => {
+                    const mIndex = t.members?.findIndex((m: any) => m.id === memberId);
+                    if (mIndex >= 0) {
+                        updated = true;
+                        const members = [...t.members];
+                        members[mIndex] = {
+                            ...members[mIndex],
+                            lastLocation: { lat, lng, timestamp: Date.now() },
+                            path: [...(members[mIndex].path || []), { lat, lng, timestamp: Date.now() }]
+                        };
+                        return { ...t, members };
+                    }
+                    return t;
+                });
+                return updated ? { ...prev, teams: newTeams } : prev;
+            });
+        }).subscribe();
+
         const interval = setInterval(fetchOp, 5000); // 5 saniyede bir daha sık güncelle (Canlı takip için)
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            supabase.removeChannel(channel);
+        }
     }, [id, router]);
 
     if (loading) {

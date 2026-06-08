@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, LayersControl, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { supabase } from "@/lib/supabase";
 
 // Kendi ikonumuzu CSS ile çizelim (unpkg yasaklamalarına karşı ve daha şık)
 const createCustomIcon = (color: string) => L.divIcon({
@@ -157,6 +158,17 @@ export default function OfflineMap({
   const [locateTrigger, setLocateTrigger] = useState(0);
   const [initialLocateDone, setInitialLocateDone] = useState(false);
   const lastPingRef = useRef<number>(0);
+  const channelRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Setup Supabase Realtime channel for broadcasting
+    channelRef.current = supabase.channel('operations-channel');
+    channelRef.current.subscribe();
+    
+    return () => {
+        if (channelRef.current) supabase.removeChannel(channelRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (myPos && !initialLocateDone) {
@@ -173,6 +185,16 @@ export default function OfflineMap({
       if (!userId) return;
 
       try {
+          // Send broadcast instantly via Supabase WebSockets!
+          if (channelRef.current) {
+              channelRef.current.send({
+                  type: 'broadcast',
+                  event: 'location_update',
+                  payload: { memberId: userId, lat, lng }
+              });
+          }
+
+          // Also save to database
           await fetch('/api/settings/operations/active/location', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
