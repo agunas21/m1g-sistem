@@ -18,7 +18,7 @@ import OperationSummaryModal from "@/components/modals/OperationSummaryModal";
 
 const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
     ssr: false,
-    loading: () => <div className="w-full h-64 bg-[#050B14] rounded-3xl animate-pulse flex items-center justify-center border border-white/5"><Compass className="animate-spin text-neutral-500" size={32} /></div>
+    loading: () => <div className="w-full h-64 bg-[#050B14] rounded-3xl  flex items-center justify-center border border-white/5"><Compass className="animate-spin text-neutral-500" size={32} /></div>
 });
 
 // Types
@@ -1251,7 +1251,7 @@ export default function Operasyonlar() {
                     <X size={24} />
                 </button>
                 <div className="text-center mb-8">
-                    <ScanBarcode size={48} className="mx-auto text-red-500 mb-4 animate-pulse" />
+                    <ScanBarcode size={48} className="mx-auto text-red-500 mb-4 " />
                     <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Hızlı Sevk Barkod Okuyucu</h2>
                     <p className="text-neutral-400 mt-2 text-sm font-light">Üye kimlik QR kodunu veya envanter barkodunu gösterin veya fotoğraf yükleyin.</p>
                 </div>
@@ -1452,10 +1452,10 @@ export default function Operasyonlar() {
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                            <Activity className="text-red-500 animate-pulse" size={28} /> Afet Komuta & Sevk Masası
+                            <Activity className="text-red-500 " size={28} /> Afet Komuta & Sevk Masası
                         </h1>
                         {isOffline && (
-                            <span className="px-3 py-1 bg-red-600/20 text-red-500 border border-red-500/20 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">
+                            <span className="px-3 py-1 bg-red-600/20 text-red-500 border border-red-500/20 rounded-full text-[10px] font-black uppercase tracking-widest ">
                                 Çevrimdışı Mod
                             </span>
                         )}
@@ -1465,7 +1465,7 @@ export default function Operasyonlar() {
                 <div className="flex items-center gap-3">
                     <button 
                         onClick={handlePanicStart}
-                        className="px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_30px_rgba(239,68,68,0.5)] border border-red-500/20 animate-pulse"
+                        className="px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_30px_rgba(239,68,68,0.5)] border border-red-500/20 "
                     >
                         <ShieldAlert size={16} /> ACİL AFET MODUNU AÇ
                     </button>
@@ -1517,7 +1517,7 @@ export default function Operasyonlar() {
                                         </div>
                                         <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest border ${
                                             isActive 
-                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 animate-pulse' 
+                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 ' 
                                             : 'bg-neutral-800 text-neutral-500 border-white/10'
                                         }`}>
                                             {op.status}
@@ -1553,7 +1553,7 @@ export default function Operasyonlar() {
                                         {selectedOp.status === "Aktif" && (
                                             <button 
                                                 onDoubleClick={triggerEvacuationAlert} 
-                                                className={`px-4 py-2.5 ${selectedOp.isEvacuationActive ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${!selectedOp.isEvacuationActive && 'animate-pulse'} shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-white/10`}
+                                                className={`px-4 py-2.5 ${selectedOp.isEvacuationActive ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${!selectedOp.isEvacuationActive && ''} shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-white/10`}
                                                 title="ÇİFT TIKLA: Saha Tahliye Alarmını Aç / Kapat"
                                             >
                                                 <ShieldAlert size={14} /> {selectedOp.isEvacuationActive ? 'ALARM KAPAT (ÇİFT TIK)' : '🚨 TAHLİYE SİRENİ (ÇİFT TIK)'}
@@ -1593,9 +1593,9 @@ export default function Operasyonlar() {
                                 </div>
 
                                 {selectedOp.isEvacuationActive && (
-                                    <div className="bg-red-600 text-white px-5 py-3.5 rounded-2xl flex items-center justify-between border border-red-500/30 animate-pulse text-xs font-extrabold tracking-wider uppercase shadow-[0_0_30px_rgba(220,38,38,0.5)]">
+                                    <div className="bg-red-600 text-white px-5 py-3.5 rounded-2xl flex items-center justify-between border border-red-500/30  text-xs font-extrabold tracking-wider uppercase shadow-[0_0_30px_rgba(220,38,38,0.5)]">
                                         <div className="flex items-center gap-2">
-                                            <ShieldAlert size={20} className="animate-bounce" />
+                                            <ShieldAlert size={20} className="" />
                                             <span>⚠️ TAHLİYE ALARMI AKTİF: Tüm ekipler kampa çekildi! Tahliyeleri onaylayın.</span>
                                         </div>
                                         <button onDoubleClick={triggerEvacuationAlert} className="px-3 py-1 bg-white text-red-600 rounded font-black text-[10px]">SİRENİ SUSTUR</button>
@@ -1736,7 +1736,7 @@ export default function Operasyonlar() {
                                                             <div className="flex items-center gap-2">
                                                                 <h4 className="text-white font-bold text-sm">{team.name}</h4>
                                                                 <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                                                                    isDeployed ? 'bg-red-500/20 text-red-400 border border-red-500/10 animate-pulse' : 'bg-blue-500/20 text-blue-400 border border-blue-500/10'
+                                                                    isDeployed ? 'bg-red-500/20 text-red-400 border border-red-500/10 ' : 'bg-blue-500/20 text-blue-400 border border-blue-500/10'
                                                                 }`}>
                                                                     {team.status}
                                                                 </span>
@@ -2100,7 +2100,7 @@ export default function Operasyonlar() {
                         </div>
                     ) : (
                         <div className="py-20 flex flex-col items-center justify-center text-center bg-[#050B14] border border-white/5 rounded-3xl p-6 shadow-2xl">
-                            <Activity size={64} className="text-neutral-700 mb-4 animate-pulse" />
+                            <Activity size={64} className="text-neutral-700 mb-4 " />
                             <h2 className="text-xl font-bold">Faaliyet Bulunmuyor</h2>
                             <p className="text-neutral-500 text-sm mt-1">Lütfen yeni bir faaliyet başlatın veya yan taraftan seçin.</p>
                         </div>
@@ -2248,6 +2248,7 @@ export default function Operasyonlar() {
                                         });
                                         setNewPinPos(null);
                                         setNewPinName("");
+                                        fetchData();
                                     } catch(e) {
                                         alert("Hata oluştu.");
                                     }
@@ -2269,7 +2270,7 @@ export default function Operasyonlar() {
                         className="bg-[#050B14] border border-white/10 rounded-3xl p-6 max-w-md w-full space-y-6 text-center shadow-2xl"
                     >
                         <div>
-                            <Heart size={44} className="text-red-500 mx-auto animate-pulse mb-3" />
+                            <Heart size={44} className="text-red-500 mx-auto  mb-3" />
                             <h3 className="text-lg font-black text-white uppercase tracking-tight">Tim Nabız Yoklaması (Debriefing)</h3>
                             <p className="text-neutral-400 text-xs mt-2 leading-relaxed">
                                 Deplase olan ekibin kampa dönüş anındaki fiziksel/tıbbi yıpranma durumunu 1 saniyede kaydedin.
@@ -2295,7 +2296,7 @@ export default function Operasyonlar() {
                             
                             <button 
                                 onClick={() => submitDebrief("Kırmızı")}
-                                className="p-4 bg-red-500/10 border-2 border-red-500/20 hover:border-red-500/80 rounded-2xl flex flex-col items-center justify-center transition-all group animate-pulse"
+                                className="p-4 bg-red-500/10 border-2 border-red-500/20 hover:border-red-500/80 rounded-2xl flex flex-col items-center justify-center transition-all group "
                             >
                                 <span className="w-4 h-4 rounded-full bg-red-500 mb-2 group-hover:scale-110 transition-transform" />
                                 <span className="text-xs font-black text-red-400 uppercase tracking-wide">Tükendi</span>

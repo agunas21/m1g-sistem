@@ -12,7 +12,7 @@ import dynamic from "next/dynamic";
 
 const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
     ssr: false,
-    loading: () => <div className="w-full h-48 bg-[#050B14] rounded-3xl animate-pulse flex items-center justify-center border border-white/5"><Compass className="animate-spin text-neutral-500" size={32} /></div>
+    loading: () => <div className="w-full h-48 bg-[#050B14] rounded-3xl  flex items-center justify-center border border-white/5"><Compass className="animate-spin text-neutral-500" size={32} /></div>
 });
 
 export default function OperasyonDetayPage({ params }: { params: Promise<{ id: string }> }) {
@@ -131,6 +131,7 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                                         });
                                         setPinModal(null);
                                         setPinName("");
+                                        fetchOp();
                                     } catch(e) {
                                         alert("Hata oluştu.");
                                     }
@@ -153,7 +154,7 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                 <div>
                     <div className="flex items-center gap-3 mb-1">
                         <div className="flex items-center gap-2 bg-red-500/20 px-2.5 py-1 rounded-md border border-red-500/30">
-                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 " />
                             <span className="text-[9px] font-black text-red-500 uppercase tracking-widest">CANLI İZLEME</span>
                         </div>
                         <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest border border-white/10 px-2 py-0.5 rounded">

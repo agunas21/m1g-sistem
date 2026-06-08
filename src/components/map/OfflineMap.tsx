@@ -6,15 +6,34 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 // Kendi ikonumuzu CSS ile çizelim (unpkg yasaklamalarına karşı ve daha şık)
-const customIcon = L.divIcon({
+const createCustomIcon = (color: string) => L.divIcon({
   className: 'custom-div-icon',
-  html: `<div style="background-color: #dc2626; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative;">
+  html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative;">
           <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: white; border-radius: 50%;"></div>
          </div>`,
   iconSize: [20, 20],
   iconAnchor: [10, 10],
-  popupAnchor: [0, -10],
+  popupAnchor: [0, -10]
 });
+
+const TEAM_COLORS = [
+    '#ef4444', // red
+    '#3b82f6', // blue
+    '#10b981', // emerald
+    '#f59e0b', // amber
+    '#8b5cf6', // violet
+    '#ec4899', // pink
+    '#14b8a6', // teal
+];
+
+const getTeamColor = (teamName: string) => {
+    if (!teamName) return TEAM_COLORS[0];
+    let hash = 0;
+    for (let i = 0; i < teamName.length; i++) {
+        hash = teamName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return TEAM_COLORS[Math.abs(hash) % TEAM_COLORS.length];
+};
 
 const getPinIcon = (type: string) => {
   let bgColor = "#3b82f6"; // default blue
@@ -218,21 +237,29 @@ export default function OfflineMap({
 
       <MapEventHandler onClick={onMapClick} />
       
-      {members.map((m, idx) => (
-        <div key={`member-group-${m.id}-${idx}`}>
-            {m.path && m.path.length > 1 && (
-                <Polyline positions={m.path} color="#3b82f6" weight={3} opacity={0.6} dashArray="5, 5" />
-            )}
-            <Marker position={m.location} icon={customIcon}>
-                <Popup>
-                <div className="text-neutral-900">
-                    <strong className="block text-sm">{m.id.substring(0,8)}...</strong>
-                    <span className="text-xs text-neutral-500 font-bold uppercase">{m.teamName} - {m.role}</span>
-                </div>
-                </Popup>
-            </Marker>
-        </div>
-      ))}
+      {/* İpucu */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-black/80 backdrop-blur border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-2 pointer-events-none">
+          <span className="text-[10px] font-bold text-neutral-300 tracking-wider">HARİTAYA TIKLAYARAK İŞARET (PİN) BIRAKABİLİRSİNİZ</span>
+      </div>
+
+      {members.map((m, idx) => {
+        const tColor = getTeamColor(m.teamName);
+        return (
+            <div key={`member-group-${m.id}-${idx}`}>
+                {m.path && m.path.length > 1 && (
+                    <Polyline positions={m.path} color={tColor} weight={3} opacity={0.6} dashArray="5, 5" />
+                )}
+                <Marker position={m.location} icon={createCustomIcon(tColor)}>
+                    <Popup>
+                    <div className="text-neutral-900">
+                        <strong className="block text-sm">{m.id.substring(0,8)}...</strong>
+                        <span className="text-xs font-bold uppercase block mt-1" style={{color: tColor}}>{m.teamName} - {m.role}</span>
+                    </div>
+                    </Popup>
+                </Marker>
+            </div>
+        );
+      })}
 
       {pins.map((pin) => (
         <Marker key={pin.id} position={pin.location} icon={getPinIcon(pin.type)}>
@@ -248,9 +275,8 @@ export default function OfflineMap({
       {myPos && (
         <Marker position={myPos} icon={myLocationIcon}>
           <Popup>
-            <div className="text-neutral-900 text-center">
-              <strong className="block text-sm text-blue-600">Senin Konumun</strong>
-              <span className="text-[10px] text-neutral-500">Mevcut Koordinatların</span>
+            <div className="text-neutral-900 text-center font-bold text-xs uppercase tracking-wider">
+              Konumum
             </div>
           </Popup>
         </Marker>
