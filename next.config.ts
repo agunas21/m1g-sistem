@@ -6,6 +6,29 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
   register: true,
   cacheOnFrontEndNav: false,
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/.*\.tile\.openstreetmap\.org\/.*/i,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'map-tiles',
+          expiration: {
+            maxEntries: 1000,
+            maxAgeSeconds: 7 * 24 * 60 * 60, // 1 Hafta offline kalabilir
+          },
+        },
+      },
+      {
+        urlPattern: /^https:\/\/.*\.google\.com\/.*/i,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'google-apis',
+          expiration: { maxAgeSeconds: 24 * 60 * 60 },
+        },
+      }
+    ]
+  }
 });
 
 const CSP = [

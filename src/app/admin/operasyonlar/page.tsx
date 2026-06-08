@@ -123,6 +123,8 @@ export default function Operasyonlar() {
     const [isOffline, setIsOffline] = useState(false);
     const [offlineQueueCount, setOfflineQueueCount] = useState(0);
     const [tick, setTick] = useState(0);
+    const [radarWarnings, setRadarWarnings] = useState<string[]>([]);
+    const [showQrModal, setShowQrModal] = useState(false);
 
     // Form states for new operation
     const [newOpData, setNewOpData] = useState({
@@ -265,7 +267,7 @@ export default function Operasyonlar() {
         // --- Supabase Realtime (WebSockets) ---
         const channel = supabase.channel('operations-channel');
         channel.on('broadcast', { event: 'location_update' }, (payload) => {
-            const { memberId, lat, lng } = payload.payload;
+            const { memberId, lat, lng, battery } = payload.payload;
             
             setSelectedOp((prev: any) => {
                 if (!prev) return prev;
@@ -275,9 +277,34 @@ export default function Operasyonlar() {
                     if (mIndex >= 0) {
                         updated = true;
                         const members = [...t.members];
+                        
+                        // Hız Anomalisi ve Geofence Kontrolü
+                        const oldLoc = members[mIndex].lastLocation;
+                        if (oldLoc) {
+                            const R = 6371;
+                            const dLat = (lat - oldLoc.lat) * (Math.PI/180);
+                            const dLon = (lng - oldLoc.lng) * (Math.PI/180);
+                            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                                      Math.cos(oldLoc.lat * (Math.PI/180)) * Math.cos(lat * (Math.PI/180)) * 
+                                      Math.sin(dLon/2) * Math.sin(dLon/2); 
+                            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+                            
+                            const timeDiffHours = (Date.now() - oldLoc.timestamp) / (1000 * 60 * 60);
+                            if (timeDiffHours > 0) {
+                                const speed = dist / timeDiffHours;
+                                if (speed > 150) {
+                                    setRadarWarnings(w => {
+                                        const msg = `🚨 [GPS Anomalisi] ${memberId} ${Math.round(speed)}km/h hızla yer değiştirdi (Işınlanma)!`;
+                                        if (w.includes(msg)) return w;
+                                        return [...w, msg].slice(-5);
+                                    });
+                                }
+                            }
+                        }
+
                         members[mIndex] = {
                             ...members[mIndex],
-                            lastLocation: { lat, lng, timestamp: Date.now() },
+                            lastLocation: { lat, lng, timestamp: Date.now(), battery },
                             path: [...(members[mIndex].path || []), { lat, lng, timestamp: Date.now() }]
                         };
                         return { ...t, members };
@@ -1487,10 +1514,15 @@ export default function Operasyonlar() {
                                         {selectedOp.status === "Aktif" && (
                                             <button 
                                                 onDoubleClick={triggerEvacuationAlert} 
-                                                className={`px-4 py-2.5 ${selectedOp.isEvacuationActive ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${!selectedOp.isEvacuationActive && ''} shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-white/10`}
+                                                className={`px-4 py-2.5 ${selectedOp.isEvacuationActive ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-white/10`}
                                                 title="ÇİFT TIKLA: Saha Tahliye Alarmını Aç / Kapat"
                                             >
                                                 <ShieldAlert size={14} /> {selectedOp.isEvacuationActive ? 'ALARM KAPAT (ÇİFT TIK)' : '🚨 TAHLİYE SİRENİ (ÇİFT TIK)'}
+                                            </button>
+                                        )}
+                                        {selectedOp.status === "Aktif" && (
+                                            <button onClick={() => setShowQrModal(true)} className="px-4 py-2.5 bg-indigo-600/20 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all border border-indigo-500/20">
+                                                <ScanBarcode size={14} /> TİM BAĞLANTI QR
                                             </button>
                                         )}
                                         {selectedOp.status === "Aktif" ? (
@@ -1529,10 +1561,29 @@ export default function Operasyonlar() {
                                 {selectedOp.isEvacuationActive && (
                                     <div className="bg-red-600 text-white px-5 py-3.5 rounded-2xl flex items-center justify-between border border-red-500/30  text-xs font-extrabold tracking-wider uppercase shadow-[0_0_30px_rgba(220,38,38,0.5)]">
                                         <div className="flex items-center gap-2">
-                                            <ShieldAlert size={20} className="" />
+                                            <ShieldAlert size={20} />
                                             <span>⚠️ TAHLİYE ALARMI AKTİF: Tüm ekipler kampa çekildi! Tahliyeleri onaylayın.</span>
                                         </div>
                                         <button onDoubleClick={triggerEvacuationAlert} className="px-3 py-1 bg-white text-red-600 rounded font-black text-[10px]">SİRENİ SUSTUR</button>
+                                    </div>
+                                )}
+
+                                {/* Komuta Merkezi Radarı (Geofence / Anomaly) */}
+                                {radarWarnings.length > 0 && (
+                                    <div className="bg-red-950/40 border border-red-500/30 rounded-2xl p-4">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h3 className="text-red-400 font-bold uppercase text-xs tracking-widest flex items-center gap-2">
+                                                <Activity size={14} /> Sistem Radar Uyarıları
+                                            </h3>
+                                            <button onClick={() => setRadarWarnings([])} className="text-red-500 hover:text-white text-[10px] font-bold uppercase">Temizle</button>
+                                        </div>
+                                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                                            {radarWarnings.map((w, idx) => (
+                                                <div key={idx} className="bg-red-500/10 text-red-300 text-xs py-1.5 px-3 rounded font-mono border border-red-500/20">
+                                                    {w}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
 
@@ -2354,6 +2405,41 @@ export default function Operasyonlar() {
                     operation={finishedOperation} 
                     onClose={() => setShowSummaryModal(false)} 
                 />
+            )}
+            {/* TEAM QR CODE MODAL */}
+            {showQrModal && selectedOp && (
+                <div className="fixed inset-0 bg-black/80 z-[999] flex items-center justify-center p-4">
+                    <div className="bg-[#050B14] border border-white/10 rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center relative overflow-hidden">
+                        <button onClick={() => setShowQrModal(false)} className="absolute top-4 right-4 text-neutral-500 hover:text-white">
+                            <X size={24} />
+                        </button>
+                        <h3 className="text-white font-black text-xl mb-1 uppercase tracking-tight">Sahaya Katılım</h3>
+                        <p className="text-neutral-400 text-xs mb-6">Tim personelinin bu operasyona anında katılması için QR kodu okutması yeterlidir.</p>
+                        
+                        <div className="bg-white p-4 rounded-xl inline-block mb-6 shadow-xl">
+                            <img 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/portal/operasyonlar/${selectedOp.id}`)}`} 
+                                alt="Operation QR" 
+                                className="w-48 h-48"
+                            />
+                        </div>
+                        
+                        <div className="bg-black/50 border border-white/5 p-3 rounded-xl flex items-center justify-between">
+                            <span className="text-neutral-500 font-mono text-xs truncate max-w-[200px]">
+                                {`${window.location.origin}/portal/operasyonlar/${selectedOp.id}`}
+                            </span>
+                            <button 
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}/portal/operasyonlar/${selectedOp.id}`);
+                                    alert("Link kopyalandı!");
+                                }}
+                                className="text-blue-500 text-xs font-bold uppercase hover:text-blue-400"
+                            >
+                                Kopyala
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -10,6 +10,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
+import { useLocationTracker } from "@/hooks/useLocationTracker";
 
 const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
     ssr: false,
@@ -24,6 +25,12 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
     const [isAdmin, setIsAdmin] = useState(false);
     const [user, setUser] = useState<any>(null);
     
+    const { isTracking, lastSent, accuracy, battery, error, startTracking, stopTracking } = useLocationTracker({
+        memberId: user?.id || user?.uid || user?.email || "anonymous",
+        intervalMs: 5000,
+        highAccuracy: true
+    });
+
     const [pinModal, setPinModal] = useState<{lat: number, lng: number} | null>(null);
     const [pinName, setPinName] = useState("");
     const [pinType, setPinType] = useState("Kamp");
@@ -226,6 +233,56 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                     <span className="text-sm font-bold text-white">{operation.teams?.length || 0} Tim</span>
                 </div>
             </div>
+
+            {/* GPS Takip Paneli (Yeni) */}
+            <div className="bg-[#050B14] p-5 rounded-3xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+                <div className="flex-1">
+                    <h3 className="text-white font-bold uppercase tracking-widest flex items-center gap-2 mb-1">
+                        <Compass className={isTracking ? "text-emerald-500 animate-spin-slow" : "text-neutral-500"} size={20}/>
+                        GPS Saha Takip Modülü
+                    </h3>
+                    <p className="text-xs text-neutral-400">Arka planda konum ve batarya verilerinizi komuta merkezine iletir. Lütfen sahaya inmeden önce aktif edin.</p>
+                </div>
+                
+                <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest bg-black/40 p-3 rounded-xl border border-white/5">
+                    <div className="flex flex-col items-center">
+                        <span className="text-neutral-500 mb-1">Doğruluk</span>
+                        <span className={accuracy && accuracy < 20 ? "text-emerald-400" : "text-amber-400"}>
+                            {accuracy ? `±${Math.round(accuracy)}m` : '-'}
+                        </span>
+                    </div>
+                    <div className="w-px h-8 bg-white/10" />
+                    <div className="flex flex-col items-center">
+                        <span className="text-neutral-500 mb-1">Batarya</span>
+                        <span className={battery && battery < 20 ? "text-red-500" : "text-emerald-400"}>
+                            {battery ? `%${battery}` : '-'}
+                        </span>
+                    </div>
+                    <div className="w-px h-8 bg-white/10" />
+                    <div className="flex flex-col items-center">
+                        <span className="text-neutral-500 mb-1">Son Veri</span>
+                        <span className="text-blue-400">
+                            {lastSent ? lastSent.toLocaleTimeString('tr-TR') : '-'}
+                        </span>
+                    </div>
+                </div>
+
+                <button 
+                    onClick={isTracking ? stopTracking : startTracking}
+                    className={`px-8 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-xl border ${
+                        isTracking 
+                        ? 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20' 
+                        : 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-500'
+                    }`}
+                >
+                    {isTracking ? "Takibi Durdur" : "Takibi Başlat"}
+                </button>
+            </div>
+            {error && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-widest p-3 rounded-xl flex items-center gap-2">
+                    <AlertTriangle size={16} /> {error}
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
                 
