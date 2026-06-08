@@ -1387,32 +1387,23 @@ export default function Operasyonlar() {
                 {/* Operations side panel */}
                 <div className="lg:col-span-1 space-y-4">
                     <h2 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-3">
-                        <Clock size={16} className="text-blue-500" /> Faaliyet & Tatbikatlar
+                        <Clock size={16} className="text-blue-500" /> Aktif Operasyonlar
                     </h2>
                     
-                    <div className="space-y-3 max-h-[75vh] overflow-y-auto pr-2">
-                        {operations.map(op => {
+                    <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
+                        {operations.filter(op => op.status === "Aktif").map(op => {
                             const isPanic = op.id.includes("PANIC");
-                            const isActive = op.status === "Aktif";
+                            const isActive = true;
                             return (
                                 <div 
                                     key={op.id} 
                                     onClick={() => setSelectedOp(op)}
-                                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                                        selectedOp?.id === op.id 
-                                        ? 'bg-white/10 border-red-500/50 shadow-2xl' 
-                                        : isPanic 
-                                            ? 'bg-red-950/10 border-red-900/30 hover:border-red-500/30'
-                                            : 'bg-[#020617] border-white/5 hover:border-white/20'
-                                    }`}
+                                    className={`p-3 rounded-xl border cursor-pointer transition-all ${selectedOp?.id === op.id ? 'bg-red-600/10 border-red-500/30' : 'bg-black/50 border-white/5 hover:border-white/20'}`}
                                 >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <span className={`text-[8px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase mr-2 ${
-                                                isPanic ? 'bg-red-500/20 text-red-400 border border-red-500/20' :
-                                                op.type === 'Deprem' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/20' :
-                                                op.type === 'Yangın' ? 'bg-red-500/20 text-red-400 border border-red-500/20' :
-                                                'bg-blue-500/20 text-blue-400 border border-blue-500/20'
+                                    <div className="flex justify-between items-start mb-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded border ${
+                                                isPanic ? 'bg-red-500/20 text-red-500 border-red-500/20' : 'bg-white/5 text-white border-white/10'
                                             }`}>
                                                 {isPanic ? 'PANİK' : op.type}
                                             </span>
@@ -1433,6 +1424,32 @@ export default function Operasyonlar() {
                                     </div>
                                 </div>
                             );
+                        })}
+                    </div>
+
+                    <h2 className="text-xs font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-3 mt-6">
+                        <Clock size={16} className="text-neutral-600" /> Geçmiş Operasyonlar
+                    </h2>
+                    
+                    <div className="space-y-3 max-h-[35vh] overflow-y-auto pr-2 opacity-70">
+                        {operations.filter(op => op.status === "Tamamlandı").map(op => {
+                            return (
+                                <div 
+                                    key={op.id} 
+                                    onClick={() => setSelectedOp(op)}
+                                    className={`p-3 rounded-xl border cursor-pointer transition-all bg-black/50 border-white/5 hover:border-white/20`}
+                                >
+                                    <div className="flex justify-between items-start mb-1">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="px-2 py-0.5 bg-neutral-500/20 text-neutral-400 text-[10px] font-bold uppercase rounded-md border border-neutral-500/20">{op.type}</span>
+                                                <span className="text-[10px] font-medium text-neutral-600 font-mono">{op.endTime?.substring(0,10)}</span>
+                                            </div>
+                                            <h3 className="font-bold text-neutral-300 text-sm leading-tight">{op.name}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
                         })}
                     </div>
                 </div>
