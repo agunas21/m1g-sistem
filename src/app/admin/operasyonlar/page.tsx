@@ -271,8 +271,29 @@ export default function Operasyonlar() {
 
         fetchData();
 
+        // Haritada canlı takip için operasyonları arka planda 5 saniyede bir güncelle
+        const liveInterval = setInterval(async () => {
+            if (!isOnline) return;
+            try {
+                const opRes = await fetch("/api/settings/operations/active?t=" + Date.now());
+                if (opRes.ok) {
+                    const opData = await opRes.json();
+                    setOperations(opData.operations || []);
+                    
+                    setSelectedOp((prev: any) => {
+                        if (!prev) return prev;
+                        const updated = (opData.operations || []).find((o: any) => o.id === prev.id);
+                        return updated || prev;
+                    });
+                }
+            } catch (e) {
+                // Silently ignore errors
+            }
+        }, 5000);
+
         return () => {
             clearInterval(timer);
+            clearInterval(liveInterval);
         };
     }, []);
 

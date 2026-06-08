@@ -209,7 +209,7 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                             })) || []} 
                             members={mapMembers}
                             pins={operation.pins || []}
-                            userId={user?.uid || user?.email}
+                            userId={user?.id || user?.uid || user?.email}
                             onMapClick={(lat, lng) => {
                                 const userId = user?.id || user?.uid || user?.email || "";
                                 const userName = user?.name || user?.fullName || "";

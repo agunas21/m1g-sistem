@@ -39,12 +39,11 @@ export async function POST(req: Request) {
         for (let i = 0; i < operations.length; i++) {
             if (operations[i].status !== 'Aktif') continue;
 
-            // Bu operasyonun timlerinde bu member var mı ve tim "Sahada" mı?
+            // Bu operasyonun timlerinde bu member var mı? (Kampta veya Sahada fark etmez, takip et)
             for (let t = 0; t < operations[i].teams.length; t++) {
                 const team = operations[i].teams[t];
-                if (team.status === 'Sahada') {
-                    const memberIndex = team.members.findIndex((m: any) => m.id === memberId);
-                    if (memberIndex !== -1) {
+                const memberIndex = team.members.findIndex((m: any) => m.id === memberId);
+                if (memberIndex !== -1) {
                         const m = team.members[memberIndex];
                         
                         const newLocation = { lat, lng, timestamp: Date.now() };
