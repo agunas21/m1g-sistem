@@ -87,6 +87,18 @@ function LocateControl({ pos, trigger }: { pos: [number, number] | null, trigger
   return null;
 }
 
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    // Harita yüklendikten hemen sonra boyutları hesapla (Mobil gri ekran sorununu çözer)
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
+
 interface OfflineMapProps {
   center?: [number, number];
   zoom?: number;
@@ -269,11 +281,12 @@ export default function OfflineMap({
         </LayersControl.BaseLayer>
       </LayersControl>
 
+      <MapResizer />
       <MapEventHandler onClick={onMapClick} />
       
       {/* İpucu */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-black/80 backdrop-blur border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-2 pointer-events-none">
-          <span className="text-[10px] font-bold text-neutral-300 tracking-wider">HARİTAYA TIKLAYARAK İŞARET (PİN) BIRAKABİLİRSİNİZ</span>
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-black/80 backdrop-blur border border-white/10 px-3 py-1.5 md:px-4 rounded-full flex items-center justify-center pointer-events-none w-max max-w-[80%] text-center">
+          <span className="text-[9px] md:text-[10px] font-bold text-neutral-300 tracking-widest leading-tight">PİN İÇİN HARİTAYA TIKLA</span>
       </div>
 
       {members.map((m, idx) => {
