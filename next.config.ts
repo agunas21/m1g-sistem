@@ -8,6 +8,8 @@ const withPWA = withPWAInit({
   skipWaiting: true,
   clientsClaim: true,
   cacheOnFrontEndNav: false,
+  // SW'nin response header'larını cache'lememesi için:
+  runtimeCaching: [], // varsayılan cache stratejilerini devre dışı bırak
 });
 
 const CSP = [
@@ -35,9 +37,8 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Content-Security-Policy', value: CSP },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
-  { key: 'Cross-Origin-Resource-Policy', value: 'same-site' },
-  // Disable Cache-Control to allow Service Worker caching for PWA
-  // { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+  { key: 'Permissions-Policy', value: 'geolocation=*, camera=(), microphone=()' },
 ];
 
 const nextConfig: NextConfig = {
@@ -48,16 +49,10 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: '**' }
     ],
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   experimental: {
-    serverActions: {
-      bodySizeLimit: '60mb',
-    },
+    serverActions: { bodySizeLimit: '60mb' },
   },
   poweredByHeader: false,
   async headers() {
@@ -67,12 +62,17 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
       {
+        // SW için hem Cache-Control hem Permissions-Policy tekrar açıkça set ediliyor
         source: "/sw.js",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "no-cache, no-store, must-revalidate",
-          },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Permissions-Policy", value: "geolocation=*, camera=(), microphone=()" },
+        ],
+      },
+      {
+        source: "/workbox-:hash.js", // workbox chunk'ları da cache'lenmesin
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
         ],
       },
       {
@@ -80,8 +80,7 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'Access-Control-Allow-Origin', value: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Requested-With' },
-          { key: 'Access-Control-Max-Age', value: '86400' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
         ],
       },
     ];
