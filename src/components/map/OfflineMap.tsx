@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, LayersControl } from "react-leaflet";
+import { useEffect, useState, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, LayersControl, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -77,12 +77,21 @@ interface OfflineMapProps {
     location?: [number, number]; // [lat, lng]
     status: string;
   }>;
+  members?: Array<{
+    id: string;
+    name: string;
+    teamName: string;
+    role: string;
+    location: [number, number];
+    path: [number, number][];
+  }>;
   pins?: Array<{
     id: string;
     name: string;
     type: string;
     location: [number, number];
   }>;
+  userId?: string;
   onMapClick?: (lat: number, lng: number) => void;
 }
 
@@ -90,12 +99,37 @@ export default function OfflineMap({
   center = [38.4237, 27.1428], // İzmir
   zoom = 10,
   teams = [],
+  members = [],
   pins = [],
+  userId,
   onMapClick
 }: OfflineMapProps) {
   const [mounted, setMounted] = useState(false);
   const [myPos, setMyPos] = useState<[number, number] | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const lastPingRef = useRef<number>(0);
+
+  const pingLocation = async (lat: number, lng: number) => {
+      const now = Date.now();
+      if (now - lastPingRef.current < 5000) return; // En fazla 5 saniyede bir at
+      lastPingRef.current = now;
+
+      if (!userId) return;
+
+      try {
+          await fetch('/api/settings/operations/active/location', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  memberId: userId,
+                  lat,
+                  lng
+              })
+          });
+      } catch (e) {
+          console.error("GPS Ping gönderilemedi", e);
+      }
+  };
 
   const startTracking = () => {
     if ("geolocation" in navigator) {
@@ -103,6 +137,7 @@ export default function OfflineMap({
         (pos) => {
             setMyPos([pos.coords.latitude, pos.coords.longitude]);
             setGpsError(null);
+            pingLocation(pos.coords.latitude, pos.coords.longitude);
         },
         (err) => {
             console.log("Konum hatası:", err);
@@ -113,7 +148,10 @@ export default function OfflineMap({
       );
       
       const watchId = navigator.geolocation.watchPosition(
-        (pos) => setMyPos([pos.coords.latitude, pos.coords.longitude]),
+        (pos) => {
+            setMyPos([pos.coords.latitude, pos.coords.longitude]);
+            pingLocation(pos.coords.latitude, pos.coords.longitude);
+        },
         (err) => console.log("Canlı konum alınamadı:", err),
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
@@ -142,6 +180,14 @@ export default function OfflineMap({
       zoomControl={true}
     >
       <LayersControl position="topright">
+        <LayersControl.BaseLayer name="Çevrimdışı (Ege Bölgesi)">
+          <TileLayer
+            attribution='&copy; Çevrimdışı M1G Haritası'
+            url="/tiles/{z}/{x}/{y}.png"
+            maxZoom={12}
+            minZoom={8}
+          />
+        </LayersControl.BaseLayer>
         <LayersControl.BaseLayer name="Standart Sokak (OSM)" checked>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -172,20 +218,21 @@ export default function OfflineMap({
 
       <MapEventHandler onClick={onMapClick} />
       
-      {teams.map((team, idx) => {
-        // Only render marker if team actually has a location
-        if (!team.location || !team.location[0]) return null;
-        return (
-          <Marker key={team.id} position={team.location as [number, number]} icon={customIcon}>
-            <Popup>
-              <div className="text-neutral-900">
-                <strong className="block text-sm">{team.name}</strong>
-                <span className="text-xs text-neutral-500">Durum: {team.status}</span>
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
+      {members.map((m, idx) => (
+        <div key={`member-group-${m.id}-${idx}`}>
+            {m.path && m.path.length > 1 && (
+                <Polyline positions={m.path} color="#3b82f6" weight={3} opacity={0.6} dashArray="5, 5" />
+            )}
+            <Marker position={m.location} icon={customIcon}>
+                <Popup>
+                <div className="text-neutral-900">
+                    <strong className="block text-sm">{m.id.substring(0,8)}...</strong>
+                    <span className="text-xs text-neutral-500 font-bold uppercase">{m.teamName} - {m.role}</span>
+                </div>
+                </Popup>
+            </Marker>
+        </div>
+      ))}
 
       {pins.map((pin) => (
         <Marker key={pin.id} position={pin.location} icon={getPinIcon(pin.type)}>

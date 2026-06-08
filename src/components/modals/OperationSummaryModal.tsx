@@ -98,7 +98,14 @@ export default function OperationSummaryModal({ operation, onClose }: OperationS
                                         <tr key={t.id} className="bg-white">
                                             <td className="px-4 py-3">{t.name}</td>
                                             <td className="px-4 py-3">{t.status}</td>
-                                            <td className="px-4 py-3">{t.members?.length || 0} Kişi</td>
+                                            <td className="px-4 py-3">
+                                                {t.members?.length || 0} Kişi
+                                                {t.members?.some((m: any) => m.distanceCovered) && (
+                                                    <div className="text-xs text-neutral-500 mt-1 font-bold">
+                                                        Toplam Yürüyüş: {(t.members.reduce((sum: number, m: any) => sum + (m.distanceCovered || 0), 0)).toFixed(2)} km
+                                                    </div>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

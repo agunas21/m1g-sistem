@@ -20,6 +20,12 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
     const router = useRouter();
     const [operation, setOperation] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    
+    const [pinModal, setPinModal] = useState<{lat: number, lng: number} | null>(null);
+    const [pinName, setPinName] = useState("");
+    const [pinType, setPinType] = useState("Kamp");
 
     useEffect(() => {
         const fetchOp = async () => {
@@ -43,8 +49,18 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
             }
         };
 
-        fetchOp();
-        const interval = setInterval(fetchOp, 15000); // 15 saniyede bir daha sık güncelle
+        const init = async () => {
+            const userRes = await fetch("/api/auth/me");
+            if (userRes.ok) {
+                const u = await userRes.json();
+                setUser(u);
+                setIsAdmin(u.isAdmin || u.isSuperAdmin);
+            }
+            await fetchOp();
+        };
+
+        init();
+        const interval = setInterval(fetchOp, 5000); // 5 saniyede bir daha sık güncelle (Canlı takip için)
         return () => clearInterval(interval);
     }, [id, router]);
 
@@ -58,8 +74,73 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
 
     if (!operation) return null;
 
+    // Collect all members from all teams for the map
+    const mapMembers = operation.teams?.flatMap((t: any) => 
+        t.members?.filter((m: any) => m.lastLocation).map((m: any) => ({
+            id: m.id,
+            name: m.id, // Veya name varsa
+            teamName: t.name,
+            role: m.role,
+            location: [m.lastLocation.lat, m.lastLocation.lng],
+            path: m.path?.map((p: any) => [p.lat, p.lng]) || []
+        }))
+    ) || [];
+
     return (
         <div className="space-y-6 pb-20 max-w-5xl mx-auto">
+            
+            {/* PIN MODAL */}
+            {pinModal && (
+                <div className="fixed inset-0 bg-black/80 z-[999] flex items-center justify-center p-4">
+                    <div className="bg-[#050B14] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                        <h3 className="text-white font-bold mb-4 uppercase">İşaretçi (Pin) Ekle</h3>
+                        <input 
+                            type="text" 
+                            placeholder="İşaretçi Adı (Örn: Merkez Kamp)"
+                            className="w-full bg-white/5 border border-white/10 rounded p-2 text-white mb-3 text-sm focus:outline-none focus:border-red-500"
+                            value={pinName}
+                            onChange={(e) => setPinName(e.target.value)}
+                        />
+                        <select
+                            className="w-full bg-[#050B14] border border-white/10 rounded p-2 text-white mb-5 text-sm focus:outline-none focus:border-red-500"
+                            value={pinType}
+                            onChange={(e) => setPinType(e.target.value)}
+                        >
+                            <option value="Kamp">Kamp</option>
+                            <option value="Araç">Araç</option>
+                            <option value="Tehlike">Tehlike/Yangın</option>
+                            <option value="Toplanma">Toplanma</option>
+                        </select>
+                        <div className="flex gap-2">
+                            <button onClick={() => setPinModal(null)} className="flex-1 p-2 rounded bg-white/5 text-neutral-400 hover:text-white text-sm font-bold transition">İptal</button>
+                            <button 
+                                onClick={async () => {
+                                    if(!pinName) return alert("İsim girmelisiniz.");
+                                    try {
+                                        await fetch('/api/settings/operations/active/pins', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                operationId: id,
+                                                name: pinName,
+                                                type: pinType,
+                                                lat: pinModal.lat,
+                                                lng: pinModal.lng,
+                                                createdBy: user?.fullName || 'Bilinmiyor'
+                                            })
+                                        });
+                                        setPinModal(null);
+                                        setPinName("");
+                                    } catch(e) {
+                                        alert("Hata oluştu.");
+                                    }
+                                }}
+                                className="flex-1 p-2 rounded bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition"
+                            >Ekle</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             
             {/* Header & Back */}
             <div className="flex items-center gap-4 mb-8">
@@ -125,29 +206,14 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                                 status: t.status,
                                 location: t.location ? [t.location.lat, t.location.lng] : undefined
                             })) || []} 
+                            members={mapMembers}
                             pins={operation.pins || []}
-                            onMapClick={async (lat, lng) => {
-                                // Only allow clicking if user is admin or a team leader
-                                const isLeader = operation.teams?.some((t: any) => t.personnel?.some((p: any) => (p.email === user?.email || p.id === user?.uid) && p.role === 'Lider'));
+                            userId={user?.uid || user?.email}
+                            onMapClick={(lat, lng) => {
+                                const isLeader = operation.teams?.some((t: any) => t.members?.some((m: any) => m.id === (user?.uid || user?.email) && m.role === 'Lider'));
                                 if (isAdmin || isLeader) {
-                                    if(confirm("Tıkladığınız noktayı 'kendi konumunuz' olarak sisteme kaydetmek istiyor musunuz? (Manuel Konum Güncellemesi)")) {
-                                        try {
-                                            await fetch('/api/settings/operations/active/location', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    memberId: user?.uid || user?.email,
-                                                    lat: lat,
-                                                    lng: lng
-                                                })
-                                            });
-                                            alert("Konumunuz başarıyla manuel olarak güncellendi.");
-                                        } catch (e) {
-                                            alert("Konum güncellenemedi.");
-                                        }
-                                    }
+                                    setPinModal({ lat, lng });
                                 } else {
-                                    // If not leader, just show coordinates
                                     alert(`Tıkladığınız Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
                                 }
                             }}
