@@ -216,18 +216,8 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                             pins={operation.pins || []}
                             userId={user?.id || user?.uid || user?.email}
                             onMapClick={(lat, lng) => {
-                                const userId = user?.id || user?.uid || user?.email || "";
-                                const userName = user?.name || user?.fullName || "";
-                                const isMember = operation.teams?.some((t: any) => 
-                                    t.members?.some((m: any) => 
-                                        (m.id === userId || m.name === userName || m.tcNo === userId || m.fullName === userName)
-                                    )
-                                );
-                                if (isMember || isAdmin) {
-                                    setPinModal({ lat, lng });
-                                } else {
-                                    alert(`Tıkladığınız Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}\n\nSadece saha ekipleri ve adminler haritaya işaret bırakabilir.`);
-                                }
+                                // Tüm portal kullanıcıları pin bırakabilsin
+                                setPinModal({ lat, lng });
                             }}
                         />
                     </div>
