@@ -38,7 +38,7 @@ const securityHeaders = [
   { key: 'Content-Security-Policy', value: CSP },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
   { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
-  { key: 'Permissions-Policy', value: 'geolocation=*, camera=(), microphone=()' },
+  { key: 'Permissions-Policy', value: 'geolocation=*, camera=*, microphone=*' },
 ];
 
 const nextConfig: NextConfig = {
@@ -66,7 +66,7 @@ const nextConfig: NextConfig = {
         source: "/sw.js",
         headers: [
           { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
-          { key: "Permissions-Policy", value: "geolocation=*, camera=(), microphone=()" },
+          { key: "Permissions-Policy", value: "geolocation=*, camera=*, microphone=*" },
         ],
       },
       {
