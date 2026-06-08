@@ -1538,36 +1538,7 @@ export default function Operasyonlar() {
                             </div>
 
                             {/* OFFLINE MAP (IZMIR TERRAIN) */}
-                            <div className="bg-[#050B14] border border-white/5 rounded-3xl p-2 relative shadow-2xl h-96 w-full overflow-hidden no-print z-0">
-                                <div className="absolute top-4 left-4 z-[400] bg-black/80 backdrop-blur border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-2 pointer-events-none">
-                                    <MapPin size={14} className="text-red-500" />
-                                    <span className="text-[10px] font-bold text-white tracking-widest uppercase">Canlı Saha Takibi (Aşama 2)</span>
-                                </div>
-                                <OfflineMap 
-                                    teams={selectedOp.teams.map(t => ({
-                                        id: t.id,
-                                        name: t.name,
-                                        status: t.status,
-                                        location: (t as any).location ? [(t as any).location.lat, (t as any).location.lng] : undefined
-                                    }))} 
-                                    members={selectedOp.teams?.flatMap((t: any) => 
-                                        t.members?.filter((m: any) => m.lastLocation).map((m: any) => ({
-                                            id: m.id,
-                                            name: membersData.find(mem => mem.id === m.id)?.fullName || m.id,
-                                            teamName: t.name,
-                                            role: m.role,
-                                            location: [m.lastLocation.lat, m.lastLocation.lng],
-                                            path: m.path?.map((p: any) => [p.lat, p.lng]) || []
-                                        }))
-                                    ) || []}
-                                    pins={selectedOp.pins || []}
-                                    onMapClick={(lat, lng) => {
-                                        if(selectedOp.status === 'Aktif') {
-                                            setNewPinPos([lat, lng]);
-                                        }
-                                    }}
-                                />
-                            </div>
+                            <MapView selectedOp={selectedOp} membersData={membersData} setNewPinPos={setNewPinPos} />
 
                             {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
