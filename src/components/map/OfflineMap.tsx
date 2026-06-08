@@ -77,13 +77,13 @@ function MapEventHandler({ onClick }: { onClick?: (lat: number, lng: number) => 
   return null;
 }
 
-function LocateControl({ pos }: { pos: [number, number] | null }) {
+function LocateControl({ pos, trigger }: { pos: [number, number] | null, trigger: number }) {
   const map = useMap();
   useEffect(() => {
-    if (pos) {
-      map.setView(pos, 16);
+    if (pos && trigger > 0) {
+      map.flyTo(pos, 16, { animate: true });
     }
-  }, [pos, map]);
+  }, [trigger]); // Sadece trigger değiştiğinde (butona tıklandığında) merkeze al
   return null;
 }
 
@@ -126,6 +126,7 @@ export default function OfflineMap({
   const [mounted, setMounted] = useState(false);
   const [myPos, setMyPos] = useState<[number, number] | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const [locateTrigger, setLocateTrigger] = useState(0);
   const lastPingRef = useRef<number>(0);
 
   const pingLocation = async (lat: number, lng: number) => {
@@ -157,6 +158,7 @@ export default function OfflineMap({
             setMyPos([pos.coords.latitude, pos.coords.longitude]);
             setGpsError(null);
             pingLocation(pos.coords.latitude, pos.coords.longitude);
+            setLocateTrigger(prev => prev + 1); // İlk bulduğunda merkeze al
         },
         (err) => {
             console.log("Konum hatası:", err);
@@ -282,12 +284,15 @@ export default function OfflineMap({
         </Marker>
       )}
       
-      <LocateControl pos={myPos} />
+      <LocateControl pos={myPos} trigger={locateTrigger} />
     </MapContainer>
 
     {/* GPS Butonu Overlay */}
     <button 
-        onClick={startTracking}
+        onClick={() => {
+            startTracking();
+            if (myPos) setLocateTrigger(prev => prev + 1);
+        }}
         className="absolute bottom-6 right-6 z-[400] bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.5)] flex items-center justify-center transition-all active:scale-95"
         title="Konumumu Bul"
     >
