@@ -127,7 +127,15 @@ export default function OfflineMap({
   const [myPos, setMyPos] = useState<[number, number] | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [locateTrigger, setLocateTrigger] = useState(0);
+  const [initialLocateDone, setInitialLocateDone] = useState(false);
   const lastPingRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (myPos && !initialLocateDone) {
+        setLocateTrigger(prev => prev + 1);
+        setInitialLocateDone(true);
+    }
+  }, [myPos, initialLocateDone]);
 
   const pingLocation = async (lat: number, lng: number) => {
       const now = Date.now();
@@ -158,7 +166,6 @@ export default function OfflineMap({
             setMyPos([pos.coords.latitude, pos.coords.longitude]);
             setGpsError(null);
             pingLocation(pos.coords.latitude, pos.coords.longitude);
-            setLocateTrigger(prev => prev + 1); // İlk bulduğunda merkeze al
         },
         (err) => {
             console.log("Konum hatası:", err);
