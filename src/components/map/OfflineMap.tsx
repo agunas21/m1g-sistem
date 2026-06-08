@@ -170,7 +170,6 @@ export default function OfflineMap({
         (err) => {
             console.log("Konum hatası:", err);
             setGpsError("Konum izni verilmedi veya GPS kapalı.");
-            alert("Konum alınamadı. Lütfen cihazınızın GPS'ini açın veya tarayıcı ayarlarından siteye konum izni verin.");
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
@@ -183,7 +182,23 @@ export default function OfflineMap({
         (err) => console.log("Canlı konum alınamadı:", err),
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
-      return () => navigator.geolocation.clearWatch(watchId);
+
+      // 60 saniyede bir garantili güncelleme (watchPosition uykuya dalarsa diye)
+      const heartbeat = setInterval(() => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setMyPos([pos.coords.latitude, pos.coords.longitude]);
+                pingLocation(pos.coords.latitude, pos.coords.longitude);
+            },
+            () => {},
+            { enableHighAccuracy: false, maximumAge: 60000 }
+          );
+      }, 60000);
+
+      return () => {
+          navigator.geolocation.clearWatch(watchId);
+          clearInterval(heartbeat);
+      };
     } else {
         alert("Cihazınız GPS desteklemiyor.");
     }
@@ -191,8 +206,18 @@ export default function OfflineMap({
 
   useEffect(() => {
     setMounted(true);
-    // DO NOT auto-start tracking on mount to avoid Chrome's Unwanted Permission Policy blocking it!
-    // User must explicitly click the "Beni Bul" button.
+    
+    // Otomatik olarak daha önce konum izni verilmişse doğrudan takibe başla
+    if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'geolocation' }).then(result => {
+            if (result.state === 'granted') {
+                startTracking();
+            }
+        });
+    } else {
+        // Permissions API desteklemeyen tarayıcılar için sessizce denemesi adına doğrudan çağırıyoruz
+        startTracking();
+    }
   }, []);
 
   if (!mounted) {
