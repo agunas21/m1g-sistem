@@ -19,16 +19,22 @@ export default function TeamListPanel({
     removeEquipmentFromTeam,
     assignEquipmentToTeam
 }: any) {
+    const teams = selectedOp?.teams || [];
+    const baseCamp = selectedOp?.baseCamp || { members: [], equipment: [] };
+
     return (
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-            {selectedOp.teams.map((team: any) => {
+            {teams.map((team: any) => {
                 const isDeployed = team.status === "Sahada";
                 const workingHrs = calculateTeamWorkingHours(team);
+                const teamMembers = team.members || [];
+                const teamDeployments = team.deployments || [];
+                const teamEquipment = team.equipment || [];
                 
-                const leader = team.members.find((m: any) => m.role === "Lider");
-                const members = team.members.filter((m: any) => m.role !== "Lider");
+                const leader = teamMembers.find((m: any) => m.role === "Lider");
+                const members = teamMembers.filter((m: any) => m.role !== "Lider");
 
-                const lastDep = team.deployments?.[team.deployments.length - 1];
+                const lastDep = teamDeployments[teamDeployments.length - 1];
                 const currentTarget = lastDep?.targetLocation || "Genel Sektör";
                 
                 return (
@@ -53,11 +59,11 @@ export default function TeamListPanel({
                                     {/* Dynamic ticking stopwatch for active deployed/resting teams */}
                                     {isDeployed ? (
                                         <span className="text-[10px] font-bold text-red-500 font-mono flex items-center gap-1">
-                                            <Clock size={10} className="animate-spin-slow" /> {formatDuration(lastDep.deployTime)}
+                                            <Clock size={10} className="animate-spin-slow" /> {formatDuration(lastDep?.deployTime)}
                                         </span>
                                     ) : (
                                         <span className="text-[10px] font-bold text-blue-400 font-mono flex items-center gap-1">
-                                            <Clock size={10} /> {formatDuration((lastDep && lastDep.returnTime) ? lastDep.returnTime : selectedOp.startTime)}
+                                            <Clock size={10} /> {formatDuration((lastDep && lastDep.returnTime) ? lastDep.returnTime : selectedOp?.startTime)}
                                         </span>
                                     )}
                                 </div>
@@ -67,7 +73,7 @@ export default function TeamListPanel({
                             </div>
 
                             {/* Team actions */}
-                            {selectedOp.status === "Aktif" && (
+                            {selectedOp?.status === "Aktif" && (
                                 <div className="flex gap-2 flex-wrap items-center">
                                     {isDeployed ? (
                                         <button 
@@ -110,7 +116,7 @@ export default function TeamListPanel({
                         {/* Leader & Member Roster inside Team */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                             <div className="space-y-2">
-                                <span className="text-[9px] text-neutral-500 font-bold uppercase block tracking-wider">Tim Personeli ({team.members.length})</span>
+                                <span className="text-[9px] text-neutral-500 font-bold uppercase block tracking-wider">Tim Personeli ({teamMembers.length})</span>
                                 
                                 {/* Leader row */}
                                 {leader && (
@@ -119,7 +125,7 @@ export default function TeamListPanel({
                                             <span className="text-[10px]">👑</span>
                                             <span>{membersData.find((m: any) => m.id === leader.id)?.fullName || leader.id} (Lider)</span>
                                         </div>
-                                        {selectedOp.status === "Aktif" && (
+                                        {selectedOp?.status === "Aktif" && (
                                             <button onClick={() => removeMemberFromTeam(team.id, leader.id)} className="text-[10px] text-neutral-500 hover:text-red-400">Kaldır</button>
                                         )}
                                     </div>
@@ -129,7 +135,7 @@ export default function TeamListPanel({
                                 {members.map((m: any) => (
                                     <div key={m.id} className="flex items-center justify-between text-xs bg-white/5 p-2 rounded-lg border border-white/5">
                                         <span className="text-neutral-300">{membersData.find((mem: any) => mem.id === m.id)?.fullName || m.id}</span>
-                                        {selectedOp.status === "Aktif" && (
+                                        {selectedOp?.status === "Aktif" && (
                                             <div className="flex items-center gap-2">
                                                 <button onClick={() => setTeamLeader(team.id, m.id)} className="text-[10px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded hover:bg-red-500/20 font-bold">Lider Yap</button>
                                                 <button onClick={() => removeMemberFromTeam(team.id, m.id)} className="text-[10px] text-neutral-500 hover:text-red-400">Kaldır</button>
@@ -138,16 +144,16 @@ export default function TeamListPanel({
                                     </div>
                                 ))}
 
-                                {team.members.length === 0 && (
+                                {teamMembers.length === 0 && (
                                     <p className="text-[10px] text-neutral-600 italic">Ekibe üye atanmadı.</p>
                                 )}
 
                                 {/* Add member button trigger */}
-                                {selectedOp.status === "Aktif" && (
+                                {selectedOp?.status === "Aktif" && (
                                     <select
                                         onChange={(e) => {
                                             if (e.target.value) {
-                                                const role = team.members.length === 0 ? "Lider" : "Üye";
+                                                const role = teamMembers.length === 0 ? "Lider" : "Üye";
                                                 assignMemberToTeam(team.id, e.target.value, role);
                                                 e.target.value = "";
                                             }
@@ -155,7 +161,7 @@ export default function TeamListPanel({
                                         className="w-full bg-white/5 border border-white/10 rounded-lg text-xs text-neutral-400 p-1.5 mt-2 cursor-pointer outline-none"
                                     >
                                         <option value="">+ Personel Ekle (Base Havuzundan)</option>
-                                        {selectedOp.baseCamp.members.map((mId: string) => (
+                                        {(baseCamp.members || []).map((mId: string) => (
                                             <option key={mId} value={mId}>{membersData.find((m: any) => m.id === mId)?.fullName || mId}</option>
                                         ))}
                                     </select>
@@ -164,26 +170,26 @@ export default function TeamListPanel({
 
                             {/* Team Equipment Zimmet */}
                             <div className="space-y-2">
-                                <span className="text-[9px] text-neutral-500 font-bold uppercase block tracking-wider">Zimmetli Ekipmanlar ({team.equipment.length})</span>
+                                <span className="text-[9px] text-neutral-500 font-bold uppercase block tracking-wider">Zimmetli Ekipmanlar ({teamEquipment.length})</span>
                                 <div className="space-y-1">
-                                    {team.equipment.map((eqId: string) => {
+                                    {teamEquipment.map((eqId: string) => {
                                         const item = inventoryData.find((i: any) => i.id === eqId);
                                         return (
                                             <div key={eqId} className="flex items-center justify-between text-xs bg-white/5 p-2 rounded-lg border border-white/5">
                                                 <span className="text-neutral-300 font-mono">{item?.name || eqId}</span>
-                                                {selectedOp.status === "Aktif" && (
+                                                {selectedOp?.status === "Aktif" && (
                                                     <button onClick={() => removeEquipmentFromTeam(team.id, eqId)} className="text-[10px] text-neutral-500 hover:text-red-400">İade</button>
                                                 )}
                                             </div>
                                         );
                                     })}
-                                    {team.equipment.length === 0 && (
+                                    {teamEquipment.length === 0 && (
                                         <p className="text-[10px] text-neutral-600 italic">Zimmetli malzeme bulunmuyor.</p>
                                     )}
                                 </div>
 
                                 {/* Add equipment button trigger */}
-                                {selectedOp.status === "Aktif" && (
+                                {selectedOp?.status === "Aktif" && (
                                     <select
                                         onChange={(e) => {
                                             if (e.target.value) {
@@ -194,7 +200,7 @@ export default function TeamListPanel({
                                         className="w-full bg-white/5 border border-white/10 rounded-lg text-xs text-neutral-400 p-1.5 mt-2 cursor-pointer outline-none"
                                     >
                                         <option value="">+ Ekipman Ata (Base Havuzundan)</option>
-                                        {selectedOp.baseCamp.equipment.map((eqId: string) => (
+                                        {(baseCamp.equipment || []).map((eqId: string) => (
                                             <option key={eqId} value={eqId}>{inventoryData.find((i: any) => i.id === eqId)?.name || eqId}</option>
                                         ))}
                                     </select>
@@ -203,16 +209,17 @@ export default function TeamListPanel({
                         </div>
 
                         {/* Last deployment status trace */}
-                        {team.deployments.length > 0 && (
+                        {teamDeployments.length > 0 && (
                             <div className="mt-4 pt-3 border-t border-white/5 text-[10px] text-neutral-500 flex flex-wrap gap-4 font-mono">
-                                <span>Son Çıkış: {team.deployments[team.deployments.length - 1].deployTime}</span>
-                                {team.deployments[team.deployments.length - 1].returnTime && (
+                                <span>Son Çıkış: {lastDep?.deployTime}</span>
+
+                                {lastDep?.returnTime && (
                                     <>
-                                        <span>Son Giriş: {team.deployments[team.deployments.length - 1].returnTime}</span>
+                                        <span>Son Giriş: {lastDep.returnTime}</span>
                                         <span>Durum: <span className={
-                                            team.deployments[team.deployments.length - 1].pulse === 'Yeşil' ? 'text-emerald-400 font-bold' :
-                                            team.deployments[team.deployments.length - 1].pulse === 'Sarı' ? 'text-amber-400 font-bold' : 'text-red-500 font-bold'
-                                        }>{team.deployments[team.deployments.length - 1].pulse || 'Bilinmiyor'}</span></span>
+                                            lastDep.pulse === 'Yeşil' ? 'text-emerald-400 font-bold' :
+                                            lastDep.pulse === 'Sarı' ? 'text-amber-400 font-bold' : 'text-red-500 font-bold'
+                                        }>{lastDep.pulse || 'Bilinmiyor'}</span></span>
                                     </>
                                 )}
                             </div>
@@ -220,7 +227,7 @@ export default function TeamListPanel({
                     </div>
                 );
             })}
-            {selectedOp.teams.length === 0 && (
+            {teams.length === 0 && (
                 <div className="text-center py-10 border border-dashed border-white/5 rounded-3xl">
                     <Users size={32} className="mx-auto text-neutral-600 mb-2" />
                     <p className="text-xs text-neutral-500">Kayıtlı tim bulunmuyor. Yeni bir tim ekleyin.</p>
