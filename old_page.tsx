@@ -414,47 +414,12 @@ export default function PortalDashboard() {
                                 </div>
                             </div>
 
-                            {/* Intent Links for Android */}
-                            <div className="mt-4 flex flex-col gap-2 border-t border-white/10 pt-4">
-                                <h4 className="text-sm font-bold text-neutral-300">Hızlı Kısayollar (Android)</h4>
-                                <a href="intent://#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end" className="w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-bold py-2 px-4 rounded-xl text-center border border-white/5 transition-all">
-                                    Cihaz Konum Ayarlarını Aç
-                                </a>
-                                <a href="intent://#Intent;action=android.settings.APPLICATION_DETAILS_SETTINGS;package=com.android.chrome;end" className="w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-bold py-2 px-4 rounded-xl text-center border border-white/5 transition-all">
-                                    Chrome İzinlerini Aç
-                                </a>
-                            </div>
-
-                            <div className="mt-6 flex flex-col gap-2">
-                                <button 
-                                    onClick={() => setShowGpsHelp(false)}
-                                    className="w-full py-3 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all"
-                                >
-                                    Anladım, Ayarları Düzelteceğim
-                                </button>
-                                
-                                <button 
-                                    onClick={async () => {
-                                        if ('serviceWorker' in navigator) {
-                                            const regs = await navigator.serviceWorker.getRegistrations();
-                                            for (const reg of regs) {
-                                                await reg.unregister();
-                                            }
-                                        }
-                                        if ('caches' in window) {
-                                            const keys = await caches.keys();
-                                            for (const key of keys) {
-                                                await caches.delete(key);
-                                            }
-                                        }
-                                        alert("Sistem önbelleği temizlendi. Uygulama yeniden başlatılıyor.");
-                                        window.location.reload();
-                                    }}
-                                    className="w-full bg-transparent border border-neutral-700 hover:bg-neutral-800 text-neutral-400 text-xs font-bold py-2 px-4 rounded-xl transition-all"
-                                >
-                                    SİSTEM ÖNBELLEĞİNİ SIFIRLA
-                                </button>
-                            </div>
+                            <button 
+                                onClick={() => setShowGpsHelp(false)}
+                                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all"
+                            >
+                                Anladım, Ayarları Düzelteceğim
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}
