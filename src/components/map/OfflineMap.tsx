@@ -125,8 +125,8 @@ export default function OfflineMap({
 
   useEffect(() => {
     setMounted(true);
-    // Auto-start tracking on mount if possible
-    startTracking();
+    // DO NOT auto-start tracking on mount to avoid Chrome's Unwanted Permission Policy blocking it!
+    // User must explicitly click the "Beni Bul" button.
   }, []);
 
   if (!mounted) {
