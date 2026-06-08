@@ -409,17 +409,247 @@ export default function PortalDashboard() {
                                         iPhone (iOS)
                                     </h4>
                                     <p className="text-neutral-400 text-xs leading-relaxed">
-                                        Telefonunuzun <strong>Ayarlar &gt; Gizlilik ve Güvenlik &gt; Konum Servisleri</strong> menüsüne girin. Listeden <strong>Safari</strong> uygulamasını bulup <strong>"Uygulamayı Kullanırken"</strong> seçeneğini işaretleyin.
-                                    </p>
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-blue-600/20 text-blue-500 rounded-xl border border-blue-500/20">
+                                <MapPin size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Saha Modu İzinleri</h3>
+                                <p className="text-neutral-500 text-xs">GPS & Offline Depolama</p>
+                            </div>
+                        </div>
+                        <p className="text-xs text-neutral-400 font-light leading-relaxed">
+                            Dağlık arazide timlerin canlı takip edilmesi ve offline verilerin saklanması için cihaz izinleri gereklidir.
+                        </p>
+                        <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                            <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">GPS Durumu:</span>
+                            <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase tracking-widest ${
+                                gpsStatus === "granted" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20" :
+                                gpsStatus === "denied" ? "bg-red-500/20 text-red-400 border border-red-500/20" :
+                                "bg-neutral-800 text-neutral-400 border border-white/10"
+                            }`}>
+                                {gpsStatus === "granted" ? "Aktif" : gpsStatus === "denied" ? "Reddedildi" : "Bekleniyor"}
+                            </span>
+                        </div>
+                        {gpsStatus !== "granted" && (
+                            <button 
+                                onClick={requestGpsPermission}
+                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]"
+                            >
+                                {gpsStatus === "denied" ? "NASIL İZİN VERİLİR? (YARDIM)" : "KONUM İZNİ VER"}
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* CANLI BRİFİNG ODASI (LIVE SESSION) */}
+                <div className="col-span-1 lg:col-span-2 bg-[#020617] border border-red-500/10 rounded-2xl p-5 md:p-6 shadow-2xl flex flex-col justify-center relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-600/5 to-transparent z-0"></div>
+                    {liveSession?.isActive ? (
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+                            <div className="flex-1 text-center md:text-left">
+                                <div className="flex items-center justify-center md:justify-start gap-3 mb-3">
+                                    <div className="relative flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+                                    </div>
+                                    <span className="text-red-500 text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase">CANLI YAYIN AKTİF</span>
+                                </div>
+                                <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-2 leading-tight">{liveSession.title}</h3>
+                                <p className="text-neutral-500 text-xs md:text-sm">Acilen katılım sağlayınız.</p>
+                            </div>
+                            <div className="w-full md:w-auto">
+                                <a
+                                    href={liveSession.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full md:px-8 py-4 bg-red-600 hover:bg-neutral-100 hover:text-red-600 text-white font-black tracking-widest uppercase rounded-xl transition-all shadow-[0_0_30px_rgba(234,29,44,0.3)] flex items-center justify-center gap-3 text-sm"
+                                >
+                                    <Video size={18} className="animate-pulse" /> Katıl
+                                </a>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="relative z-10 flex flex-col items-center justify-center text-center py-8 h-full bg-black/40 border border-white/5 rounded-xl border-dashed">
+                            <Radio size={32} className="text-neutral-800 mb-3" />
+                            <h3 className="text-lg font-black text-neutral-600 uppercase tracking-widest mb-1">BRİFİNG: OFF-LINE</h3>
+                            <p className="text-[10px] text-neutral-700 uppercase font-bold">Beklemede</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* EĞİTİM KÜTÜPHANESİ */}
+            <div className="mt-8 mb-4">
+                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-wide flex items-center gap-3 border-b border-white/5 pb-4">
+                    <BookOpen size={20} className="text-neutral-500" /> Video Kütüphanesi
+                </h2>
+            </div>
+
+            {loading ? (
+                <div className="flex items-center justify-center py-20">
+                    <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+                </div>
+            ) : videos.length === 0 ? (
+                <div className="flex items-center justify-center flex-col text-neutral-600 py-20 bg-black/20 rounded-2xl border border-white/5">
+                    <PlayCircle className="w-16 h-16 mb-4 opacity-30" />
+                    <p className="text-lg font-medium">Sisteme atanmış eğitim modülü bulunamadı.</p>
+                </div>
+            ) : (
+                <div className="flex flex-col lg:flex-row gap-6">
+
+                    {/* Main Video Player */}
+                    <div className="lg:w-2/3 flex flex-col">
+                        <div className="bg-black border border-white/10 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] aspect-video relative">
+                            {isClient && activeVideo ? (
+                                <iframe
+                                    src={activeVideo.url.includes("youtube") || activeVideo.url.includes("youtu.be")
+                                        ? `https://www.youtube.com/embed/${activeVideo.url.split("v=")[1]?.split("&")[0] || activeVideo.url.split("/").pop()}`
+                                        : activeVideo.url}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                    className="absolute top-0 left-0 w-full h-full"
+                                />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center bg-neutral-950">
+                                    <Loader2 className="animate-spin text-red-600" />
+                                </div>
+                            )}
+                        </div>
+                        {activeVideo && (
+                            <div className="mt-4 p-5 bg-[#050B14] border border-white/5 rounded-xl shadow-lg">
+                                <span className="text-[10px] font-bold text-neutral-500 tracking-[0.2em] uppercase mb-1 block">Ders Modülü</span>
+                                <h2 className="text-xl font-bold text-white mb-3 leading-tight">{activeVideo.title}</h2>
+                                <p className="text-neutral-400 text-sm font-light leading-relaxed">{activeVideo.description || "Açıklama eklenmemiş."}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Video Selection List */}
+                    <div className="lg:w-1/3 flex flex-col max-h-[600px] overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+                        {videos.map((vid) => {
+                            const isActive = activeVideo?.id === vid.id;
+                            return (
+                                <div
+                                    key={vid.id}
+                                    onClick={() => setActiveVideo(vid)}
+                                    className={`p-4 rounded-xl cursor-pointer transition-all border ${isActive
+                                        ? "bg-red-900/10 border-red-500/50 shadow-[0_0_20px_rgba(234,29,44,0.1)]"
+                                        : "bg-[#050B14] border-white/5 hover:border-white/20 hover:bg-white/5"
+                                        }`}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className={`mt-0.5 rounded-full p-2 flex-shrink-0 ${isActive ? "bg-red-500 text-white" : "bg-neutral-800 text-neutral-400"}`}>
+                                            <PlayCircle size={16} />
+                                        </div>
+                                        <div>
+                                            <h4 className={`font-bold text-xs md:text-sm mb-1 leading-tight ${isActive ? "text-white" : "text-neutral-300"}`}>{vid.title}</h4>
+                                            <p className="text-[10px] md:text-xs font-light text-neutral-500 line-clamp-1 md:line-clamp-2 leading-relaxed">{vid.description}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                </div>
+            )}
+
+            {/* GPS YARDIM MODALI */}
+            <AnimatePresence>
+                {showGpsHelp && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-[#0A101C] border border-red-500/30 rounded-2xl p-6 max-w-md w-full relative shadow-2xl"
+                        >
+                            <button 
+                                onClick={() => setShowGpsHelp(false)}
+                                className="absolute top-4 right-4 text-neutral-500 hover:text-white"
+                            >
+                                <X size={24} />
+                            </button>
+
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-12 h-12 bg-red-500/20 text-red-500 rounded-xl flex items-center justify-center border border-red-500/20">
+                                    <MapPin size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-bold text-lg">Konum İzni Engellendi!</h3>
+                                    <p className="text-red-400 text-xs">Sistem izni otomatik alamıyor.</p>
                                 </div>
                             </div>
 
-                            <button 
-                                onClick={() => setShowGpsHelp(false)}
-                                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all"
-                            >
-                                Anladım, Ayarları Düzelteceğim
-                            </button>
+                            <p className="text-neutral-300 text-sm mb-6 leading-relaxed">
+                                Görünüşe göre telefonunuz bu uygulama için konum erişimini <strong>kalıcı olarak kapatmış</strong>. Güvenlik kuralları gereği, bunu sadece <strong>siz manuel olarak düzeltebilirsiniz.</strong>
+                            </p>
+
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 space-y-4">
+                                <div>
+                                    <h4 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">1</div>
+                                        Android (Samsung, Xiaomi vb.)
+                                    </h4>
+                                    <p className="text-neutral-400 text-xs leading-relaxed">
+                                        Telefonunuzun <strong>Ayarlar &gt; Uygulamalar</strong> menüsüne girin. Listeden <strong>M1G Arama Kurtarma</strong> (veya Chrome) uygulamasını bulup tıklayın. <strong>İzinler &gt; Konum</strong> sekmesine girip <strong>"İzin Ver"</strong> seçeneğini işaretleyin.
+                                    </p>
+                                </div>
+                                <div className="h-px w-full bg-white/10 my-2"></div>
+                                <div>
+                                    <h4 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">2</div>
+                                        iPhone (iOS)
+                                    </h4>
+                                    <p className="text-neutral-400 text-xs leading-relaxed">
+                                        Telefonunuzun <strong>Ayarlar &gt; Gizlilik ve Güvenlik &gt; Konum Servisleri</strong> menüsüne girin. Listeden <strong>Safari</strong> uygulamasını bulup <strong>"Uygulamayı Kullanırken"</strong> seçeneğini işaretleyin.
+                                    </p>
+                                </div>
+                                
+                                {/* Intent Links for Android */}
+                                <div className="mt-4 flex flex-col gap-2 border-t border-white/10 pt-4">
+                                    <h4 className="text-sm font-bold text-neutral-300">Hızlı Kısayollar (Android)</h4>
+                                    <a href="intent://#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end" className="w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-bold py-2 px-4 rounded-xl text-center border border-white/5 transition-all">
+                                        Cihaz Konum Ayarlarını Aç
+                                    </a>
+                                    <a href="intent://#Intent;action=android.settings.APPLICATION_DETAILS_SETTINGS;package=com.android.chrome;end" className="w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-bold py-2 px-4 rounded-xl text-center border border-white/5 transition-all">
+                                        Chrome İzinlerini Aç
+                                    </a>
+                                </div>
+                                
+                                <div className="mt-6 flex flex-col gap-2">
+                                    <button 
+                                        onClick={() => window.location.reload()}
+                                        className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all"
+                                    >
+                                        ANLADIM, AYARLARI DÜZELTECEĞİM
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={async () => {
+                                            if ('serviceWorker' in navigator) {
+                                                const regs = await navigator.serviceWorker.getRegistrations();
+                                                for (const reg of regs) {
+                                                    await reg.unregister();
+                                                }
+                                            }
+                                            if ('caches' in window) {
+                                                const keys = await caches.keys();
+                                                for (const key of keys) {
+                                                    await caches.delete(key);
+                                                }
+                                            }
+                                            alert("Sistem önbelleği temizlendi. Uygulama yeniden başlatılıyor.");
+                                            window.location.reload();
+                                        }}
+                                        className="w-full bg-transparent border border-neutral-700 hover:bg-neutral-800 text-neutral-400 text-xs font-bold py-2 px-4 rounded-xl transition-all"
+                                    >
+                                        SİSTEM ÖNBELLEĞİNİ SIFIRLA
+                                    </button>
+                                </div>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
