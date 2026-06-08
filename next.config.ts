@@ -37,7 +37,6 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Content-Security-Policy', value: CSP },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
-  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
   { key: 'Permissions-Policy', value: 'geolocation=*, camera=*, microphone=*' },
 ];
 
