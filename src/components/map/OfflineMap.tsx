@@ -77,25 +77,41 @@ function MapEventHandler({ onClick }: { onClick?: (lat: number, lng: number) => 
   return null;
 }
 
-function LocateControl({ pos, trigger }: { pos: [number, number] | null, trigger: number }) {
+function MapController({ pos, trigger }: { pos: [number, number] | null, trigger: number }) {
   const map = useMap();
-  useEffect(() => {
-    if (pos && trigger > 0) {
-      map.flyTo(pos, 16, { animate: true });
-    }
-  }, [trigger]); // Sadece trigger değiştiğinde (butona tıklandığında) merkeze al
-  return null;
-}
+  const isFirstFly = useRef(true);
 
-function MapResizer() {
-  const map = useMap();
   useEffect(() => {
-    // Harita yüklendikten hemen sonra boyutları hesapla (Mobil gri ekran sorununu çözer)
-    const timer = setTimeout(() => {
-      map.invalidateSize();
-    }, 500);
-    return () => clearTimeout(timer);
+    if (!pos) return;
+
+    // Container boyutunu önce doğrula, sonra uç
+    map.invalidateSize();
+
+    if (trigger > 0) {
+      if (isFirstFly.current) {
+        // İlk konumda animate olmadan set et — daha güvenilir
+        map.setView(pos, 16, { animate: false });
+        isFirstFly.current = false;
+      } else {
+        map.flyTo(pos, 16, { animate: true, duration: 1.5 });
+      }
+    }
+  }, [pos, trigger, map]);
+
+  // Mobil: adres çubuğu kaybolunca resize event tetiklenir
+  useEffect(() => {
+    const handleResize = () => {
+      map.invalidateSize({ animate: false });
+    };
+    window.addEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleResize);
+    };
   }, [map]);
+
   return null;
 }
 
@@ -192,24 +208,11 @@ export default function OfflineMap({
             pingLocation(pos.coords.latitude, pos.coords.longitude);
         },
         (err) => console.log("Canlı konum alınamadı:", err),
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
       );
-
-      // 60 saniyede bir garantili güncelleme (watchPosition uykuya dalarsa diye)
-      const heartbeat = setInterval(() => {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                setMyPos([pos.coords.latitude, pos.coords.longitude]);
-                pingLocation(pos.coords.latitude, pos.coords.longitude);
-            },
-            () => {},
-            { enableHighAccuracy: false, maximumAge: 60000 }
-          );
-      }, 60000);
 
       return () => {
           navigator.geolocation.clearWatch(watchId);
-          clearInterval(heartbeat);
       };
     } else {
         alert("Cihazınız GPS desteklemiyor.");
@@ -243,6 +246,8 @@ export default function OfflineMap({
       zoom={zoom} 
       style={{ height: "100%", width: "100%", borderRadius: "0.75rem", zIndex: 0 }}
       zoomControl={true}
+      preferCanvas={false}
+      updateWhenZooming={false}
     >
       <LayersControl position="topright">
         <LayersControl.BaseLayer name="Çevrimdışı (Ege Bölgesi)">
@@ -257,6 +262,8 @@ export default function OfflineMap({
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            keepBuffer={4}
+            updateWhenIdle={true}
           />
         </LayersControl.BaseLayer>
         <LayersControl.BaseLayer name="Uydu & Arazi (Hibrit)">
@@ -281,7 +288,7 @@ export default function OfflineMap({
         </LayersControl.BaseLayer>
       </LayersControl>
 
-      <MapResizer />
+      <MapController pos={myPos} trigger={locateTrigger} />
       <MapEventHandler onClick={onMapClick} />
       
       {/* İpucu */}
