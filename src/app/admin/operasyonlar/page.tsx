@@ -68,6 +68,11 @@ interface ActiveOperation {
         completed: boolean;
         notes: string;
         memberNotes: Record<string, string>;
+        suppliesUsed?: {
+            ppeCount: number;
+            mealsCount: number;
+            firstAidKits: number;
+        };
     };
     pins?: Array<{
         id: string;
@@ -668,7 +673,15 @@ export default function Operasyonlar() {
             }
         }
 
-        // 3. Mark operation as completed and save reports
+        // Calculate supplies used
+        const totalPersonnel = selectedOp.teams.reduce((acc, t) => acc + t.members.length, 0) + selectedOp.baseCamp.members.length;
+        const initialSupplies = calculateInitialSupplies(selectedOp.type, Math.max(totalPersonnel, 10)); // Default to 10 if nobody added yet
+        const suppliesUsed = {
+            ppeCount: Math.max(0, initialSupplies.ppeCount - (selectedOp.supplies?.ppeCount || 0)),
+            mealsCount: Math.max(0, initialSupplies.mealsCount - (selectedOp.supplies?.mealsCount || 0)),
+            firstAidKits: Math.max(0, initialSupplies.firstAidKits - (selectedOp.supplies?.firstAidKits || 0)),
+        };
+
         const updated: ActiveOperation = {
             ...selectedOp,
             status: "Tamamlandı" as const,
@@ -676,7 +689,8 @@ export default function Operasyonlar() {
             postMortemReport: {
                 completed: true,
                 notes: closureFtrNotes,
-                memberNotes: closureMemberNotes
+                memberNotes: closureMemberNotes,
+                suppliesUsed
             },
             logs: [
                 ...selectedOp.logs,
