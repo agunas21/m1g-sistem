@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
 
-const OfflineMap = dynamic(() => import('@/components/admin/operasyonlar/OfflineMap'), { ssr: false, loading: () => <div className="h-96 flex items-center justify-center bg-[#050B14] text-neutral-500 border border-white/5 rounded-3xl z-0">Harita Yükleniyor...</div> });
+const OfflineMap = dynamic(() => import('@/components/map/OfflineMap'), { ssr: false, loading: () => <div className="h-96 flex items-center justify-center bg-[#050B14] text-neutral-500 border border-white/5 rounded-3xl z-0">Harita Yükleniyor...</div> });
 
 export default function MapView({ selectedOp, membersData, setNewPinPos }: any) {
     return (
