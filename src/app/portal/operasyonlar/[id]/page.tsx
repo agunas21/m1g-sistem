@@ -218,16 +218,15 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                             onMapClick={(lat, lng) => {
                                 const userId = user?.id || user?.uid || user?.email || "";
                                 const userName = user?.name || user?.fullName || "";
-                                const isLeader = operation.teams?.some((t: any) => 
+                                const isMember = operation.teams?.some((t: any) => 
                                     t.members?.some((m: any) => 
-                                        (m.id === userId || m.name === userName || m.fullName === userName) 
-                                        && m.role === 'Lider'
+                                        (m.id === userId || m.name === userName || m.tcNo === userId || m.fullName === userName)
                                     )
                                 );
-                                if (isAdmin || isLeader) {
+                                if (isMember || isAdmin) {
                                     setPinModal({ lat, lng });
                                 } else {
-                                    alert(`Tıkladığınız Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}\n\nSadece Admin ve Tim Liderleri haritaya işaret bırakabilir.`);
+                                    alert(`Tıkladığınız Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}\n\nSadece saha ekipleri ve adminler haritaya işaret bırakabilir.`);
                                 }
                             }}
                         />
