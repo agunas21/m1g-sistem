@@ -336,7 +336,6 @@ export default function OfflineMap({
         </Marker>
       )}
       
-      <LocateControl pos={myPos} trigger={locateTrigger} />
     </MapContainer>
 
     {/* GPS Butonu Overlay */}
