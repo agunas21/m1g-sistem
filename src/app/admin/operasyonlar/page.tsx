@@ -9,17 +9,15 @@ import {
     MessageSquare, UserCheck, Wrench
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Html5Qrcode } from "html5-qrcode";
 import { createPortal } from "react-dom";
 import { offlineDB } from "@/lib/offline-db";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import dynamic from "next/dynamic";
 import OperationSummaryModal from "@/components/modals/OperationSummaryModal";
+import TeamListPanel from "@/components/admin/operasyonlar/TeamListPanel";
+import MapView from "@/components/admin/operasyonlar/MapView";
 
-const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
-    ssr: false,
-    loading: () => <div className="w-full h-64 bg-[#050B14] rounded-3xl  flex items-center justify-center border border-white/5"><Compass className="animate-spin text-neutral-500" size={32} /></div>
-});
+const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
 
 // Types
 interface TeamMember {
