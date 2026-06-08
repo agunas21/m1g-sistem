@@ -211,11 +211,18 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                             pins={operation.pins || []}
                             userId={user?.uid || user?.email}
                             onMapClick={(lat, lng) => {
-                                const isLeader = operation.teams?.some((t: any) => t.members?.some((m: any) => m.id === (user?.uid || user?.email) && m.role === 'Lider'));
+                                const userId = user?.id || user?.uid || user?.email || "";
+                                const userName = user?.name || user?.fullName || "";
+                                const isLeader = operation.teams?.some((t: any) => 
+                                    t.members?.some((m: any) => 
+                                        (m.id === userId || m.name === userName || m.fullName === userName) 
+                                        && m.role === 'Lider'
+                                    )
+                                );
                                 if (isAdmin || isLeader) {
                                     setPinModal({ lat, lng });
                                 } else {
-                                    alert(`Tıkladığınız Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+                                    alert(`Tıkladığınız Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}\n\nSadece Admin ve Tim Liderleri haritaya işaret bırakabilir.`);
                                 }
                             }}
                         />
