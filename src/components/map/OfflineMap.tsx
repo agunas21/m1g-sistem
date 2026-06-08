@@ -168,19 +168,6 @@ export default function OfflineMap({
             maxZoom={20}
           />
         </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Karanlık Mod (Taktiksel)">
-          <TileLayer
-            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Google Arazi (Topoğrafik)">
-          <TileLayer
-            attribution='&copy; Google Maps'
-            url="https://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}"
-            maxZoom={20}
-          />
-        </LayersControl.BaseLayer>
       </LayersControl>
 
       <MapEventHandler onClick={onMapClick} />

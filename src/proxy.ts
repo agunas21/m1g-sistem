@@ -124,7 +124,6 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
     h.set('X-Frame-Options', 'SAMEORIGIN');
     h.set('X-XSS-Protection', '1; mode=block');
     h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    h.set('Permissions-Policy', 'camera=*, microphone=*, geolocation=*, payment=*');
     h.set('X-Powered-By-Hidden', 'true'); // next.js X-Powered-By gizleme
     return response;
 }
