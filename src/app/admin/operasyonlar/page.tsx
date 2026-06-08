@@ -1303,7 +1303,7 @@ export default function Operasyonlar() {
 
         if (selectedOp.type === "Yangın" || selectedOp.type === "Deprem") {
             return (
-                <div className="bg-red-950/20 border border-red-500/20 p-4 rounded-2xl space-y-2 animate-pulse">
+                <div className="bg-red-950/20 border border-red-500/20 p-4 rounded-2xl space-y-2 relative z-10">
                     <div className="flex items-center gap-2 text-red-400 font-extrabold text-xs uppercase tracking-wider">
                         <Flame size={16} /> Ağır Afet Lojistik İkmal Önerisi
                     </div>
@@ -1317,7 +1317,7 @@ export default function Operasyonlar() {
             );
         } else {
             return (
-                <div className="bg-blue-950/20 border border-blue-500/20 p-4 rounded-2xl space-y-2 animate-pulse">
+                <div className="bg-blue-950/20 border border-blue-500/20 p-4 rounded-2xl space-y-2 relative z-10">
                     <div className="flex items-center gap-2 text-blue-400 font-extrabold text-xs uppercase tracking-wider">
                         <Compass size={16} /> Doğa/Eğitim İkmal Önerisi
                     </div>
@@ -1661,9 +1661,9 @@ export default function Operasyonlar() {
                             </div>
 
                             {/* OFFLINE MAP (IZMIR TERRAIN) */}
-                            <div className="bg-[#050B14] border border-white/5 rounded-3xl p-2 relative shadow-2xl h-96 w-full overflow-hidden no-print">
+                            <div className="bg-[#050B14] border border-white/5 rounded-3xl p-2 relative shadow-2xl h-96 w-full overflow-hidden no-print z-0">
                                 <div className="absolute top-4 left-4 z-[400] bg-black/80 backdrop-blur border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-2 pointer-events-none">
-                                    <MapPin size={14} className="text-red-500 animate-bounce" />
+                                    <MapPin size={14} className="text-red-500" />
                                     <span className="text-[10px] font-bold text-white tracking-widest uppercase">Canlı Saha Takibi (Aşama 2)</span>
                                 </div>
                                 <OfflineMap 
@@ -1673,6 +1673,16 @@ export default function Operasyonlar() {
                                         status: t.status,
                                         location: (t as any).location ? [(t as any).location.lat, (t as any).location.lng] : undefined
                                     }))} 
+                                    members={selectedOp.teams?.flatMap((t: any) => 
+                                        t.members?.filter((m: any) => m.lastLocation).map((m: any) => ({
+                                            id: m.id,
+                                            name: membersData.find(mem => mem.id === m.id)?.fullName || m.id,
+                                            teamName: t.name,
+                                            role: m.role,
+                                            location: [m.lastLocation.lat, m.lastLocation.lng],
+                                            path: m.path?.map((p: any) => [p.lat, p.lng]) || []
+                                        }))
+                                    ) || []}
                                     pins={selectedOp.pins || []}
                                     onMapClick={(lat, lng) => {
                                         if(selectedOp.status === 'Aktif') {
@@ -2191,6 +2201,60 @@ export default function Operasyonlar() {
                                 className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold uppercase tracking-wider"
                             >
                                 Timi Ekle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* FORM: ADD PIN MODAL */}
+            {newPinPos && (
+                <div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-[#050B14] border border-white/10 rounded-3xl p-6 max-w-sm w-full space-y-4">
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                            <h3 className="text-sm font-black text-white uppercase tracking-wider">İşaretçi (Pin) Ekle</h3>
+                            <button onClick={() => setNewPinPos(null)} className="p-1 text-neutral-400 hover:text-white rounded-lg"><X size={16}/></button>
+                        </div>
+                        <div className="space-y-3 text-xs">
+                            <input 
+                                type="text" placeholder="İşaretçi Adı (Örn: Merkez Kamp)"
+                                value={newPinName} onChange={(e) => setNewPinName(e.target.value)}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-red-500"
+                            />
+                            <select
+                                value={newPinType} onChange={(e) => setNewPinType(e.target.value as any)}
+                                className="w-full bg-[#050B14] border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-red-500"
+                            >
+                                <option value="Kamp">Kamp</option>
+                                <option value="Araç">Araç</option>
+                                <option value="Tehlike">Tehlike/Yangın</option>
+                                <option value="Toplanma">Toplanma</option>
+                            </select>
+                            <button 
+                                onClick={async () => {
+                                    if(!newPinName) return alert("İsim girmelisiniz.");
+                                    try {
+                                        await fetch('/api/settings/operations/active/pins', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                operationId: selectedOp?.id,
+                                                name: newPinName,
+                                                type: newPinType,
+                                                lat: newPinPos[0],
+                                                lng: newPinPos[1],
+                                                createdBy: "Admin"
+                                            })
+                                        });
+                                        setNewPinPos(null);
+                                        setNewPinName("");
+                                    } catch(e) {
+                                        alert("Hata oluştu.");
+                                    }
+                                }}
+                                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold uppercase tracking-wider"
+                            >
+                                İşaretçiyi Kaydet
                             </button>
                         </div>
                     </div>
