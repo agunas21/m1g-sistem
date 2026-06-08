@@ -8,12 +8,15 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Admin client (server-side only — Storage uploads, bypasses RLS)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-})
+// We only initialize this on the server. On the client, supabaseServiceKey is undefined, which would crash createClient.
+export const supabaseAdmin = typeof window === 'undefined' && supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    })
+    : null as any;
 
 /**
  * Hasar fotoğrafı Supabase Storage'a yükler.
@@ -29,7 +32,7 @@ export async function uploadDamagePhoto(
         const ext = file instanceof File ? file.name.split('.').pop() ?? 'jpg' : 'jpg'
         const path = `damage-photos/${operationId}/${itemId}_${timestamp}.${ext}`
 
-        const { error } = await supabaseAdmin.storage
+        const { error } = await supabaseAdmin!.storage
             .from('m1g-assets')
             .upload(path, file, {
                 cacheControl: '3600',
@@ -42,7 +45,7 @@ export async function uploadDamagePhoto(
             return null
         }
 
-        const { data } = supabaseAdmin.storage
+        const { data } = supabaseAdmin!.storage
             .from('m1g-assets')
             .getPublicUrl(path)
 
@@ -62,13 +65,13 @@ export async function uploadToStorage(
     contentType = 'application/octet-stream'
 ): Promise<string | null> {
     try {
-        const { error } = await supabaseAdmin.storage
+        const { error } = await supabaseAdmin!.storage
             .from('m1g-assets')
             .upload(path, buffer, { contentType, upsert: true })
 
         if (error) return null
 
-        const { data } = supabaseAdmin.storage
+        const { data } = supabaseAdmin!.storage
             .from('m1g-assets')
             .getPublicUrl(path)
 
