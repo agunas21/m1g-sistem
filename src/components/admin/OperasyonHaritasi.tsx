@@ -97,7 +97,36 @@ const myLocationIcon = L.divIcon({
 });
 
 
-// ── Özel marker ikonu (Leaflet DivIcon) ────────────────────────────────────
+// ── Özel Marker İkonları ve Bileşenleri ────────────────────────────────────
+
+const CenterPinButton = ({ onClick }: { onClick: (lat: number, lng: number) => void }) => {
+  const map = useMap();
+  return (
+    <div style={{ position:'absolute', top:16, left:'50%', transform:'translateX(-50%)', zIndex:1000 }}>
+      <button 
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const center = map.getCenter();
+          onClick(center.lat, center.lng);
+        }}
+        style={{ background:'rgba(0,0,0,0.8)', padding:'8px 20px', borderRadius:20, border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer', display:'flex', alignItems:'center', gap:8, boxShadow:'0 4px 12px rgba(0,0,0,0.5)' }}
+      >
+        <span style={{ fontSize:16 }}>📍</span>
+        <span style={{ fontSize:11, fontWeight:700, color:'#e2e8f0', letterSpacing:1 }}>MERKEZE PİN EKLE</span>
+      </button>
+    </div>
+  );
+};
+
+const CenterCrosshair = () => {
+  return (
+    <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -50%)', zIndex:1000, pointerEvents:'none', opacity:0.6 }}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    </div>
+  );
+};
+
 function makeIcon(color: string, initials: string, isSelected: boolean) {
   if (typeof window === 'undefined') return undefined
   const L = require('leaflet')
@@ -493,7 +522,8 @@ export default function OperasyonHaritasi({
             />
 
             {mapReady && <MapController flyTo={flyTo} />}
-            <MapEventHandler onClick={onMapClick} />
+            {onMapClick && <CenterPinButton onClick={onMapClick} />}
+            {onMapClick && <CenterCrosshair />}
 
             {pins.map((pin) => (
               <Marker key={pin.id} position={pin.location} icon={getPinIcon(pin.type)}>
@@ -501,6 +531,15 @@ export default function OperasyonHaritasi({
                   <div style={{color: 'black', textAlign: 'center'}}>
                     <strong style={{display: 'block', fontSize: '14px'}}>{pin.name}</strong>
                     <span style={{fontSize: '12px', color: '#666', fontWeight: 'bold'}}>{pin.type}</span>
+                    <div style={{marginTop: '10px'}}>
+                      <a 
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${pin.location[0]},${pin.location[1]}`}
+                        target="_blank" rel="noreferrer"
+                        style={{display: 'inline-block', backgroundColor: '#2563eb', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', textDecoration: 'none', fontWeight: 'bold'}}
+                      >
+                        Konuma Git
+                      </a>
+                    </div>
                   </div>
                 </Popup>
               </Marker>
@@ -547,12 +586,7 @@ export default function OperasyonHaritasi({
             })}
           </MapContainer>
 
-          {/* İpucu Overlay */}
-          <div style={{ position:'absolute', top:16, left:'50%', transform:'translateX(-50%)', zIndex:400, background:'rgba(0,0,0,0.8)', padding:'6px 16px', borderRadius:20, pointerEvents:'none', border:'1px solid rgba(255,255,255,0.1)' }}>
-              <span style={{ fontSize:10, fontWeight:700, color:'#e2e8f0', letterSpacing:1 }}>PİN İÇİN HARİTAYA TIKLA</span>
-          </div>
-
-          {/* Konumum Butonu */}
+          {/* İpucu Overlay KALDIRILDI - Artık harita içinde buton var */}          {/* Konumum Butonu */}
           <button 
               onClick={() => {
                 if (myPos) {
