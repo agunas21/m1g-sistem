@@ -109,7 +109,7 @@ const formatDuration = (startTimeStr: string, endTimeStr: string | null = null) 
 };
 
 export default function Operasyonlar() {
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
     const [operations, setOperations] = useState<ActiveOperation[]>([]);
     const [selectedOp, setSelectedOp] = useState<ActiveOperation | null>(null);
     const [membersData, setMembersData] = useState<any[]>([]);
@@ -1650,6 +1650,7 @@ export default function Operasyonlar() {
                             <div className="h-[500px] md:h-[600px] mb-6 rounded-2xl overflow-hidden border border-white/10 relative z-0">
                                 <OperasyonHaritasi 
                                     operationId={selectedOp.id} 
+                                    userId={user?.uid}
                                     onMapClick={(lat, lng) => {
                                         if (selectedOp?.status === 'Aktif') {
                                             setNewPinPos([lat, lng]);

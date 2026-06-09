@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 
@@ -30,6 +30,7 @@ interface Props {
   initialCenter?: [number, number]
   initialZoom?: number
   onMapClick?: (lat: number, lng: number) => void
+  userId?: string
 }
 
 // ── Durum renkleri ─────────────────────────────────────────────────────────
@@ -156,7 +157,8 @@ export default function OperasyonHaritasi({
   operationId,
   initialCenter = [39.9334, 32.8597],
   initialZoom   = 14,
-  onMapClick
+  onMapClick,
+  userId
 }: Props) {
   const [locations,  setLocations]  = useState<Record<string, PersonnelLocation>>({})
   const [trails,     setTrails]     = useState<Record<string, [number, number][]>>({})
@@ -166,6 +168,10 @@ export default function OperasyonHaritasi({
   const [mapReady,   setMapReady]   = useState(false)
   const [opStats,    setOpStats]    = useState({ name: "Yükleniyor...", activeCount: 0 })
   const [myPos,      setMyPos]      = useState<[number, number] | null>(null)
+  
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const lastPingRef = useRef<number>(0)
+  const channelRef = useRef<any>(null)
 
   // ── İlk yükleme ve API eşleşmesi ──────────────────────────────────────────
   useEffect(() => {
@@ -234,11 +240,12 @@ export default function OperasyonHaritasi({
 
   // ── Realtime subscription ────────────────────────────────────────────────
   useEffect(() => {
-    const ch = supabase.channel('operations-channel');
-    ch.on('broadcast', { event: 'location_update' }, (payload) => {
+    channelRef.current = supabase.channel('operations-channel');
+    
+    channelRef.current.on('broadcast', { event: 'location_update' }, (payload: any) => {
         const { memberId, lat, lng, battery, accuracy, timestamp } = payload.payload;
 
-        setLocations(prev => {
+        setLocations((prev: any) => {
             const p = prev[memberId];
             if (!p) return prev; 
             
@@ -262,14 +269,14 @@ export default function OperasyonHaritasi({
             };
         });
 
-        setTrails(prev => {
+        setTrails((prev: any) => {
             const existing = prev[memberId] ?? [];
             const updated = [...existing, [lat, lng] as [number, number]];
             return { ...prev, [memberId]: updated.slice(-MAX_TRAIL) };
         });
     }).subscribe();
 
-    return () => { supabase.removeChannel(ch) }
+    return () => { if(channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [])
 
   const handleSelect = useCallback((id: string) => {
@@ -278,14 +285,41 @@ export default function OperasyonHaritasi({
     if (loc) setFlyTo([loc.lat, loc.lng])
   }, [locations])
 
-  // ── Konumumu Bul ──────────────────────────────────────────────────────────
+  // ── Konumumu Bul ve Gönder ────────────────────────────────────────────────
+  const pingLocation = async (lat: number, lng: number) => {
+    const now = Date.now();
+    if (now - lastPingRef.current < 5000) return; // Max 5 saniyede bir at
+    lastPingRef.current = now;
+
+    if (!userId) return;
+
+    try {
+        if (channelRef.current) {
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'location_update',
+                payload: { memberId: userId, lat, lng, timestamp: now }
+            });
+        }
+        fetch('/api/settings/operations/active/location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: userId, lat, lng })
+        }).catch(() => {});
+    } catch (e) {
+        console.error("GPS Ping failed", e);
+    }
+  };
+
   const startTracking = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-            const posCoords = [pos.coords.latitude, pos.coords.longitude] as [number, number];
-            setMyPos(posCoords);
-            setFlyTo(posCoords);
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            setMyPos([lat, lng]);
+            setFlyTo([lat, lng]);
+            pingLocation(lat, lng);
         },
         (err) => console.log("Konum hatası:", err),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -293,7 +327,10 @@ export default function OperasyonHaritasi({
       
       const watchId = navigator.geolocation.watchPosition(
         (pos) => {
-            setMyPos([pos.coords.latitude, pos.coords.longitude]);
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            setMyPos([lat, lng]);
+            pingLocation(lat, lng);
         },
         (err) => console.log("Canlı konum alınamadı:", err),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
@@ -349,11 +386,21 @@ export default function OperasyonHaritasi({
   }
 
   return (
-    <div style={S.wrap}>
+    <div className="relative flex w-full h-full bg-[#1a1f2e] font-sans rounded-2xl overflow-hidden">
       {/* ── Sol panel ────────────────────────────────────────── */}
-      <div style={S.sidebar}>
+      <div className={`
+        absolute md:relative z-[500] md:z-0
+        w-[85%] md:w-[300px] h-full
+        bg-[#111827] flex flex-col border-r border-slate-800
+        transform transition-transform duration-300 shadow-2xl md:shadow-none
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 shrink-0
+      `}>
         <div style={S.sHead}>
-          <div style={S.sTitle}>Canlı takip</div>
+          <div className="flex items-center justify-between">
+              <div style={S.sTitle}>Canlı takip</div>
+              <button className="md:hidden text-slate-400 p-2" onClick={() => setIsSidebarOpen(false)}>✕</button>
+          </div>
           <div style={S.sSub}>{opStats.name}</div>
           <div style={S.badge}>
             <div style={S.bdot} />
@@ -369,7 +416,10 @@ export default function OperasyonHaritasi({
             return (
               <div
                 key={p.member_id}
-                onClick={() => handleSelect(p.member_id)}
+                onClick={() => {
+                  handleSelect(p.member_id);
+                  if(window.innerWidth < 768) setIsSidebarOpen(false); // Otomatik kapat
+                }}
                 style={{
                   display:'flex', alignItems:'center', gap:12,
                   padding:'10px 12px', borderRadius:8, cursor:'pointer',
@@ -407,14 +457,20 @@ export default function OperasyonHaritasi({
       </div>
 
       {/* ── Harita alanı ─────────────────────────────────────── */}
-      <div style={S.mapWrap}>
+      <div className="flex-1 relative flex flex-col min-w-0">
         {/* Üst bar */}
         <div style={S.topbar}>
-          <span style={{ fontSize:16, color:'#4ade80' }}>●</span>
+          <button 
+            className="md:hidden mr-2 text-white bg-slate-800 border border-slate-700 p-1.5 rounded"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <span style={{ fontSize:16, color:'#4ade80' }} className="hidden md:inline">●</span>
           <span style={{ fontSize:14, fontWeight:500, color:'#e2e8f0' }}>Operasyon izleme</span>
-          <span style={{ width:'0.5px', height:16, background:'#374151' }} />
-          <span style={S.tbStat}>Aktif: <span style={S.tbVal}>{onlineN}</span></span>
-          <span style={S.tbStat}>Toplam: <span style={S.tbVal}>{people.length}</span></span>
+          <span style={{ width:'0.5px', height:16, background:'#374151' }} className="hidden md:inline" />
+          <span style={S.tbStat} className="hidden md:inline">Aktif: <span style={S.tbVal}>{onlineN}</span></span>
+          <span style={S.tbStat} className="ml-auto md:ml-0">Toplam: <span style={S.tbVal}>{people.length}</span></span>
         </div>
 
         {/* Leaflet harita */}
@@ -529,14 +585,14 @@ export default function OperasyonHaritasi({
               </div>
 
               {/* İstatistik kartları */}
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:12 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:12 }} className="overflow-x-auto pb-2 md:pb-0">
                 {[
                   { label:'Batarya', value:`${Math.round(selPer.battery)}%`, color: selPer.battery < 20 ? '#f87171' : '#4ade80' },
                   { label:'GPS ±m',  value:`±${Math.round(selPer.accuracy)}m`, color:'#93c5fd' },
                   { label:'Hız',     value:`${selPer.speed !== null ? Math.round(selPer.speed) : '—'} km/h`, color:'#e2e8f0' },
                   { label:'Sinyal',  value: new Date(selPer.recorded_at).toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' }), color:'#e2e8f0' },
                 ].map(s => (
-                  <div key={s.label} style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center' }}>
+                  <div key={s.label} style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center', minWidth: '70px' }}>
                     <div style={{ fontSize:14, fontWeight:600, color:s.color }}>{s.value}</div>
                     <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>{s.label}</div>
                   </div>
@@ -544,7 +600,7 @@ export default function OperasyonHaritasi({
               </div>
 
               {/* Aksiyon butonları */}
-              <div style={{ display:'flex', gap:8 }}>
+              <div className="flex flex-col md:flex-row gap-2">
                 <button
                   onClick={() => openNavigation(selPer)}
                   style={{
