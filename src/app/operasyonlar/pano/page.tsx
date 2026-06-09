@@ -136,7 +136,7 @@ export default function OperasyonPano() {
 
     useEffect(() => {
         fetchData();
-        const refreshInterval = setInterval(fetchData, 5000);
+        const refreshInterval = setInterval(fetchData, 60000); // 1 dakikaya çıkarıldı
         const tickInterval = setInterval(() => {
             setTick(t => t + 1);
         }, 1000);

@@ -347,7 +347,7 @@ export default function Operasyonlar() {
             } catch (e) {
                 // Silently ignore errors
             }
-        }, 5000);
+        }, 60000); // Changed from 5000 to 60000 to save Vercel bandwidth
 
         return () => {
             clearInterval(timer);

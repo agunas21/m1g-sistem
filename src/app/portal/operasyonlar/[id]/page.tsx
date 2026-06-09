@@ -95,7 +95,7 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
             });
         }).subscribe();
 
-        const interval = setInterval(fetchOp, 5000); // 5 saniyede bir daha sık güncelle (Canlı takip için)
+        const interval = setInterval(fetchOp, 30000); // 30 saniyeye cikarildi (Bant genisligi tasarrufu)
         return () => {
             clearInterval(interval);
             supabase.removeChannel(channel);
