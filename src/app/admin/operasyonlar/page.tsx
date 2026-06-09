@@ -335,11 +335,12 @@ export default function Operasyonlar() {
                 const opRes = await fetch("/api/settings/operations/active?t=" + Date.now());
                 if (opRes.ok) {
                     const opData = await opRes.json();
-                    setOperations(opData.operations || []);
+                    const ops = Array.isArray(opData) ? opData : [];
+                    setOperations(ops);
                     
                     setSelectedOp((prev: any) => {
                         if (!prev) return prev;
-                        const updated = (opData.operations || []).find((o: any) => o.id === prev.id);
+                        const updated = ops.find((o: any) => o.id === prev.id);
                         return updated || prev;
                     });
                 }
