@@ -228,8 +228,11 @@ export default function OperasyonHaritasi({
 
         // Ortala
         const locs = Object.values(map);
-        if (locs.length > 0) {
-            setFlyTo([locs[0].lat, locs[0].lng]);
+        const validLocs = locs.filter(l => l.lat !== undefined && l.lng !== undefined);
+        if (validLocs.length > 0) {
+            setFlyTo([validLocs[0].lat as number, validLocs[0].lng as number]);
+        } else if (op.pins && op.pins.length > 0) {
+            setFlyTo(op.pins[0].location);
         }
       } catch (err) {
           console.error("Harita verisi yüklenemedi", err);
