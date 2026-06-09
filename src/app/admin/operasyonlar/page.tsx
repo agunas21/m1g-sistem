@@ -1552,16 +1552,14 @@ export default function Operasyonlar() {
                                                 Kalıcı Olarak Sil
                                             </button>
                                         )}
-                                        {selectedOp.status === "Aktif" && (
-                                            <a 
-                                                href={`/admin/canli-harita/${selectedOp.id}`} 
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-4 py-2.5 bg-blue-600/20 hover:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all border border-blue-500/20"
-                                            >
-                                                <MapPin size={14} /> Gelişmiş Harita
-                                            </a>
-                                        )}
+                                        <a 
+                                            href={`/admin/canli-harita/${selectedOp.id}`} 
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-4 py-2.5 bg-blue-600/20 hover:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all border border-blue-500/20"
+                                        >
+                                            <MapPin size={14} /> Gelişmiş Harita
+                                        </a>
                                         <button onClick={() => window.print()} className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 border border-white/10 transition-colors">
                                             <Printer size={14} /> Yazdır (PDF)
                                         </button>
