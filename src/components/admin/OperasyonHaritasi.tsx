@@ -4,13 +4,9 @@ import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 
-// ── Leaflet bileşenlerini SSR'sız yükle ──────────────────────────────────────
-const MapContainer   = dynamic(() => import('react-leaflet').then(m => m.MapContainer),   { ssr: false })
-const TileLayer      = dynamic(() => import('react-leaflet').then(m => m.TileLayer),       { ssr: false })
-const Marker         = dynamic(() => import('react-leaflet').then(m => m.Marker),          { ssr: false })
-const Polyline       = dynamic(() => import('react-leaflet').then(m => m.Polyline),        { ssr: false })
-const Circle         = dynamic(() => import('react-leaflet').then(m => m.Circle),          { ssr: false })
-const useMap         = dynamic(() => import('react-leaflet').then(m => m.useMap),          { ssr: false }) as any
+import { MapContainer, TileLayer, Marker, Polyline, Circle, Popup, useMap, useMapEvents } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
 
 // ── Tipler ──────────────────────────────────────────────────────────────────
 interface PersonnelLocation {
@@ -33,6 +29,7 @@ interface Props {
   operationId: string
   initialCenter?: [number, number]
   initialZoom?: number
+  onMapClick?: (lat: number, lng: number) => void
 }
 
 // ── Durum renkleri ─────────────────────────────────────────────────────────
@@ -63,6 +60,41 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
     return R * c;
 }
+
+// ── Pin Icons ──────────────────────────────────────────────────────────────
+const getPinIcon = (type: string) => {
+  let bgColor = "#3b82f6"; // default blue
+  if (type === "Kamp") bgColor = "#10b981"; // green
+  if (type === "Tehlike") bgColor = "#f97316"; // orange
+  if (type === "Toplanma") bgColor = "#8b5cf6"; // purple
+
+  return L.divIcon({
+    className: 'custom-pin-icon',
+    html: `<div style="background-color: ${bgColor}; width: 24px; height: 24px; border-radius: 50% 50% 50% 0; border: 2px solid white; transform: rotate(-45deg); box-shadow: 2px 2px 5px rgba(0,0,0,0.4); position: relative;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: white; border-radius: 50%;"></div>
+           </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+    popupAnchor: [0, -24],
+  });
+};
+
+const myLocationIcon = L.divIcon({
+  className: 'my-location-icon',
+  html: `<div style="background-color: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(59,130,246,0.8); position: relative;">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; background-color: #3b82f6; border-radius: 50%; opacity: 0.5; animation: pulse 2s infinite;"></div>
+         </div>
+         <style>
+          @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+          }
+         </style>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+  popupAnchor: [0, -8],
+});
+
 
 // ── Özel marker ikonu (Leaflet DivIcon) ────────────────────────────────────
 function makeIcon(color: string, initials: string, isSelected: boolean) {
@@ -108,6 +140,15 @@ function MapController({ flyTo }: { flyTo: [number, number] | null }) {
   return null
 }
 
+function MapEventHandler({ onClick }: { onClick?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      if (onClick) onClick(e.latlng.lat, e.latlng.lng);
+    }
+  });
+  return null;
+}
+
 const MAX_TRAIL = 60
 
 // ── Ana bileşen ────────────────────────────────────────────────────────────
@@ -115,13 +156,16 @@ export default function OperasyonHaritasi({
   operationId,
   initialCenter = [39.9334, 32.8597],
   initialZoom   = 14,
+  onMapClick
 }: Props) {
   const [locations,  setLocations]  = useState<Record<string, PersonnelLocation>>({})
   const [trails,     setTrails]     = useState<Record<string, [number, number][]>>({})
+  const [pins,       setPins]       = useState<any[]>([])
   const [selected,   setSelected]   = useState<string | null>(null)
   const [flyTo,      setFlyTo]      = useState<[number, number] | null>(null)
   const [mapReady,   setMapReady]   = useState(false)
   const [opStats,    setOpStats]    = useState({ name: "Yükleniyor...", activeCount: 0 })
+  const [myPos,      setMyPos]      = useState<[number, number] | null>(null)
 
   // ── İlk yükleme ve API eşleşmesi ──────────────────────────────────────────
   useEffect(() => {
@@ -173,6 +217,7 @@ export default function OperasyonHaritasi({
         });
         setLocations(map);
         setTrails(newTrails);
+        setPins(op.pins || []);
         setOpStats({ name: op.name, activeCount: Object.keys(map).length });
 
         // Ortala
@@ -227,12 +272,38 @@ export default function OperasyonHaritasi({
     return () => { supabase.removeChannel(ch) }
   }, [])
 
-  // ── Personel seç ─────────────────────────────────────────────────────────
   const handleSelect = useCallback((id: string) => {
     setSelected(prev => prev === id ? null : id)
     const loc = locations[id]
     if (loc) setFlyTo([loc.lat, loc.lng])
   }, [locations])
+
+  // ── Konumumu Bul ──────────────────────────────────────────────────────────
+  const startTracking = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const posCoords = [pos.coords.latitude, pos.coords.longitude] as [number, number];
+            setMyPos(posCoords);
+            setFlyTo(posCoords);
+        },
+        (err) => console.log("Konum hatası:", err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+      
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+            setMyPos([pos.coords.latitude, pos.coords.longitude]);
+        },
+        (err) => console.log("Canlı konum alınamadı:", err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      );
+
+      return () => navigator.geolocation.clearWatch(watchId);
+    } else {
+        alert("Cihazınız GPS desteklemiyor.");
+    }
+  };
 
   // ── "Konuma git" — Google Maps ────────────────────────────────────────────
   const openNavigation = useCallback((loc: PersonnelLocation) => {
@@ -363,6 +434,28 @@ export default function OperasyonHaritasi({
             />
 
             {mapReady && <MapController flyTo={flyTo} />}
+            <MapEventHandler onClick={onMapClick} />
+
+            {pins.map((pin) => (
+              <Marker key={pin.id} position={pin.location} icon={getPinIcon(pin.type)}>
+                <Popup>
+                  <div style={{color: 'black', textAlign: 'center'}}>
+                    <strong style={{display: 'block', fontSize: '14px'}}>{pin.name}</strong>
+                    <span style={{fontSize: '12px', color: '#666', fontWeight: 'bold'}}>{pin.type}</span>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+
+            {myPos && (
+              <Marker position={myPos} icon={myLocationIcon}>
+                <Popup>
+                  <div style={{color: 'black', textAlign: 'center', fontWeight: 'bold', fontSize: '12px'}}>
+                    Konumum
+                  </div>
+                </Popup>
+              </Marker>
+            )}
 
             {people.map(p => {
               const isSelected = selected === p.member_id
@@ -393,6 +486,20 @@ export default function OperasyonHaritasi({
               )
             })}
           </MapContainer>
+
+          {/* İpucu Overlay */}
+          <div style={{ position:'absolute', top:16, left:'50%', transform:'translateX(-50%)', zIndex:400, background:'rgba(0,0,0,0.8)', padding:'6px 16px', borderRadius:20, pointerEvents:'none', border:'1px solid rgba(255,255,255,0.1)' }}>
+              <span style={{ fontSize:10, fontWeight:700, color:'#e2e8f0', letterSpacing:1 }}>PİN İÇİN HARİTAYA TIKLA</span>
+          </div>
+
+          {/* Konumum Butonu */}
+          <button 
+              onClick={startTracking}
+              style={{ position:'absolute', bottom:24, right:24, zIndex:400, background:'#2563eb', border:'none', color:'#fff', padding:12, borderRadius:'50%', cursor:'pointer', boxShadow:'0 0 15px rgba(37,99,235,0.5)' }}
+              title="Konumumu Bul"
+          >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+          </button>
         </div>
 
         {/* ── Detay paneli (pin/liste tıklanınca açılır) ──── */}

@@ -1648,7 +1648,14 @@ export default function Operasyonlar() {
 
                             {/* ADVANCED LIVE TRACKING MAP */}
                             <div className="h-[500px] md:h-[600px] mb-6 rounded-2xl overflow-hidden border border-white/10 relative z-0">
-                                <OperasyonHaritasi operationId={selectedOp.id} />
+                                <OperasyonHaritasi 
+                                    operationId={selectedOp.id} 
+                                    onMapClick={(lat, lng) => {
+                                        if (selectedOp?.status === 'Aktif') {
+                                            setNewPinPos([lat, lng]);
+                                        }
+                                    }}
+                                />
                             </div>                            {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                                 
