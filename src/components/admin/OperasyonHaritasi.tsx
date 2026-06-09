@@ -254,7 +254,7 @@ export default function OperasyonHaritasi({
 
   // ── CSS ───────────────────────────────────────────────────────────────────
   const S = {
-    wrap:    { display:'flex', height:'100vh', width:'100%', background:'#1a1f2e', fontFamily:'system-ui' } as const,
+    wrap:    { display:'flex', height:'100%', width:'100%', background:'#1a1f2e', fontFamily:'system-ui', borderRadius: '1rem', overflow: 'hidden' } as const,
     sidebar: { width:300, background:'#111827', display:'flex', flexDirection:'column' as const, borderRight:'0.5px solid #2d3748', overflow:'hidden' },
     sHead:   { padding:'14px 16px', borderBottom:'0.5px solid #2d3748' },
     sTitle:  { fontSize:15, fontWeight:600, color:'#e2e8f0' },

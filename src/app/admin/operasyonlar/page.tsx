@@ -16,8 +16,8 @@ import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
 import OperationSummaryModal from "@/components/modals/OperationSummaryModal";
 import TeamListPanel from "@/components/admin/operasyonlar/TeamListPanel";
-import MapView from "@/components/admin/operasyonlar/MapView";
 
+const OperasyonHaritasi = dynamic(() => import("@/components/admin/OperasyonHaritasi"), { ssr: false });
 const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
 
 // Types
@@ -1552,14 +1552,6 @@ export default function Operasyonlar() {
                                                 Kalıcı Olarak Sil
                                             </button>
                                         )}
-                                        <a 
-                                            href={`/admin/canli-harita/${selectedOp.id}`} 
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="px-4 py-2.5 bg-blue-600/20 hover:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all border border-blue-500/20"
-                                        >
-                                            <MapPin size={14} /> Gelişmiş Harita
-                                        </a>
                                         <button onClick={() => window.print()} className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 border border-white/10 transition-colors">
                                             <Printer size={14} /> Yazdır (PDF)
                                         </button>
@@ -1653,10 +1645,10 @@ export default function Operasyonlar() {
                                 </div>
                             </div>
 
-                            {/* OFFLINE MAP (IZMIR TERRAIN) */}
-                            <MapView selectedOp={selectedOp} membersData={membersData} setNewPinPos={setNewPinPos} />
-
-                            {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
+                            {/* ADVANCED LIVE TRACKING MAP */}
+                            <div className="h-[500px] md:h-[600px] mb-6 rounded-2xl overflow-hidden border border-white/10 relative z-0">
+                                <OperasyonHaritasi operationId={selectedOp.id} />
+                            </div>                            {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                                 
                                 {/* Timler listesi (Active Teams & Deployments) - 2 Columns wide */}
