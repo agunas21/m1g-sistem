@@ -12,7 +12,7 @@ import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 
-const OfflineMap = dynamic(() => import("@/components/map/OfflineMap"), { 
+const OperasyonHaritasi = dynamic(() => import("@/components/admin/OperasyonHaritasi"), { 
     ssr: false,
     loading: () => <div className="w-full h-48 bg-[#050B14] rounded-3xl  flex items-center justify-center border border-white/5"><Compass className="animate-spin text-neutral-500" size={32} /></div>
 });
@@ -292,21 +292,10 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                         <MapPin className="text-red-500" size={20} />
                         <h2 className="text-lg font-bold text-white uppercase tracking-widest">Saha Haritası</h2>
                     </div>
-                    <div className="bg-[#050B14] border border-white/5 rounded-3xl p-2 relative shadow-2xl h-64 md:h-96 w-full overflow-hidden">
-                        <OfflineMap 
-                            teams={operation.teams?.map((t: any) => ({
-                                id: t.id,
-                                name: t.name,
-                                status: t.status,
-                                location: t.location ? [t.location.lat, t.location.lng] : undefined
-                            })) || []} 
-                            members={mapMembers}
-                            pins={operation.pins || []}
+                    <div className="bg-[#050B14] border border-white/5 rounded-3xl p-2 relative shadow-2xl h-[600px] w-full overflow-hidden">
+                        <OperasyonHaritasi 
+                            operationId={operation.id}
                             userId={user?.id || user?.uid || user?.email}
-                            onMapClick={(lat, lng) => {
-                                // Tüm portal kullanıcıları pin bırakabilsin
-                                setPinModal({ lat, lng });
-                            }}
                         />
                     </div>
                 </div>

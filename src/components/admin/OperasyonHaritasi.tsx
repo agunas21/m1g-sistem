@@ -392,7 +392,7 @@ export default function OperasyonHaritasi({
     <div className="relative flex w-full h-full bg-[#1a1f2e] font-sans rounded-2xl overflow-hidden">
       {/* ── Sol panel ────────────────────────────────────────── */}
       <div className={`
-        absolute z-[500]
+        absolute z-[1100]
         w-[85%] md:w-[320px] h-full
         bg-[#111827] flex flex-col border-r border-slate-800
         transform transition-transform duration-300 shadow-2xl
@@ -554,8 +554,15 @@ export default function OperasyonHaritasi({
 
           {/* Konumum Butonu */}
           <button 
-              onClick={startTracking}
-              style={{ position:'absolute', bottom:24, right:24, zIndex:400, background:'#2563eb', border:'none', color:'#fff', padding:12, borderRadius:'50%', cursor:'pointer', boxShadow:'0 0 15px rgba(37,99,235,0.5)' }}
+              onClick={() => {
+                if (myPos) {
+                  setFlyTo(myPos)
+                } else {
+                  startTracking();
+                  alert("Konumunuz henüz bulunamadı veya cihazınız desteklemiyor.");
+                }
+              }}
+              style={{ position:'absolute', bottom:24, right:24, zIndex:400, background: myPos ? '#2563eb' : '#64748b', border:'none', color:'#fff', padding:12, borderRadius:'50%', cursor:'pointer', boxShadow:'0 0 15px rgba(37,99,235,0.5)' }}
               title="Konumumu Bul"
           >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
