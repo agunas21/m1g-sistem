@@ -526,7 +526,7 @@ export default function OperasyonHaritasi({
                 <div key={p.member_id}>
                   <Circle
                     center={[p.lat, p.lng]}
-                    radius={p.accuracy}
+                    radius={p.accuracy || 15}
                     pathOptions={{ color: p.team_color, fillColor: p.team_color, fillOpacity:0.06, weight:1, opacity:0.3 }}
                   />
 
