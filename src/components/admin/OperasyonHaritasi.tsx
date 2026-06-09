@@ -16,13 +16,13 @@ interface PersonnelLocation {
   team_color:    string
   role:          string
   status:        'searching' | 'found_victim' | 'returning' | 'standby'
-  lat:           number
-  lng:           number
-  accuracy:      number
-  battery:       number
-  speed:         number | null    // km/h
+  lat?:          number
+  lng?:          number
+  accuracy?:     number
+  battery?:      number
+  speed?:        number | null    // km/h
   is_online:     boolean
-  recorded_at:   string
+  recorded_at?:  string
 }
 
 interface Props {
@@ -197,22 +197,22 @@ export default function OperasyonHaritasi({
           colorIdx++;
           t.members.forEach((m: any) => {
               const memInfo = memberMap.get(m.id);
+              map[m.id] = {
+                  member_id: m.id,
+                  member_name: memInfo?.fullName || m.id,
+                  team_name: t.name,
+                  team_color: teamColor,
+                  role: m.role,
+                  status: m.role === 'Lider' ? 'standby' : 'searching',
+                  lat: m.lastLocation?.lat,
+                  lng: m.lastLocation?.lng,
+                  accuracy: m.lastLocation?.accuracy,
+                  battery: m.lastLocation?.battery,
+                  speed: 0,
+                  is_online: m.lastLocation ? (Date.now() - m.lastLocation.timestamp < 10 * 60 * 1000) : false,
+                  recorded_at: m.lastLocation ? new Date(m.lastLocation.timestamp).toISOString() : undefined
+              };
               if (m.lastLocation) {
-                  map[m.id] = {
-                      member_id: m.id,
-                      member_name: memInfo?.fullName || m.id,
-                      team_name: t.name,
-                      team_color: teamColor,
-                      role: m.role,
-                      status: m.role === 'Lider' ? 'standby' : 'searching',
-                      lat: m.lastLocation.lat,
-                      lng: m.lastLocation.lng,
-                      accuracy: m.lastLocation.accuracy || 15,
-                      battery: m.lastLocation.battery || 100,
-                      speed: 0,
-                      is_online: Date.now() - m.lastLocation.timestamp < 10 * 60 * 1000,
-                      recorded_at: new Date(m.lastLocation.timestamp).toISOString()
-                  };
                   if (m.path && m.path.length > 0) {
                       newTrails[m.id] = m.path.map((p:any) => [p.lat, p.lng]);
                   } else {
@@ -250,7 +250,7 @@ export default function OperasyonHaritasi({
             if (!p) return prev; 
             
             let speed = 0;
-            if (p.lat && p.lng) {
+            if (p.lat && p.lng && p.recorded_at) {
                 const dist = getDistanceFromLatLonInKm(p.lat, p.lng, lat, lng);
                 const timeDiff = (timestamp - new Date(p.recorded_at).getTime()) / (1000 * 60 * 60);
                 if (timeDiff > 0) speed = dist / timeDiff;
@@ -260,8 +260,8 @@ export default function OperasyonHaritasi({
                 ...prev,
                 [memberId]: {
                     ...p,
-                    lat, lng, battery: battery || p.battery,
-                    accuracy: accuracy || p.accuracy,
+                    lat, lng, battery: battery || p.battery || 100,
+                    accuracy: accuracy || p.accuracy || 15,
                     speed,
                     is_online: true,
                     recorded_at: new Date(timestamp).toISOString()
@@ -282,7 +282,7 @@ export default function OperasyonHaritasi({
   const handleSelect = useCallback((id: string) => {
     setSelected(prev => prev === id ? null : id)
     const loc = locations[id]
-    if (loc) setFlyTo([loc.lat, loc.lng])
+    if (loc && loc.lat !== undefined && loc.lng !== undefined) setFlyTo([loc.lat, loc.lng])
   }, [locations])
 
   // ── Konumumu Bul ve Gönder ────────────────────────────────────────────────
@@ -389,17 +389,17 @@ export default function OperasyonHaritasi({
     <div className="relative flex w-full h-full bg-[#1a1f2e] font-sans rounded-2xl overflow-hidden">
       {/* ── Sol panel ────────────────────────────────────────── */}
       <div className={`
-        absolute md:relative z-[500] md:z-0
-        w-[85%] md:w-[300px] h-full
+        absolute z-[500]
+        w-[85%] md:w-[320px] h-full
         bg-[#111827] flex flex-col border-r border-slate-800
-        transform transition-transform duration-300 shadow-2xl md:shadow-none
+        transform transition-transform duration-300 shadow-2xl
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0 shrink-0
+        shrink-0
       `}>
         <div style={S.sHead}>
           <div className="flex items-center justify-between">
               <div style={S.sTitle}>Canlı takip</div>
-              <button className="md:hidden text-slate-400 p-2" onClick={() => setIsSidebarOpen(false)}>✕</button>
+              <button className="text-slate-400 p-2 hover:bg-slate-800 rounded-lg" onClick={() => setIsSidebarOpen(false)}>✕</button>
           </div>
           <div style={S.sSub}>{opStats.name}</div>
           <div style={S.badge}>
@@ -443,12 +443,12 @@ export default function OperasyonHaritasi({
                   </div>
                   <div style={{ fontSize:11, color:'#64748b', marginTop:1 }}>{p.team_name} — {p.role}</div>
                   <div style={{ display:'flex', alignItems:'center', gap:4, marginTop:2 }}>
-                    <div style={{ width:5, height:5, borderRadius:'50%', background:sc }} />
-                    <span style={{ fontSize:11, color:sc }}>{STATUS_LABELS[p.status]}</span>
+                    <div style={{ width:5, height:5, borderRadius:'50%', background: p.lat ? sc : '#64748b' }} />
+                    <span style={{ fontSize:11, color: p.lat ? sc : '#64748b' }}>{p.lat ? STATUS_LABELS[p.status] : 'Konum Bekleniyor'}</span>
                   </div>
                 </div>
-                <div style={{ fontSize:11, color: p.battery < 20 ? '#f87171' : '#94a3b8', flexShrink:0 }}>
-                  🔋{Math.round(p.battery)}%
+                <div style={{ fontSize:11, color: (p.battery ?? 100) < 20 ? '#f87171' : '#94a3b8', flexShrink:0 }}>
+                  {p.battery !== undefined ? `🔋${Math.round(p.battery)}%` : 'Bekleniyor'}
                 </div>
               </div>
             )
@@ -461,16 +461,16 @@ export default function OperasyonHaritasi({
         {/* Üst bar */}
         <div style={S.topbar}>
           <button 
-            className="md:hidden mr-2 text-white bg-slate-800 border border-slate-700 p-1.5 rounded"
+            className="mr-3 text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-600/50 p-2 rounded-lg backdrop-blur shadow-lg transition-colors"
             onClick={() => setIsSidebarOpen(true)}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
-          <span style={{ fontSize:16, color:'#4ade80' }} className="hidden md:inline">●</span>
-          <span style={{ fontSize:14, fontWeight:500, color:'#e2e8f0' }}>Operasyon izleme</span>
-          <span style={{ width:'0.5px', height:16, background:'#374151' }} className="hidden md:inline" />
-          <span style={S.tbStat} className="hidden md:inline">Aktif: <span style={S.tbVal}>{onlineN}</span></span>
-          <span style={S.tbStat} className="ml-auto md:ml-0">Toplam: <span style={S.tbVal}>{people.length}</span></span>
+          <span style={{ fontSize:16, color:'#4ade80' }}>●</span>
+          <span style={{ fontSize:15, fontWeight:600, color:'#e2e8f0' }} className="ml-1">Operasyon izleme</span>
+          <span style={{ width:'1px', height:18, background:'#374151' }} className="mx-2 hidden sm:inline" />
+          <span style={S.tbStat} className="hidden sm:inline">Aktif: <span style={S.tbVal}>{onlineN}</span></span>
+          <span style={S.tbStat} className="ml-auto">Toplam: <span style={S.tbVal}>{people.length}</span></span>
         </div>
 
         {/* Leaflet harita */}
@@ -514,6 +514,7 @@ export default function OperasyonHaritasi({
             )}
 
             {people.map(p => {
+              if (p.lat === undefined || p.lng === undefined) return null;
               const isSelected = selected === p.member_id
               const icon = makeIcon(p.team_color, getInitials(p.member_name), isSelected)
               if (!icon) return null
@@ -584,55 +585,63 @@ export default function OperasyonHaritasi({
                 >×</button>
               </div>
 
-              {/* İstatistik kartları */}
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:12 }} className="overflow-x-auto pb-2 md:pb-0">
-                {[
-                  { label:'Batarya', value:`${Math.round(selPer.battery)}%`, color: selPer.battery < 20 ? '#f87171' : '#4ade80' },
-                  { label:'GPS ±m',  value:`±${Math.round(selPer.accuracy)}m`, color:'#93c5fd' },
-                  { label:'Hız',     value:`${selPer.speed !== null ? Math.round(selPer.speed) : '—'} km/h`, color:'#e2e8f0' },
-                  { label:'Sinyal',  value: new Date(selPer.recorded_at).toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' }), color:'#e2e8f0' },
-                ].map(s => (
-                  <div key={s.label} style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center', minWidth: '70px' }}>
-                    <div style={{ fontSize:14, fontWeight:600, color:s.color }}>{s.value}</div>
-                    <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
+              {selPer.lat !== undefined ? (
+                  <>
+                    {/* İstatistik kartları */}
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:12 }} className="overflow-x-auto pb-2 md:pb-0">
+                      {[
+                        { label:'Batarya', value:`${Math.round(selPer.battery ?? 100)}%`, color: (selPer.battery ?? 100) < 20 ? '#f87171' : '#4ade80' },
+                        { label:'GPS ±m',  value:`±${Math.round(selPer.accuracy ?? 15)}m`, color:'#93c5fd' },
+                        { label:'Hız',     value:`${selPer.speed !== null ? Math.round(selPer.speed) : '—'} km/h`, color:'#e2e8f0' },
+                        { label:'Sinyal',  value: selPer.recorded_at ? new Date(selPer.recorded_at).toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' }) : '—', color:'#e2e8f0' },
+                      ].map(s => (
+                        <div key={s.label} style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center', minWidth: '70px' }}>
+                          <div style={{ fontSize:14, fontWeight:600, color:s.color }}>{s.value}</div>
+                          <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>{s.label}</div>
+                        </div>
+                      ))}
+                    </div>
 
-              {/* Aksiyon butonları */}
-              <div className="flex flex-col md:flex-row gap-2">
-                <button
-                  onClick={() => openNavigation(selPer)}
-                  style={{
-                    flex:2, padding:'12px 0', borderRadius:8,
-                    background:'#1d4ed8', border:'0.5px solid #2563eb',
-                    color:'#fff', cursor:'pointer', fontSize:14, fontWeight:500,
-                    display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-                  }}
-                >
-                  ↗ Konuma git
-                </button>
-                <button
-                  onClick={() => copyCoords(selPer)}
-                  style={{
-                    flex:1, padding:'12px 0', borderRadius:8,
-                    background:'transparent', border:'0.5px solid rgba(255,255,255,.15)',
-                    color:'#94a3b8', cursor:'pointer', fontSize:13,
-                  }}
-                >
-                  Koordinat kopyala
-                </button>
-                <button
-                  onClick={() => setFlyTo([selPer.lat, selPer.lng])}
-                  style={{
-                    flex:1, padding:'12px 0', borderRadius:8,
-                    background:'transparent', border:'0.5px solid rgba(255,255,255,.15)',
-                    color:'#94a3b8', cursor:'pointer', fontSize:13,
-                  }}
-                >
-                  Haritada ortala
-                </button>
-              </div>
+                    {/* Aksiyon butonları */}
+                    <div className="flex flex-col md:flex-row gap-2">
+                      <button
+                        onClick={() => openNavigation(selPer)}
+                        style={{
+                          flex:2, padding:'12px 0', borderRadius:8,
+                          background:'#1d4ed8', border:'0.5px solid #2563eb',
+                          color:'#fff', cursor:'pointer', fontSize:14, fontWeight:500,
+                          display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                        }}
+                      >
+                        ↗ Konuma git
+                      </button>
+                      <button
+                        onClick={() => copyCoords(selPer)}
+                        style={{
+                          flex:1, padding:'12px 0', borderRadius:8,
+                          background:'transparent', border:'0.5px solid rgba(255,255,255,.15)',
+                          color:'#94a3b8', cursor:'pointer', fontSize:13,
+                        }}
+                      >
+                        Koordinat kopyala
+                      </button>
+                      <button
+                        onClick={() => { if(selPer.lat) setFlyTo([selPer.lat, selPer.lng as number]) }}
+                        style={{
+                          flex:1, padding:'12px 0', borderRadius:8,
+                          background:'transparent', border:'0.5px solid rgba(255,255,255,.15)',
+                          color:'#94a3b8', cursor:'pointer', fontSize:13,
+                        }}
+                      >
+                        Haritada ortala
+                      </button>
+                    </div>
+                  </>
+              ) : (
+                  <div className="text-center py-6 text-slate-400 bg-slate-800/50 rounded-xl border border-slate-700">
+                    Henüz GPS sinyali alınmadı. Cihaz bekleniyor...
+                  </div>
+              )}
             </>
           )}
         </div>
