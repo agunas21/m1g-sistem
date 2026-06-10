@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyJwt } from '@/lib/crypto'
 import { cookies } from 'next/headers'
+import { uploadToStorage } from '@/lib/supabase'
 
 /**
  * POST /api/upload
@@ -28,12 +29,20 @@ export async function POST(req: NextRequest) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const base64 = buffer.toString('base64');
-        const dataUrl = `data:${file.type};base64,${base64}`;
+        
+        // Supabase Storage'a Yükle
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filename = `uploads/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+        
+        const publicUrl = await uploadToStorage(buffer, filename, file.type);
+
+        if (!publicUrl) {
+            return NextResponse.json({ error: 'Depolama sunucusuna yüklenemedi.' }, { status: 500 });
+        }
 
         return NextResponse.json({
             success: true,
-            url: dataUrl
+            url: publicUrl
         });
 
     } catch (e: any) {
