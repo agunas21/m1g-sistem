@@ -67,11 +67,11 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
             await fetchOp();
         };
 
-        init();
-
-        // --- Supabase Realtime (WebSockets) ---
+        init();        // --- Supabase Realtime (WebSockets) ---
         const channel = supabase.channel('operations-channel');
-        channel.on('broadcast', { event: 'location_update' }, (payload) => {
+        channel.on('broadcast', { event: 'operation_update' }, () => {
+            fetchOp();
+        }).on('broadcast', { event: 'location_update' }, (payload) => {
             const { memberId, lat, lng } = payload.payload;
             
             setOperation((prev: any) => {
@@ -95,11 +95,11 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
             });
         }).subscribe();
 
-        const interval = setInterval(fetchOp, 30000); // 30 saniyeye cikarildi (Bant genisligi tasarrufu)
+        const interval = setInterval(fetchOp, 5 * 60 * 1000); // 5 dakikaya cikarildi (Yedekleme amaciyla)
         return () => {
             clearInterval(interval);
             supabase.removeChannel(channel);
-        }
+        };
     }, [id, router]);
 
     if (loading) {

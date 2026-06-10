@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Activity, Clock, MapPin, Users, Box, RefreshCw, Radio, Heart, Compass, ShieldAlert } from "lucide-react";
 import { motion } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 // Helper for calculating total team working hours in decimal format
 const calculateTeamWorkingHours = (deployments: any[]) => {
@@ -172,13 +173,20 @@ export default function ArkaCephePano() {
 
     useEffect(() => {
         fetchData();
-        const refreshInterval = setInterval(fetchData, 60000); // 1 dakikaya cikarildi
+
+        // Gerçek zamanlı tetikleyicileri (WebSockets) dinle
+        const channel = supabase.channel('operations-channel');
+        
+        channel.on('broadcast', { event: 'operation_update' }, () => {
+            fetchData();
+        }).subscribe();
+
         const tickInterval = setInterval(() => {
             setTick(t => t + 1);
         }, 1000);
 
         return () => {
-            clearInterval(refreshInterval);
+            supabase.removeChannel(channel);
             clearInterval(tickInterval);
             stopSirenNode();
         };
