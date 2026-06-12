@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyJwt } from '@/lib/crypto'
 import { cookies } from 'next/headers'
-import { uploadToStorage } from '@/lib/supabase'
+import { uploadToCloudinary } from '@/lib/cloudinary'
 
 /**
  * POST /api/upload
@@ -30,11 +30,9 @@ export async function POST(req: NextRequest) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
         
-        // Supabase Storage'a Yükle
-        const ext = file.name.split('.').pop() || 'jpg';
-        const filename = `uploads/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-        
-        const publicUrl = await uploadToStorage(buffer, filename, file.type);
+        // Cloudinary'e Yükle
+        const dataUri = "data:" + file.type + ";base64," + buffer.toString("base64");
+        const publicUrl = await uploadToCloudinary(dataUri, "m1g_uploads");
 
         if (!publicUrl) {
             return NextResponse.json({ error: 'Depolama sunucusuna yüklenemedi.' }, { status: 500 });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyJwt } from '@/lib/crypto'
 import { cookies } from 'next/headers'
-import { supabaseAdmin } from '@/lib/supabase'
+import { uploadToCloudinary } from '@/lib/cloudinary'
 import { prisma } from '@/lib/prisma'
 import { logAudit, extractActor, extractRequestMeta } from '@/lib/db-audit'
 
@@ -50,41 +50,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Dosya 10MB'dan büyük olamaz." }, { status: 400 })
         }
 
-        const EXTERNAL_UPLOAD_URL = process.env.NEXT_PUBLIC_EXTERNAL_UPLOAD_URL;
-        const SECRET_TOKEN = process.env.UPLOAD_SECRET_TOKEN;
-
-        if (!EXTERNAL_UPLOAD_URL || !SECRET_TOKEN) {
-            return NextResponse.json({ error: 'Harici sunucu upload ayarları (.env) eksik.' }, { status: 500 });
-        }
-
-        // Harici sunucuya iletmek için yeni FormData oluştur
-        const externalFormData = new FormData();
-        externalFormData.append('file', file);
-
         let photoUrl = '';
         try {
-            const externalRes = await fetch(EXTERNAL_UPLOAD_URL, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${SECRET_TOKEN}`
-                },
-                body: externalFormData
-            });
-
-            if (!externalRes.ok) {
-                const errText = await externalRes.text();
-                throw new Error(`Harici sunucu hatası (${externalRes.status}): ${errText}`);
-            }
-
-            const externalData = await externalRes.json();
-            if (!externalData.success || !externalData.url) {
-                throw new Error(externalData.error || 'Harici sunucu URL döndürmedi.');
-            }
-
-            photoUrl = externalData.url;
+            const buffer = Buffer.from(await file.arrayBuffer());
+            const dataUri = "data:" + file.type + ";base64," + buffer.toString("base64");
+            photoUrl = await uploadToCloudinary(dataUri, "m1g_damage_photos");
         } catch (uploadErr: any) {
-            console.error('External upload error:', uploadErr);
-            return NextResponse.json({ error: 'Fotoğraf harici sunucuya yüklenemedi: ' + uploadErr.message }, { status: 500 });
+            console.error('Cloudinary upload error:', uploadErr);
+            return NextResponse.json({ error: 'Fotoğraf Cloudinary sunucusuna yüklenemedi: ' + uploadErr.message }, { status: 500 });
         }
 
         // InventoryItem güncelle: fotoğraf URL'si + durum değişikliği
