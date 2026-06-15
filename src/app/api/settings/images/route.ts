@@ -7,12 +7,15 @@ import { getSiteImagesDB, writeSiteImagesDB } from '@/lib/settings';
 export async function GET() {
     try {
         const data = await getSiteImagesDB();
-        return NextResponse.json({
+        const res = NextResponse.json({
             siteLogo: data.siteLogo || '',
             siteFavicon: data.siteFavicon || '',
             heroImages: data.heroImages || [],
             sponsors: data.sponsors || [],
         });
+        // Görseller nadiren değişir — 1 dakika CDN cache
+        res.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+        return res;
     } catch (error) {
         console.error('[images GET]', error);
         return NextResponse.json({ siteLogo: '', siteFavicon: '', heroImages: [], sponsors: [] }, { status: 500 });

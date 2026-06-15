@@ -17,7 +17,10 @@ async function writeOperations(data: any[]): Promise<void> {
 export async function GET() {
     try {
         const data = await readOperations();
-        return NextResponse.json(data);
+        const res = NextResponse.json(data);
+        // Operasyon verisi — 15 sn cache (canlı operasyonda bile yeterli)
+        res.headers.set('Cache-Control', 's-maxage=15, stale-while-revalidate=30');
+        return res;
     } catch (error) {
         console.error('[active-operations GET]', error);
         return NextResponse.json({ error: 'Operasyonlar okunamadı' }, { status: 500 });

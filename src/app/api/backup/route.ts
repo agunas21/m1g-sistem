@@ -6,6 +6,18 @@ import nodemailer from 'nodemailer'
 
 export const dynamic = 'force-dynamic';
 
+// ─── Rate Limiter (in-memory) ───────────────────────────────────────
+// Backup çok büyük veri transfer eder — 30 dk'da bir izin ver
+const rateLimitMap = new Map<string, number>();
+const RATE_LIMIT_MS = 30 * 60 * 1000; // 30 dakika
+
+function isRateLimited(ip: string): boolean {
+    const last = rateLimitMap.get(ip);
+    if (last && Date.now() - last < RATE_LIMIT_MS) return true;
+    rateLimitMap.set(ip, Date.now());
+    return false;
+}
+
 export async function GET(req: NextRequest) {
     let actor: any = null
     try {
@@ -19,6 +31,15 @@ export async function GET(req: NextRequest) {
     // Allow access if it's super admin OR it's an automated cron job
     if (!isCron && (!actor || !actor.isSuperAdmin)) {
         return NextResponse.json({ error: 'Yalnızca Süper Admin yedek alabilir.' }, { status: 403 })
+    }
+
+    // Rate limit: 30 dakikada bir backup alınabilir
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    if (!isCron && isRateLimited(ip)) {
+        return NextResponse.json(
+            { error: 'Yedekleme limiti: 30 dakika içinde tekrar alınamaz.' },
+            { status: 429 }
+        );
     }
 
     try {

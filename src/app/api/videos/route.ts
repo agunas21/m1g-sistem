@@ -6,13 +6,16 @@ import { logAudit, extractActor, extractRequestMeta } from '@/lib/db-audit'
 
 export const dynamic = 'force-dynamic';
 
-// GET: Videoları listele
+// GET: Videoları listele — 5 dk CDN cache (public veri)
 export async function GET(req: NextRequest) {
     try {
         const videos = await prisma.video.findMany({
             orderBy: { order: 'asc' }
         })
-        return NextResponse.json(videos)
+        const res = NextResponse.json(videos)
+        // 5 dakika CDN cache — videolar sık değişmez
+        res.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+        return res
     } catch (e: any) {
         return NextResponse.json({ error: e.message }, { status: 500 })
     }

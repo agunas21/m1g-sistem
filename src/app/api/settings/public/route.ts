@@ -56,7 +56,10 @@ export async function GET() {
             activityReports: [],
         };
 
-        return NextResponse.json(lite);
+        const res = NextResponse.json(lite);
+        // 2 dakika CDN cache — ana sayfa içeriği sık değişmez
+        res.headers.set('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+        return res;
     } catch (error) {
         console.error('[public GET]', error);
         return NextResponse.json({ error: 'Veriler okunamadı' }, { status: 500 });

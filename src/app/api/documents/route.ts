@@ -12,7 +12,10 @@ async function saveDocuments(data: any) {
 }
 
 export async function GET() {
-    return NextResponse.json(await getDocuments());
+    const res = NextResponse.json(await getDocuments());
+    // 5 dakika CDN cache — döküman listesi sık değişmez
+    res.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    return res;
 }
 
 export async function POST(req: Request) {

@@ -21,10 +21,13 @@ export async function GET(req: Request) {
             if (!item) {
                 return NextResponse.json({ error: 'Not found' }, { status: 404 });
             }
-            return NextResponse.json({
+            const r = NextResponse.json({
                 photo: item.photo?.url || item.image || '',
                 text: item.common || '',
             });
+            // 10 dakika CDN cache — galeri fotoğları nadiren değişir
+            r.headers.set('Cache-Control', 's-maxage=600, stale-while-revalidate=3600');
+            return r;
         }
 
         if (type === 'report' && reportId) {
@@ -34,7 +37,9 @@ export async function GET(req: Request) {
             if (!report) {
                 return NextResponse.json({ error: 'Not found' }, { status: 404 });
             }
-            return NextResponse.json({ photos: report.photos || [] });
+            const r2 = NextResponse.json({ photos: report.photos || [] });
+            r2.headers.set('Cache-Control', 's-maxage=600, stale-while-revalidate=3600');
+            return r2;
         }
 
         return NextResponse.json({ error: 'Invalid params' }, { status: 400 });

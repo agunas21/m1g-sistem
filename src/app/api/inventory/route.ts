@@ -11,7 +11,10 @@ export async function GET() {
     const items = await prisma.inventoryItem.findMany({
         orderBy: { createdAt: 'desc' }
     })
-    return NextResponse.json(items)
+    const res = NextResponse.json(items)
+    // Admin verisi: private cache, 30 sn — sürekli origin'e gitmesin
+    res.headers.set('Cache-Control', 'private, max-age=30')
+    return res
 }
 
 // ─── POST: Yeni Malzeme Ekle ────────────────────────────────────────
