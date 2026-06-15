@@ -62,6 +62,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['*.trycloudflare.com', 'localhost:3000'],
   images: {
+    // Cloudinary zaten CDN'den optimize ediyor.
+    // Vercel'in kendi image optimizer'ı Fast Origin Transfer'ı artırıyordu!
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
       { protocol: 'http', hostname: '**' }

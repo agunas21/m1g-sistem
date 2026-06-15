@@ -7,7 +7,8 @@ import { canAccessAdmin, isSuperAdmin } from '@/lib/rbac'
 import { randomUUID } from 'crypto'
 
 
-export const dynamic = 'force-dynamic';
+// GET: 60 sn CDN cache, diğerleri dynamic
+export const revalidate = 0; // force-dynamic kaldırıldı, per-route kontrol ediyoruz
 // ─── GET: Üye Listesi ───────────────────────────────────────────────
 export async function GET(req: NextRequest) {
     let actor: any = null
@@ -62,7 +63,11 @@ export async function GET(req: NextRequest) {
         return safe
     })
 
-    return NextResponse.json(enriched)
+    const response = NextResponse.json(enriched)
+    // 60 saniye CDN cache, tarayıcı her zaman taze ister ama CDN cache'ler
+    // private: sadece oturum bazlı erişimde. Güvenli veri için s-maxage=0 kullan
+    response.headers.set('Cache-Control', 'private, no-store')
+    return response
 }
 
 // ─── POST: Yeni Üye Ekle ────────────────────────────────────────────
