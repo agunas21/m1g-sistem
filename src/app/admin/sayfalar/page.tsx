@@ -8,6 +8,7 @@ import {
     MapPin, Calendar, FileText, Edit3, Newspaper, Tag, Target, Clock, Bell, Globe
 } from "lucide-react";
 import { compressImage } from "@/lib/imageUtils";
+import { uploadDirect } from "@/lib/uploadDirect";
 import { motion, AnimatePresence } from "framer-motion";
 
 const REPORT_CATEGORIES = [
@@ -327,15 +328,12 @@ export default function KolaySiteDuzenleyici() {
         }
     };
 
-    // ─── FOTOĞRAF YÜKLEME (HARİCİ SUNUCU) ─────────────────────────────────
+    // ─── FOTOĞRAF YÜKLEME (HARİCİ SUNUCU / CLOUDINARY DIRECT) ─────────────────────────────────
     const uploadFileToServer = async (file: File): Promise<string> => {
         const compressedFile = await compressImage(file, 1200, 0.7);
-        const fd = new FormData();
-        fd.append('file', compressedFile);
-        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.success && data.url) return data.url;
-        throw new Error(data.error || 'Yükleme başarısız');
+        const res = await uploadDirect(compressedFile);
+        if (res && res.url) return res.url;
+        throw new Error('Yükleme başarısız');
     };
 
     const handleSiteLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

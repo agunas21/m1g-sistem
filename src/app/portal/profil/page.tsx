@@ -1,8 +1,9 @@
 "use client";
 
-import { User, Droplet, Phone, MapPin, Award, CheckCircle, Camera, Lock, KeyRound, Upload, FileText, Eye, Loader2, ShieldAlert, BadgeInfo, Briefcase, Calendar } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ShieldCheck, Mail, Edit3, Save, X, Phone, User, Activity, MapPin, Briefcase, Calendar, UploadCloud, GraduationCap, Lock, Unlock, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { uploadDirect } from "@/lib/uploadDirect";
 
 function parseToInputDate(dateStr: string): string {
     if (!dateStr) return "";
@@ -118,11 +119,8 @@ export default function ProfilPage() {
         if (file) {
             setLoading(true);
             try {
-                const formData = new FormData();
-                formData.append('file', file);
-                const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success && data.url) {
+                const data = await uploadDirect(file);
+                if (data && data.url) {
                     setProfile({ ...profile, avatar: data.url });
                 } else {
                     alert('Fotoğraf yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));
@@ -239,11 +237,8 @@ export default function ProfilPage() {
         if (file) {
             setCertLoading(true);
             try {
-                const formData = new FormData();
-                formData.append('file', file);
-                const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success && data.url) {
+                const data = await uploadDirect(file);
+                if (data && data.url) {
                     setCertFile(data.url);
                 } else {
                     alert('Sertifika dosyası yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));

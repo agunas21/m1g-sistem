@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { CreditCard, UploadCloud, CheckCircle2, Clock, Info, ShieldCheck, Camera, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import { uploadDirect } from "@/lib/uploadDirect";
 
 export default function AidatBagisPage() {
     const { user } = useAuth();
@@ -56,14 +57,11 @@ export default function AidatBagisPage() {
 
         setIsUploading(true);
         try {
-            // Harici Sunucuya Yükleme
-            const fd = new FormData();
-            fd.append('file', selectedFile);
-            const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
-            const uploadData = await uploadRes.json();
-
-            if (!uploadData.success || !uploadData.url) {
-                alert("Dosya yüklenirken bir hata oluştu: " + (uploadData.error || "Bilinmeyen hata"));
+            // Harici Sunucuya Yükleme (Direct Cloudinary)
+            const uploadRes = await uploadDirect(selectedFile);
+            
+            if (!uploadRes || !uploadRes.url) {
+                alert("Dosya yüklenirken bir hata oluştu.");
                 setIsUploading(false);
                 return;
             }
