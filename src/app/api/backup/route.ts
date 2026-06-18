@@ -100,14 +100,17 @@ export async function GET(req: NextRequest) {
                 ]
             })
 
-            return NextResponse.json({ success: true, message: 'Yedek e-posta adresine gönderildi.' })
+            const res = NextResponse.json({ success: true, message: 'Yedek e-posta adresine gönderildi.' })
+            res.headers.set('Cache-Control', 'private, no-store, must-revalidate')
+            return res
         }
 
         // Return as downloadable file if not emailing
         return NextResponse.json(backupData, {
             headers: {
                 'Content-Type': 'application/json',
-                'Content-Disposition': `attachment; filename="m1g-backup-${Date.now()}.json"`
+                'Content-Disposition': `attachment; filename="m1g-backup-${Date.now()}.json"`,
+                'Cache-Control': 'private, no-store, must-revalidate'
             }
         })
     } catch (e: any) {

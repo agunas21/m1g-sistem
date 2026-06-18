@@ -4,8 +4,9 @@ import { checkRateLimit, RATE_APPLY } from '@/lib/rateLimit';
 import { checkSpam } from '@/lib/spamFilter';
 import { writeLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
-import { hashPassword } from '@/lib/crypto';
+import { hashPassword, verifyJwt } from '@/lib/crypto';
 import { randomBytes } from 'crypto';
+import { cookies } from 'next/headers';
 
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +20,20 @@ async function writeJSON(key: string, data: any) {
 
 // ─── GET: Tüm başvuruları getir ─────────────────────────────────────────
 export async function GET() {
-    return NextResponse.json(await readJSON('global_applications'));
+    try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+        const payload = verifyJwt(token);
+        if (!payload?.isAdmin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
+
+        const data = await readJSON('global_applications');
+        const res = NextResponse.json(data);
+        res.headers.set('Cache-Control', 'private, no-store, must-revalidate');
+        return res;
+    } catch {
+        return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+    }
 }
 
 // ─── POST: Yeni başvuru kaydet + Onay kuyruğuna ekle ────────────────────

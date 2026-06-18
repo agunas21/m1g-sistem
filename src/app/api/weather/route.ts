@@ -26,7 +26,9 @@ export async function GET(req: Request) {
                 let tempText = await res.text();
                 tempText = tempText.trim().replace('+', ''); // strip '+' sign
                 if (tempText && tempText.includes('°')) {
-                    return NextResponse.json({ temperature: tempText });
+                                const resp = NextResponse.json({ temperature: tempText });
+                    resp.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+                    return resp;
                 }
             }
         } catch (fetchErr) {
@@ -39,7 +41,9 @@ export async function GET(req: Request) {
             hash = location.charCodeAt(i) + ((hash << 5) - hash);
         }
         const pseudoTemp = 10 + (Math.abs(hash) % 18); // Generates temperature between 10°C and 28°C
-        return NextResponse.json({ temperature: `${pseudoTemp}°C (Offline)` });
+        const resp = NextResponse.json({ temperature: `${pseudoTemp}°C (Offline)` });
+        resp.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+        return resp;
 
     } catch (error) {
         console.error('[weather GET error]', error);

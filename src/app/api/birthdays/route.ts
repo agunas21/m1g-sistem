@@ -2,16 +2,16 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { sendEmail } from '@/lib/mailer';
-
 import { prisma } from '@/lib/prisma';
-
+import { cookies } from 'next/headers';
+import { verifyJwt } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
-// Doğum gününe kaç gün kaldığını hesapla (her yıl döngüsel)
+
+// Doğum günü yaklaşanları hesapla
 function daysUntilBirthday(birthDateStr: string): number | null {
     if (!birthDateStr || birthDateStr === '-') return null;
     
-    // "DD.MM.YYYY" veya "YYYY-MM-DD" formatını destekle
     let day: number, month: number;
     if (birthDateStr.includes('.')) {
         const parts = birthDateStr.split('.');
@@ -40,27 +40,47 @@ function daysUntilBirthday(birthDateStr: string): number | null {
     return diffDays;
 }
 
-// GET: Doğum günü yaklaşanları listele (default 30 gün içinde)
+// GET: Doğum günü yaklaşanları listele (sadece admin)
 export async function GET(req: Request) {
-    const url = new URL(req.url);
-    const withinDays = parseInt(url.searchParams.get('days') || '30');
+    try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+        
+        const payload = verifyJwt(token);
+        if (!payload?.isAdmin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
-    const members = await prisma.member.findMany({ where: { status: 'Aktif' } });
-    const upcoming = members
-        .filter((m: any) => m.birthDate)
-        .map((m: any) => {
-            const days = daysUntilBirthday(m.birthDate);
-            return { ...m, daysUntilBirthday: days };
-        })
-        .filter((m: any) => m.daysUntilBirthday !== null && m.daysUntilBirthday <= withinDays)
-        .sort((a: any, b: any) => a.daysUntilBirthday - b.daysUntilBirthday);
+        const url = new URL(req.url);
+        const withinDays = parseInt(url.searchParams.get('days') || '30');
 
-    return NextResponse.json(upcoming);
+        const members = await prisma.member.findMany({ where: { status: 'Aktif' } });
+        const upcoming = members
+            .filter((m: any) => m.birthDate)
+            .map((m: any) => {
+                const days = daysUntilBirthday(m.birthDate);
+                return { ...m, daysUntilBirthday: days };
+            })
+            .filter((m: any) => m.daysUntilBirthday !== null && m.daysUntilBirthday <= withinDays)
+            .sort((a: any, b: any) => a.daysUntilBirthday - b.daysUntilBirthday);
+
+        const res = NextResponse.json(upcoming);
+        res.headers.set('Cache-Control', 'private, no-store, must-revalidate');
+        return res;
+    } catch {
+        return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    }
 }
 
-// POST: Doğum günü yaklaşanlara mail gönder
+// POST: Doğum günü yaklaşanlara mail gönder (sadece admin)
 export async function POST(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+        
+        const payload = verifyJwt(token);
+        if (!payload?.isAdmin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
+
         const { withinDays = 7, sendMails = false } = await req.json();
         const members = await prisma.member.findMany({ where: { status: 'Aktif' } });
 

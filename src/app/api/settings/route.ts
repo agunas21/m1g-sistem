@@ -7,7 +7,9 @@ import { getSiteSettingsDB, writeSiteSettingsDB } from '@/lib/settings';
 export async function GET() {
     try {
         const data = await getSiteSettingsDB();
-        return NextResponse.json(data);
+        const res = NextResponse.json(data);
+        res.headers.set('Cache-Control', 'private, s-maxage=120, stale-while-revalidate=300');
+        return res;
     } catch (error) {
         console.error('[settings GET]', error);
         return NextResponse.json({ error: 'Ayarlar okunamadı' }, { status: 500 });

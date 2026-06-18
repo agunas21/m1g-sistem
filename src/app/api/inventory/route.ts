@@ -8,13 +8,23 @@ import { logAudit, extractActor, extractRequestMeta } from '@/lib/db-audit'
 export const dynamic = 'force-dynamic';
 // ─── GET: Envanter Listesi ──────────────────────────────────────────
 export async function GET() {
-    const items = await prisma.inventoryItem.findMany({
-        orderBy: { createdAt: 'desc' }
-    })
-    const res = NextResponse.json(items)
-    // Admin verisi: private cache, 30 sn — sürekli origin'e gitmesin
-    res.headers.set('Cache-Control', 'private, max-age=30')
-    return res
+    try {
+        const cookieStore = await cookies()
+        const token = cookieStore.get('m1g_session')?.value
+        if (!token) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
+        const payload = verifyJwt(token)
+        if (!payload) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
+
+        const items = await prisma.inventoryItem.findMany({
+            orderBy: { createdAt: 'desc' }
+        })
+        const res = NextResponse.json(items)
+        // Admin verisi: private cache, 30 sn — sürekli origin'e gitmesin
+        res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60')
+        return res
+    } catch {
+        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    }
 }
 
 // ─── POST: Yeni Malzeme Ekle ────────────────────────────────────────

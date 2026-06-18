@@ -69,5 +69,7 @@ export async function GET() {
         generatedAt: new Date().toISOString(),
     };
 
-    return NextResponse.json(summary);
+    const res = NextResponse.json(summary);
+    res.headers.set('Cache-Control', 'private, no-store, must-revalidate');
+    return res;
 }

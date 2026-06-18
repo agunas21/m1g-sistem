@@ -8,45 +8,57 @@ import { logAudit, extractActor, extractRequestMeta } from '@/lib/db-audit'
 export const dynamic = 'force-dynamic';
 // ─── GET: Tüm Operasyonlar ──────────────────────────────────────────
 export async function GET() {
-    const operations = await prisma.operation.findMany({
-        include: {
-            teams: {
-                include: {
-                    members: {
-                        include: { member: { select: { id: true, fullName: true, phone: true } } }
-                    },
-                    deployments: {
-                        orderBy: { deployTime: 'desc' },
-                        take: 1
+    try {
+        const cookieStore = await cookies()
+        const token = cookieStore.get('m1g_session')?.value
+        if (!token) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
+        const payload = verifyJwt(token)
+        if (!payload) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
+
+        const operations = await prisma.operation.findMany({
+            include: {
+                teams: {
+                    include: {
+                        members: {
+                            include: { member: { select: { id: true, fullName: true, phone: true } } }
+                        },
+                        deployments: {
+                            orderBy: { deployTime: 'desc' },
+                            take: 1
+                        }
                     }
                 }
-            }
-        },
-        orderBy: { startTime: 'desc' }
-    })
+            },
+            orderBy: { startTime: 'desc' }
+        })
 
-    // Frontend'in beklediği formata normalize et
-    const normalized = operations.map(op => ({
-        ...op,
-        startTime: op.startTime.toISOString(),
-        endTime: op.endTime?.toISOString() ?? null,
-        teams: op.teams.map(team => ({
-            ...team,
-            members: team.members.map(tm => ({
-                memberId: tm.memberId,
-                role: tm.role,
-                fullName: tm.member.fullName,
-                phone: tm.member.phone
-            })),
-            lastDeployment: team.deployments[0] ?? null,
-            deployTime: team.deployments[0]?.deployTime?.toISOString() ?? null,
-            returnTime: team.deployments[0]?.returnTime?.toISOString() ?? null,
-            targetLocation: team.deployments[0]?.targetLocation ?? null,
-            pulse: team.deployments[0]?.pulse ?? 'Yeşil'
+        // Frontend'in beklediği formata normalize et
+        const normalized = operations.map(op => ({
+            ...op,
+            startTime: op.startTime.toISOString(),
+            endTime: op.endTime?.toISOString() ?? null,
+            teams: op.teams.map(team => ({
+                ...team,
+                members: team.members.map(tm => ({
+                    memberId: tm.memberId,
+                    role: tm.role,
+                    fullName: tm.member.fullName,
+                    phone: tm.member.phone
+                })),
+                lastDeployment: team.deployments[0] ?? null,
+                deployTime: team.deployments[0]?.deployTime?.toISOString() ?? null,
+                returnTime: team.deployments[0]?.returnTime?.toISOString() ?? null,
+                targetLocation: team.deployments[0]?.targetLocation ?? null,
+                pulse: team.deployments[0]?.pulse ?? 'Yeşil'
+            }))
         }))
-    }))
 
-    return NextResponse.json(normalized)
+        const res = NextResponse.json(normalized)
+        res.headers.set('Cache-Control', 'private, no-store, must-revalidate')
+        return res
+    } catch (e) {
+        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    }
 }
 
 // ─── POST: Yeni Operasyon Başlat ────────────────────────────────────

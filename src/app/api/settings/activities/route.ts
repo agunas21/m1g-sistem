@@ -27,6 +27,8 @@ export async function GET() {
         return NextResponse.json({
             activityGallery: galleryData.activityGallery || [],
             activityReports: reportsData.activityReports || []
+        }, {
+            headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' }
         });
     } catch (error) {
         console.error('[activities GET]', error);

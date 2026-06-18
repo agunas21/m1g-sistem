@@ -118,27 +118,14 @@ export default function Login() {
                                 )}
 
                                 {/* Giriş yöntemleri açıklaması */}
-                                <div className="bg-blue-500/5 border border-blue-500/10 p-3 rounded-xl">
-                                    <p className="text-[11px] text-blue-400 font-medium mb-2">Aşağıdakilerden biriyle giriş yapabilirsiniz:</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        <span className="flex items-center gap-1 text-[10px] bg-white/5 text-neutral-300 px-2 py-1 rounded-full border border-white/10">
-                                            <CreditCard size={10} /> TC Kimlik No
-                                        </span>
-                                        <span className="flex items-center gap-1 text-[10px] bg-white/5 text-neutral-300 px-2 py-1 rounded-full border border-white/10">
-                                            <Mail size={10} /> E-posta
-                                        </span>
-                                        <span className="flex items-center gap-1 text-[10px] bg-white/5 text-neutral-300 px-2 py-1 rounded-full border border-white/10">
-                                            <Phone size={10} /> Telefon
-                                        </span>
-                                        <span className="flex items-center gap-1 text-[10px] bg-white/5 text-neutral-300 px-2 py-1 rounded-full border border-white/10">
-                                            <KeyRound size={10} /> Üye ID
-                                        </span>
-                                    </div>
+                                <div className="bg-blue-500/5 border border-blue-500/10 p-3 rounded-xl flex items-center gap-2">
+                                    <KeyRound size={14} className="text-blue-400 shrink-0" />
+                                    <p className="text-[11px] text-blue-400 font-medium">Lütfen size tanımlanan Üye ID'niz ile giriş yapın.</p>
                                 </div>
 
                                 <div>
                                     <label htmlFor="identifier" className="block text-sm font-medium text-neutral-300 mb-1">
-                                        TC / E-posta / Telefon / Üye ID
+                                        Üye ID
                                     </label>
                                     <input
                                         id="identifier"
@@ -147,7 +134,7 @@ export default function Login() {
                                         value={identifier}
                                         onChange={(e) => setIdentifier(e.target.value)}
                                         className="appearance-none block w-full px-4 py-3 border border-white/10 rounded-xl placeholder-neutral-600 bg-black/50 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm"
-                                        placeholder="Örn: 12345678901 veya user@mail.com"
+                                        placeholder="Üye ID'nizi girin"
                                     />
                                 </div>
 
@@ -162,9 +149,8 @@ export default function Login() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="appearance-none block w-full px-4 py-3 border border-white/10 rounded-xl placeholder-neutral-600 bg-black/50 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm"
-                                        placeholder="İlk giriş: TC Kimlik No"
+                                        placeholder="Şifrenizi girin"
                                     />
-                                    <p className="text-[10px] text-neutral-600 mt-1.5">İlk girişte şifreniz TC Kimlik Numaranızdır.</p>
                                 </div>
 
                                 <div className="flex items-center justify-between">

@@ -25,7 +25,7 @@ export async function GET() {
                 return new Response(buffer, {
                     headers: {
                         'Content-Type': contentType,
-                        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                        'Cache-Control': 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400',
                     },
                 });
             }
@@ -38,7 +38,7 @@ export async function GET() {
             return new Response(buffer, {
                 headers: {
                     'Content-Type': 'image/x-icon',
-                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                    'Cache-Control': 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400',
                 },
             });
         }

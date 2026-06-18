@@ -24,12 +24,26 @@ export async function GET(
             return NextResponse.json({ error: 'Üye bulunamadı.' }, { status: 404 });
         }
 
+        let actor: any = null;
+        try {
+            const cookieStore = await cookies();
+            const token = cookieStore.get('m1g_session')?.value;
+            if (token) actor = verifyJwt(token);
+        } catch {}
+
+        const isSelf = actor && (actor.id === member.id);
+        const isAdmin = actor && (actor.isAdmin || actor.isSuperAdmin);
+        const showTcNo = isSelf || isAdmin;
+
+        const plainTc = member.tcNo ? decryptField(member.tcNo) : '';
+        const maskedTc = plainTc 
+            ? (plainTc.length === 11 ? "*******" + plainTc.slice(-4) : "*".repeat(Math.max(0, plainTc.length - 4)) + plainTc.slice(-4)) 
+            : '';
+
         const isPasif = member.status === "Pasif";
-        // To get serial, we could count members joined before, but for simplicity let's just use a stub or short id.
-        // Actually since we migrated to DB, serial can just use the short hash of ID or count.
         const serial = `M1G-${member.id.substring(0, 4).toUpperCase()}`;
 
-        return NextResponse.json({
+        const res = NextResponse.json({
             id: member.id,
             fullName: member.fullName,
             avatar: member.avatar || '',
@@ -40,9 +54,12 @@ export async function GET(
             emergencyContact: member.emergencyContact || '',
             bloodType: member.bloodType || 'Belirtilmemiş',
             kimlikToken: member.kimlikToken,
-            tcNo: member.tcNo ? decryptField(member.tcNo) : '',
+            tcNo: showTcNo ? plainTc : maskedTc,
             serial: serial
         });
+
+        res.headers.set('Cache-Control', 'private, no-store, must-revalidate');
+        return res;
     } catch (e) {
         console.error(e);
         return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 });
