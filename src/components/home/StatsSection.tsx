@@ -38,49 +38,25 @@ export default function StatsSection() {
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
-        // Fetch real data from API/JSON
+        // Fetch real data from public settings API
         async function loadStats() {
             try {
-                const [membersRes, settingsRes] = await Promise.all([
-                    fetch("/api/members").catch(() => null),
-                    fetch("/api/settings/public").catch(() => null),
-                ]);
-
-                let memberCount = 45; // fallback
-                let reportCount = 3;  // fallback
-                let certCount = 12;   // fallback
-
-                if (membersRes && membersRes.ok) {
-                    const membersData = await membersRes.json();
-                    const activeMembers = Array.isArray(membersData) 
-                        ? membersData.filter((m: any) => m.status === "Aktif")
-                        : [];
-                    memberCount = activeMembers.length || 45;
-                    
-                    // Count certificates
-                    let certs = 0;
-                    if (Array.isArray(membersData)) {
-                        membersData.forEach((m: any) => {
-                            if (m.certificates && Array.isArray(m.certificates)) {
-                                certs += m.certificates.length;
-                            }
-                        });
-                    }
-                    certCount = certs || 12;
-                }
-
-                if (settingsRes && settingsRes.ok) {
-                    const settingsData = await settingsRes.json();
-                    if (settingsData.activityReports && Array.isArray(settingsData.activityReports)) {
-                        reportCount = settingsData.activityReports.length || 3;
-                    }
-                }
+                const res = await fetch("/api/settings/public");
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                
+                const statsData = data.stats || {
+                    memberCount: 45,
+                    operationCount: 8,
+                    reportCount: 3,
+                    certificateCount: 12
+                };
 
                 setStats([
-                    { label: "Aktif Üye", value: memberCount, suffix: "+", icon: <Users size={24} />, color: "text-red-500" },
-                    { label: "Tamamlanan Operasyon", value: 8, suffix: "+", icon: <Siren size={24} />, color: "text-amber-500" },
-                    { label: "Faaliyet Raporu", value: reportCount, suffix: "", icon: <FileText size={24} />, color: "text-blue-500" },
-                    { label: "Kayıtlı Sertifika", value: certCount, suffix: "+", icon: <Award size={24} />, color: "text-emerald-500" },
+                    { label: "Aktif Üye", value: statsData.memberCount, suffix: "+", icon: <Users size={24} />, color: "text-red-500" },
+                    { label: "Tamamlanan Operasyon", value: statsData.operationCount, suffix: "+", icon: <Siren size={24} />, color: "text-amber-500" },
+                    { label: "Faaliyet Raporu", value: statsData.reportCount, suffix: "", icon: <FileText size={24} />, color: "text-blue-500" },
+                    { label: "Kayıtlı Sertifika", value: statsData.certificateCount, suffix: "+", icon: <Award size={24} />, color: "text-emerald-500" },
                 ]);
                 setLoaded(true);
             } catch {
