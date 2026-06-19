@@ -51,7 +51,7 @@ export default function FaaliyetlerPage() {
     const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch("/api/settings/activities)
+        fetch("/api/settings/activities")
             .then(r => r.json())
             .then(data => {
                 setActivities(data.activityReports || []);

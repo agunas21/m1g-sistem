@@ -103,9 +103,9 @@ export default function OperasyonPano() {
     const fetchData = async () => {
         try {
             const [opsRes, memRes, invRes] = await Promise.all([
-                fetch("/api/settings/operations/active),
-                fetch("/api/members),
-                fetch("/api/inventory)
+                fetch("/api/settings/operations/active"),
+                fetch("/api/members"),
+                fetch("/api/inventory")
             ]);
             const opsData = await opsRes.json();
             const mem = await memRes.json();

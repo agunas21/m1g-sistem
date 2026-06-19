@@ -15,7 +15,7 @@ export default function Navbar() {
     const pathname = usePathname();
 
     useEffect(() => {
-        fetch('/api/settings/public)
+        fetch('')
             .then(res => res.ok ? res.json() : null)
             .then(data => {
                 if (data && data.siteLogo) {
