@@ -105,7 +105,7 @@ export default function PortalDashboard() {
         pingLocation();
 
         // 10 saniyede bir ping at
-        const interval = setInterval(pingLocation, 10000);
+        const interval = setInterval(pingLocation, 60000);
         return () => clearInterval(interval);
     }, [gpsStatus, user]);
 

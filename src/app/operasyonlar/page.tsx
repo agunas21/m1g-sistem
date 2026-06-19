@@ -67,7 +67,7 @@ export default function OperasyonlarPage() {
     useEffect(() => {
         async function load() {
             try {
-                const res = await fetch("/api/settings/operations?t=" + Date.now());
+                const res = await fetch("/api/settings/operations);
                 const data = await res.json();
                 setOperations(data.operations?.length ? data.operations : DEMO_OPERATIONS);
             } catch {

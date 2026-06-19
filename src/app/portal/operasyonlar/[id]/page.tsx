@@ -67,7 +67,8 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
             await fetchOp();
         };
 
-        init();        // --- Supabase Realtime (WebSockets) ---
+        init();
+        // --- Supabase Realtime (WebSockets) ---
         const channel = supabase.channel('operations-channel');
         channel.on('broadcast', { event: 'operation_update' }, () => {
             fetchOp();

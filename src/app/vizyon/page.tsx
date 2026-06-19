@@ -18,7 +18,7 @@ export default function Vizyon() {
     ]);
 
     useEffect(() => {
-        fetch("/api/settings/public?t=" + Date.now())
+        fetch("/api/settings/public)
             .then(res => res.ok ? res.json() : null)
             .then(data => {
                 if (data) {

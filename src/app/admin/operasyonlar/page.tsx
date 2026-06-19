@@ -328,11 +328,11 @@ export default function Operasyonlar() {
 
         fetchData();
 
-        // Haritada canlı takip için operasyonları arka planda 5 saniyede bir güncelle
+        // Haritada canlı takip için operasyonları arka planda 60 saniyede bir güncelle
         const liveInterval = setInterval(async () => {
             if (!isOnline) return;
             try {
-                const opRes = await fetch("/api/settings/operations/active?t=" + Date.now());
+                const opRes = await fetch("/api/settings/operations/active");
                 if (opRes.ok) {
                     const opData = await opRes.json();
                     const ops = Array.isArray(opData) ? opData : [];
@@ -347,7 +347,7 @@ export default function Operasyonlar() {
             } catch (e) {
                 // Silently ignore errors
             }
-        }, 60000); // Changed from 5000 to 60000 to save Vercel bandwidth
+        }, 60000);
 
         return () => {
             clearInterval(timer);
@@ -386,9 +386,9 @@ export default function Operasyonlar() {
     const fetchData = async () => {
         try {
             const [opsRes, memRes, invRes] = await Promise.all([
-                fetch("/api/settings/operations/active?t=" + Date.now()),
-                fetch("/api/members?t=" + Date.now()),
-                fetch("/api/inventory?t=" + Date.now())
+                fetch("/api/settings/operations/active),
+                fetch("/api/members),
+                fetch("/api/inventory)
             ]);
             const ops = await opsRes.json();
             const mem = await memRes.json();

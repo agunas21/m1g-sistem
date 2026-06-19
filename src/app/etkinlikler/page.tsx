@@ -48,7 +48,7 @@ export default function EtkinlikTakvimiPage() {
     useEffect(() => {
         async function load() {
             try {
-                const res = await fetch("/api/settings/events?t=" + Date.now());
+                const res = await fetch("/api/settings/events);
                 const data = await res.json();
                 setEvents(data.calendarEvents || []);
             } catch { }

@@ -23,7 +23,7 @@ export default function Footer() {
     });
 
     useEffect(() => {
-        fetch("/api/settings/public?t=" + Date.now())
+        fetch("/api/settings/public)
             .then(res => res.json())
             .then(data => {
                 if (data.bankName || data.iban) {
