@@ -246,9 +246,8 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top text */}
-                        <div style={{ position: "absolute", top: 28, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <span style={{ fontSize: 15, fontWeight: 900, color: "#333", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
-                            <span style={{ fontSize: 24, fontWeight: 900, color: "#111", letterSpacing: "1px", marginTop: "1px" }}>DERNEĞİ</span>
+                        <div style={{ position: "absolute", top: 35, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
+                            <span style={{ fontSize: 16, fontWeight: 900, color: "#111", letterSpacing: "0px", whiteSpace: "nowrap" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
                         </div>
 
                         {/* Huge Logo with Black Shadow Background */}
@@ -328,9 +327,8 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top text */}
-                        <div style={{ position: "absolute", top: 20, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <span style={{ fontSize: 9, fontWeight: 800, color: "#777", letterSpacing: "3px", marginLeft: "3px" }}>M1G ARAMA KURTARMA</span>
-                            <span style={{ fontSize: 18, fontWeight: 900, color: "#111", letterSpacing: "6px", marginLeft: "6px", marginTop: "1px" }}>DERNEĞİ</span>
+                        <div style={{ position: "absolute", top: 35, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
+                            <span style={{ fontSize: 16, fontWeight: 900, color: "#111", letterSpacing: "0px", whiteSpace: "nowrap" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
                         </div>
 
                         {/* Info Text */}
