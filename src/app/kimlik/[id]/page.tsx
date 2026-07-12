@@ -97,7 +97,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
     };
 
     const role = (() => {
-        if (['cgorgu', 'taksit', 'mtasli', 'mseyre', 'gakdor', 'agunas'].includes(memberRaw.id)) return "YÖNETİM KURULU ÜYESİ";
+        if (memberRaw.role && memberRaw.role !== "Üye" && memberRaw.role !== "Gönüllü") return memberRaw.role.toUpperCase();
         if (memberRaw.honorary === "Evet") return "ONUR ÜYESİ";
         if (memberRaw.memberType === "Üye" || memberRaw.memberType === "Asil Üye" || memberRaw.memberType === "ASİL ÜYE") return "ÜYE";
         if (memberRaw.memberType && memberRaw.memberType !== "Gönüllü") return memberRaw.memberType.toUpperCase();

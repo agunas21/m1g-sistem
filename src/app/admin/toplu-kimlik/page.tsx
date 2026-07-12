@@ -30,6 +30,7 @@ export default function TopluKimlik() {
     }, []);
 
     const getRole = (m: any) => {
+        if (m.role && m.role !== "Üye" && m.role !== "Gönüllü") return m.role.toUpperCase();
         if (m.honorary === "Evet") return "ONUR ÜYESİ";
         if (m.memberType === "Üye" || m.memberType === "Asil Üye" || m.memberType === "ASİL ÜYE") return "ÜYE";
         if (m.memberType && m.memberType !== "Gönüllü") return m.memberType.toUpperCase();
