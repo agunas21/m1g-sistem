@@ -306,6 +306,7 @@ export default function TopluKimlik() {
                                     </div>
                                 </div>
                             </div>
+                            </div>
                         </div>
                     );
                 })}
