@@ -246,15 +246,15 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top text */}
-                        <div style={{ position: "absolute", top: 22, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                            <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
-                            <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
+                        <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
                         </div>
 
                         {/* Huge Logo with Black Shadow Background */}
-                        <div style={{ position: "absolute", top: 75, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
-                            <div style={{ position: "absolute", width: 130, height: 130, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 140, height: 140, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                        <div style={{ position: "absolute", top: 85, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
+                            <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
+                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 130, height: 130, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                         </div>
 
                         {/* Photo Box */}
@@ -328,20 +328,20 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top text */}
-                        <div style={{ position: "absolute", top: 22, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                            <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
-                            <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
+                        <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
                         </div>
 
                         {/* Info Text */}
                         <div style={{ position: "absolute", top: 95, left: 24, right: 24, textAlign: "center" }}>
-                            <p style={{ fontSize: 10, fontWeight: 700, color: "#555", lineHeight: 1.6 }}>
+                            <p style={{ fontSize: 11, fontWeight: 700, color: "#555", lineHeight: 1.6 }}>
                                 Bu kimlik kartı, M1G Arama ve Kurtarma Derneği'ne aittir ve başkasına devredilemez.
                             </p>
                         </div>
 
                         {/* QR Code in Center */}
-                        <div style={{ position: "absolute", top: 125, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <div style={{ position: "absolute", top: 150, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <div style={{ background: "white", padding: 10, borderRadius: 16, border: "2px solid #111111", boxShadow: "0 6px 16px rgba(0,0,0,0.1)" }}>
                                 <QRCodeSVG value={cardUrl} size={130} level="H" fgColor="#000000" />
                             </div>
