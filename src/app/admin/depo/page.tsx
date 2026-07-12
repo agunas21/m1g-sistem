@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { 
     PackageSearch, PackagePlus, ScanBarcode, Search, Filter, 
-    Box, Wrench, PackageCheck, AlertTriangle, X, User, CheckCircle, QrCode, PenTool, Trash2
+    Box, Wrench, PackageCheck, AlertTriangle, X, User, CheckCircle, QrCode, PenTool, Trash2, Edit2, Check, ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Html5Qrcode } from "html5-qrcode";
@@ -60,6 +60,7 @@ export default function DepoYonetimi() {
     
     // Drawers & Modals
     const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [selectedGroup, setSelectedGroup] = useState<any>(null);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newItemName, setNewItemName] = useState("");
@@ -76,6 +77,49 @@ export default function DepoYonetimi() {
     const [isManualMemberDropdownOpen, setIsManualMemberDropdownOpen] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [exporting, setExporting] = useState(false);
+    const [editingItemId, setEditingItemId] = useState<string | null>(null);
+    const [editingItemName, setEditingItemName] = useState("");
+    const [isUpdatingName, setIsUpdatingName] = useState(false);
+
+    const handleUpdateItemName = async () => {
+        if (!selectedItem || !editingItemName.trim() || isUpdatingName) return;
+        setIsUpdatingName(true);
+        try {
+            const res = await fetch('/api/inventory', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: selectedItem.id, name: editingItemName.trim() })
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setInventory(prev => prev.map(i => i.id === updated.id ? updated : i));
+                setSelectedItem(updated);
+                if (selectedGroup) {
+                    const newGroupItems = selectedGroup.items.map((i: any) => i.id === updated.id ? updated : i);
+                    setSelectedGroup({ ...selectedGroup, items: newGroupItems });
+                }
+                setEditingItemId(null);
+            } else {
+                alert("Güncelleme başarısız.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Bir hata oluştu.");
+        } finally {
+            setIsUpdatingName(false);
+        }
+    };
+
+    const toggleGroupSelection = (e: React.MouseEvent, group: any) => {
+        e.stopPropagation();
+        const groupItemIds = group.items.map((i: any) => i.id);
+        const allSelected = groupItemIds.every((id: string) => selectedIds.includes(id));
+        if (allSelected) {
+            setSelectedIds(prev => prev.filter(id => !groupItemIds.includes(id)));
+        } else {
+            setSelectedIds(prev => Array.from(new Set([...prev, ...groupItemIds])));
+        }
+    };
 
     const toggleSelection = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
@@ -517,13 +561,13 @@ export default function DepoYonetimi() {
                 <div className="portal-root">
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10000]"
                         onClick={() => setSelectedItem(null)}
                     />
                     <motion.div 
                         initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="fixed top-0 right-0 h-[100dvh] w-full max-w-lg bg-[#050B14] border-l border-white/10 z-[9999] shadow-2xl overflow-y-auto flex flex-col"
+                        className="fixed top-0 right-0 h-[100dvh] w-full max-w-lg bg-[#050B14] border-l border-white/10 z-[10001] shadow-2xl overflow-y-auto flex flex-col"
                     >
                         <div className="p-6 md:p-8 bg-neutral-900/50 border-b border-white/5 relative">
                             <button onClick={() => setSelectedItem(null)} className="absolute top-6 right-6 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-white">
@@ -534,7 +578,40 @@ export default function DepoYonetimi() {
                                     <Box size={40} className="opacity-50" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white tracking-tight">{selectedItem.name}</h2>
+                                    {editingItemId === selectedItem.id ? (
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="text" 
+                                                value={editingItemName} 
+                                                onChange={(e) => setEditingItemName(e.target.value)} 
+                                                className="bg-black/50 border border-red-500/50 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-red-500 font-bold text-lg"
+                                                autoFocus
+                                            />
+                                            <button 
+                                                onClick={handleUpdateItemName} 
+                                                disabled={isUpdatingName}
+                                                className="p-1.5 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded-lg transition-colors"
+                                            >
+                                                <Check size={18} />
+                                            </button>
+                                            <button 
+                                                onClick={() => setEditingItemId(null)} 
+                                                className="p-1.5 bg-white/10 text-neutral-400 hover:bg-white/20 rounded-lg transition-colors"
+                                            >
+                                                <X size={18} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-2xl font-bold text-white tracking-tight">{selectedItem.name}</h2>
+                                            <button 
+                                                onClick={() => { setEditingItemId(selectedItem.id); setEditingItemName(selectedItem.name); }}
+                                                className="p-1.5 text-neutral-500 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                            >
+                                                <Edit2 size={14} />
+                                            </button>
+                                        </div>
+                                    )}
                                     <p className="text-neutral-500 text-sm font-mono mt-1">Barkod: {selectedItem.id}</p>
                                     <div className="flex items-center gap-2 mt-3">
                                         <span className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${statusColors[selectedItem.status]}`}>
@@ -1112,6 +1189,82 @@ export default function DepoYonetimi() {
         return createPortal(content, document.body);
     };
 
+    const renderGroupDrawer = () => {
+        if (!selectedGroup || !mounted) return null;
+
+        const content = (
+            <AnimatePresence>
+                <div className="portal-root">
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9996]"
+                        onClick={() => setSelectedGroup(null)}
+                    />
+                    <motion.div 
+                        initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        className="fixed top-0 right-0 h-[100dvh] w-full max-w-lg bg-[#050B14] border-l border-white/10 z-[9997] shadow-2xl flex flex-col"
+                    >
+                        <div className="p-6 md:p-8 bg-neutral-900/50 border-b border-white/5 relative shrink-0">
+                            <button onClick={() => setSelectedGroup(null)} className="absolute top-6 right-6 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-white">
+                                <X size={20} />
+                            </button>
+                            <div className="flex items-center gap-5 mt-4">
+                                <div className="w-20 h-20 bg-black border border-white/10 rounded-2xl flex items-center justify-center text-white shadow-xl">
+                                    <Box size={40} className="opacity-50" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white tracking-tight">{selectedGroup.name}</h2>
+                                    <p className="text-neutral-500 text-sm font-mono mt-1">Toplam: {selectedGroup.totalCount} Adet</p>
+                                    <div className="flex gap-2 mt-3 flex-wrap">
+                                        <span className="px-3 py-1 bg-white/5 border border-white/10 text-neutral-400 text-[10px] uppercase font-bold tracking-wider rounded-full">
+                                            {selectedGroup.category}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 md:p-8 flex-1 overflow-y-auto space-y-4">
+                            <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Gruba Ait Malzemeler</h3>
+                            <div className="space-y-3">
+                                {selectedGroup.items.map((item: any) => {
+                                    const isSelected = selectedIds.includes(item.id);
+                                    return (
+                                        <div key={item.id} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={isSelected} 
+                                                        onChange={(e) => toggleSelection(e as any, item.id)} 
+                                                        className="w-4 h-4 bg-black/50 border border-white/10 rounded accent-red-600 cursor-pointer" 
+                                                    />
+                                                    <div>
+                                                        <h4 className="text-white font-bold text-sm">{item.name}</h4>
+                                                        <p className="text-neutral-500 text-xs font-mono">Barkod: {item.id}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md border ${statusColors[item.status]}`}>
+                                                        {item.status}
+                                                    </span>
+                                                    <button onClick={() => setSelectedItem(item)} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-white" title="Detayları Gör / Düzenle">
+                                                        <ChevronRight size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </AnimatePresence>
+        );
+        return createPortal(content, document.body);
+    };
     return (
         <div className="space-y-8 pb-20 relative">
             <div style={{ display: "none" }}>
@@ -1120,6 +1273,7 @@ export default function DepoYonetimi() {
                 ))}
             </div>
             <QRScanner />
+            {renderGroupDrawer()}
             {renderItemDrawer()}
             {renderAddModal()}
 
@@ -1227,96 +1381,52 @@ export default function DepoYonetimi() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {filteredInventory.map((item) => (
-                                <tr key={item.id} onClick={() => setSelectedItem(item)} className={`hover:bg-white/5 transition-colors cursor-pointer group ${selectedIds.includes(item.id) ? 'bg-white/5' : ''}`}>
-                                    <td className="px-6 py-4" onClick={(e) => toggleSelection(e, item.id)}>
-                                        <input type="checkbox" checked={selectedIds.includes(item.id)} readOnly className="w-4 h-4 bg-black/50 border border-white/10 rounded accent-red-600 cursor-pointer" />
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-black border border-white/10 rounded-lg flex items-center justify-center text-white/50 group-hover:text-red-500 transition-colors">
-                                                <Box size={20} />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <h4 className="text-white font-bold text-sm group-hover:text-red-400 transition-colors">{item.name}</h4>
-                                                    {item.isContainer && (
-                                                        <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/20 uppercase tracking-wider shrink-0">
-                                                            📦 Kit
-                                                        </span>
-                                                    )}
-                                                    {/* Kit içinde mi? */}
-                                                    {(() => {
-                                                        const parentKit = inventory.find((k: any) =>
-                                                            k.isContainer &&
-                                                            (k.containerItems || []).map(normalizeId).includes(item.id)
-                                                        );
-                                                        return parentKit ? (
-                                                            <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider shrink-0" title={`Kit: ${parentKit.name}`}>
-                                                                └ {parentKit.name}
-                                                            </span>
-                                                        ) : null;
-                                                    })()}
-                                                    {item.expirationDate && (() => {
-                                                        const warn = getExpirationWarning(item.expirationDate);
-                                                        return warn ? <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" title={warn.msg} /> : null;
-                                                    })()}
-                                                    {item.maintenanceDate && (() => {
-                                                        const warn = getMaintenanceWarning(item.maintenanceDate);
-                                                        return warn ? <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" title={warn.msg} /> : null;
-                                                    })()}
-                                                    <span className={`text-[8px] font-extrabold px-1 rounded uppercase tracking-wider shrink-0 ${
-                                                        item.type === "KKE" ? "bg-purple-500/20 text-purple-400 border border-purple-500/20" : "bg-blue-500/20 text-blue-400 border border-blue-500/20"
-                                                    }`}>
-                                                        {item.type || "Demirbaş"}
-                                                    </span>
+                            {groupedInventory.map((group: any) => {
+                                const groupItemIds = group.items.map((i: any) => i.id);
+                                const allSelected = groupItemIds.every((id: string) => selectedIds.includes(id)) && groupItemIds.length > 0;
+                                const someSelected = groupItemIds.some((id: string) => selectedIds.includes(id));
+
+                                return (
+                                    <tr key={group.name} onClick={() => setSelectedGroup(group)} className={`hover:bg-white/5 transition-colors cursor-pointer group ${allSelected ? 'bg-white/5' : ''}`}>
+                                        <td className="px-6 py-4" onClick={(e) => toggleGroupSelection(e, group)}>
+                                            <input type="checkbox" checked={allSelected} ref={input => { if (input) input.indeterminate = someSelected && !allSelected }} readOnly className="w-4 h-4 bg-black/50 border border-white/10 rounded accent-red-600 cursor-pointer" />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-black border border-white/10 rounded-lg flex items-center justify-center text-white/50 group-hover:text-red-500 transition-colors">
+                                                    <Box size={20} />
                                                 </div>
-                                                <div className="text-[10px] text-neutral-500 font-mono mt-0.5">{item.id}</div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="text-white font-bold text-sm group-hover:text-red-400 transition-colors">{group.name}</h4>
+                                                    </div>
+                                                    <p className="text-[10px] text-neutral-500 font-mono mt-0.5">{group.totalCount} Adet Sistemde Kayıtlı</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="text-xs text-neutral-400 bg-white/5 px-2 py-1 rounded border border-white/5">{item.category}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2.5 py-1 inline-flex text-[9px] uppercase font-bold tracking-wider rounded-full border ${statusColors[item.status]}`}>
-                                            {item.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 flex items-center justify-between">
-                                        {item.status === "Zimmetli" && item.assignedToId ? (
-                                            <div className="flex items-center gap-2">
-                                                <User size={14} className="text-blue-500" />
-                                                <span className="text-white text-xs font-medium">
-                                                    {membersData.find(m => m.id === item.assignedToId)?.fullName || item.assignedToId}
-                                                </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="px-3 py-1 bg-white/5 border border-white/10 text-neutral-400 text-[10px] uppercase font-bold tracking-wider rounded-full">
+                                                {group.category}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex gap-2 flex-wrap">
+                                                {group.inStorageCount > 0 && <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-bold rounded-full">Depoda: {group.inStorageCount}</span>}
+                                                {group.borrowedCount > 0 && <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] uppercase font-bold rounded-full">Zimmetli: {group.borrowedCount}</span>}
+                                                {group.maintenanceCount > 0 && <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] uppercase font-bold rounded-full">Bakım/Kayıp: {group.maintenanceCount}</span>}
                                             </div>
-                                        ) : (
-                                            <span className="text-neutral-600 text-xs italic">Merkez Depo</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={async (e) => {
-                                                e.stopPropagation();
-                                                if (confirm(`DİKKAT: "${item.name}" adlı ekipmanı sistemden tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) {
-                                                    const res = await fetch(`/api/inventory?id=${item.id}`, { method: "DELETE" });
-                                                    if (res.ok) {
-                                                        setInventory(inventory.filter((inv: any) => inv.id !== item.id));
-                                                        if (selectedItem?.id === item.id) setSelectedItem(null);
-                                                    } else {
-                                                        alert("Silme başarısız.");
-                                                    }
-                                                }
-                                            }}
-                                            className="p-2 text-neutral-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors inline-flex items-center justify-center"
-                                            title="Hızlı Sil"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Detaylar panelinde</span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button className="p-2 text-neutral-500 group-hover:text-white group-hover:bg-white/10 rounded-lg transition-colors inline-flex items-center justify-center">
+                                                <ChevronRight size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                     
