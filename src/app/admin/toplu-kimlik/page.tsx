@@ -124,19 +124,19 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Top text */}
-                                    <div style={{ position: "absolute", top: 20, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <span style={{ fontSize: 9, fontWeight: 800, color: "#777", letterSpacing: "3px", marginLeft: "3px" }}>M1G ARAMA KURTARMA</span>
-                                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111", letterSpacing: "6px", marginLeft: "6px", marginTop: "1px" }}>DERNEĞİ</span>
+                                    <div style={{ position: "absolute", top: 28, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <span style={{ fontSize: 15, fontWeight: 900, color: "#333", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
+                                        <span style={{ fontSize: 24, fontWeight: 900, color: "#111", letterSpacing: "1px", marginTop: "1px" }}>DERNEĞİ</span>
                                     </div>
 
                                     {/* Huge Logo with Black Shadow Background */}
-                                    <div style={{ position: "absolute", top: 55, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
-                                        <div style={{ position: "absolute", width: 110, height: 110, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
-                                        <img src="/m1g-logo.png" alt="Logo" style={{ width: 120, height: 120, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                                    <div style={{ position: "absolute", top: 90, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
+                                        <div style={{ position: "absolute", width: 100, height: 100, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
+                                        <img src="/m1g-logo.png" alt="Logo" style={{ width: 110, height: 110, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                                     </div>
 
                                     {/* Photo Box */}
-                                    <div style={{ position: "absolute", top: 185, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
+                                    <div style={{ position: "absolute", top: 215, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
                                         <div style={{ width: "100%", height: "100%", borderRadius: 6, overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                             {member.avatar ? (
                                                 <img src={member.avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -147,14 +147,16 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Member Name */}
-                                    <div style={{ position: "absolute", top: 310, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
+                                    <div style={{ position: "absolute", top: 340, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
                                         <span style={{ fontSize: 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{member.fullName}</span>
                                     </div>
 
                                     {/* Role */}
-                                    <div style={{ position: "absolute", top: 360, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
-                                        <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "6px 24px", borderRadius: "100px", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "4px", boxShadow: "0 4px 10px rgba(0,0,0,0.2)" }}>{role}</span>
-                                    </div>
+                                    {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
+                                        <div style={{ position: "absolute", top: 385, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
+                                            <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "4px 16px", borderRadius: "100px", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "2px", boxShadow: "0 4px 10px rgba(0,0,0,0.2)" }}>{role}</span>
+                                        </div>
+                                    )}
 
                                     {/* Blood Type & Emergency Contact */}
                                     <div style={{ position: "absolute", bottom: 25, left: 24, right: 24, display: "flex", flexDirection: "column", gap: 8, zIndex: 10 }}>
@@ -194,20 +196,20 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Top text */}
-                                    <div style={{ position: "absolute", top: 20, left: 0, right: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <span style={{ fontSize: 9, fontWeight: 800, color: "#777", letterSpacing: "3px", marginLeft: "3px" }}>M1G ARAMA KURTARMA</span>
-                                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111", letterSpacing: "6px", marginLeft: "6px", marginTop: "1px" }}>DERNEĞİ</span>
+                                    <div style={{ position: "absolute", top: 28, left: 0, right: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <span style={{ fontSize: 15, fontWeight: 900, color: "#333", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
+                                        <span style={{ fontSize: 24, fontWeight: 900, color: "#111", letterSpacing: "1px", marginTop: "1px" }}>DERNEĞİ</span>
                                     </div>
 
                                     {/* Info Text */}
-                                    <div style={{ position: "absolute", top: 65, left: 24, right: 24, textAlign: "center" }}>
-                                        <p style={{ fontSize: 10, fontWeight: 700, color: "#555", lineHeight: 1.6 }}>
+                                    <div style={{ position: "absolute", top: 90, left: 24, right: 24, textAlign: "center" }}>
+                                        <p style={{ fontSize: 11, fontWeight: 700, color: "#555", lineHeight: 1.6 }}>
                                             Bu kimlik kartı, M1G Arama ve Kurtarma Derneği'ne aittir ve başkasına devredilemez.
                                         </p>
                                     </div>
 
                                     {/* QR Code in Center */}
-                                    <div style={{ position: "absolute", top: 125, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                    <div style={{ position: "absolute", top: 150, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
                                         <div style={{ background: "white", padding: 10, borderRadius: 16, border: "2px solid #111111", boxShadow: "0 6px 16px rgba(0,0,0,0.1)" }}>
                                             <QRCodeSVG value={`${origin}/kimlik/${member.kimlikToken}`} size={130} level="H" fgColor="#000000" />
                                         </div>
