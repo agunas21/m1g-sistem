@@ -27,12 +27,10 @@ export default function TopluKimlik() {
     }, []);
 
     const getRole = (m: any) => {
-        if (m.memberType && m.memberType !== "Üye" && m.memberType !== "Gönüllü") {
-            return m.memberType.toUpperCase();
-        }
         if (['cgorgu', 'taksit', 'mtasli', 'mseyre', 'gakdor', 'agunas'].includes(m.id)) return "YÖNETİM KURULU ÜYESİ";
         if (m.honorary === "Evet") return "ONUR ÜYESİ";
-        if (m.memberType === "Üye" || m.memberType === "Asil Üye") return "ÜYE";
+        if (m.memberType === "Üye" || m.memberType === "Asil Üye" || m.memberType === "ASİL ÜYE") return "ÜYE";
+        if (m.memberType && m.memberType !== "Gönüllü") return m.memberType.toUpperCase();
         return "GÖNÜLLÜ";
     };
 
@@ -126,14 +124,14 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Top text */}
-                                    <div style={{ position: "absolute", top: 18, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column" }}>
-                                        <span style={{ fontSize: 12, fontWeight: 800, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
-                                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", letterSpacing: "2px", marginTop: -2 }}>DERNEĞİ</span>
+                                    <div style={{ position: "absolute", top: 20, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <span style={{ fontSize: 9, fontWeight: 800, color: "#777", letterSpacing: "3px", marginLeft: "3px" }}>M1G ARAMA KURTARMA</span>
+                                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111", letterSpacing: "6px", marginLeft: "6px", marginTop: "1px" }}>DERNEĞİ</span>
                                     </div>
 
                                     {/* Huge Logo with Black Shadow Background */}
                                     <div style={{ position: "absolute", top: 55, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
-                                        <div style={{ position: "absolute", width: 110, height: 110, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
+                                        <div style={{ position: "absolute", width: 110, height: 110, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
                                         <img src="/m1g-logo.png" alt="Logo" style={{ width: 120, height: 120, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                                     </div>
 
@@ -196,9 +194,9 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Top text */}
-                                    <div style={{ position: "absolute", top: 18, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column" }}>
-                                        <span style={{ fontSize: 12, fontWeight: 800, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
-                                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", letterSpacing: "2px", marginTop: -2 }}>DERNEĞİ</span>
+                                    <div style={{ position: "absolute", top: 20, left: 0, right: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <span style={{ fontSize: 9, fontWeight: 800, color: "#777", letterSpacing: "3px", marginLeft: "3px" }}>M1G ARAMA KURTARMA</span>
+                                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111", letterSpacing: "6px", marginLeft: "6px", marginTop: "1px" }}>DERNEĞİ</span>
                                     </div>
 
                                     {/* Info Text */}
