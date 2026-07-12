@@ -8,6 +8,9 @@ export default function TopluKimlik() {
     const [members, setMembers] = useState<any[]>([]);
     const [allMembers, setAllMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [exporting, setExporting] = useState(false);
+    const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://m1g.org.tr';
 
     useEffect(() => {
@@ -34,8 +37,68 @@ export default function TopluKimlik() {
         return "GÖNÜLLÜ";
     };
 
-    const handlePrint = () => {
-        window.print();
+    const toggleSelection = (id: string) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const selectAll = () => {
+        setSelectedIds(members.map(m => m.id));
+    };
+
+    const clearSelection = () => {
+        setSelectedIds([]);
+    };
+
+    const exportToZip = async () => {
+        if (selectedIds.length === 0) {
+            alert("Lütfen dışa aktarmak için en az bir kişi seçin.");
+            return;
+        }
+
+        try {
+            setExporting(true);
+            setExportProgress({ current: 0, total: selectedIds.length });
+
+            const JSZip = (await import('jszip')).default;
+            const { saveAs } = await import('file-saver');
+            const html2canvas = (await import('html2canvas')).default;
+
+            const zip = new JSZip();
+
+            for (let i = 0; i < selectedIds.length; i++) {
+                const memberId = selectedIds[i];
+                const member = members.find(m => m.id === memberId);
+                if (!member) continue;
+
+                setExportProgress(prev => ({ ...prev, current: i + 1 }));
+
+                const frontElement = document.getElementById(`card-front-${member.id}`);
+                const backElement = document.getElementById(`card-back-${member.id}`);
+
+                if (frontElement && backElement) {
+                    const canvasOptions = { scale: 4, useCORS: true, logging: false, backgroundColor: "#ffffff" };
+                    
+                    const frontCanvas = await html2canvas(frontElement, canvasOptions);
+                    const backCanvas = await html2canvas(backElement, canvasOptions);
+
+                    const frontData = frontCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
+                    const backData = backCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
+
+                    const cleanName = member.fullName.replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ ]/g, "").trim().replace(/\s+/g, "_");
+
+                    zip.file(`${cleanName}_ON.png`, frontData, { base64: true });
+                    zip.file(`${cleanName}_ARKA.png`, backData, { base64: true });
+                }
+            }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, "M1G_Secili_Kimlikler.zip");
+        } catch (error) {
+            console.error("Dışa aktarma hatası:", error);
+            alert("Dışa aktarma sırasında bir hata oluştu.");
+        } finally {
+            setExporting(false);
+        }
     };
 
     if (loading) {
@@ -51,11 +114,26 @@ export default function TopluKimlik() {
             <div className="mb-8 flex justify-between items-center print:hidden">
                 <div>
                     <h1 className="text-2xl font-black uppercase tracking-tight">Toplu Kimlik Yazdırma</h1>
-                    <p className="text-neutral-400">Toplam {members.length} aktif personelin kimlik kartı yükleniyor.</p>
+                    <p className="text-neutral-400">Toplam {members.length} aktif personel. Dışa aktarmak istediklerinizi seçin.</p>
                 </div>
-                <button onClick={handlePrint} className="px-6 py-3 bg-red-600 hover:bg-red-700 font-bold uppercase rounded-xl transition-all text-sm">
-                    Yazdır (A4)
-                </button>
+                
+                <div className="flex gap-4 items-center">
+                    {exporting && (
+                        <span className="text-red-400 font-bold animate-pulse text-sm">
+                            İşleniyor... ({exportProgress.current} / {exportProgress.total})
+                        </span>
+                    )}
+                    <button onClick={selectAll} className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 font-bold uppercase rounded-xl transition-all text-sm border border-neutral-700">
+                        Tümünü Seç
+                    </button>
+                    <button onClick={clearSelection} className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 font-bold uppercase rounded-xl transition-all text-sm border border-neutral-700">
+                        Temizle
+                    </button>
+                    <button onClick={exportToZip} disabled={exporting || selectedIds.length === 0} className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold uppercase rounded-xl transition-all text-sm flex items-center gap-2">
+                        {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        Seçilileri İndir (ZIP)
+                    </button>
+                </div>
             </div>
 
             <style dangerouslySetInnerHTML={{__html: `
@@ -99,9 +177,15 @@ export default function TopluKimlik() {
                     }
 
                     return (
-                        <div key={index} className="flex gap-4 mb-4" style={{ pageBreakInside: 'avoid' }}>
-                            {/* ÖN YÜZ */}
-                            <div className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.05), inset -4px -4px 10px rgba(255,255,255,0.5)", overflow: "hidden" }}>
+                        <div key={index} className="flex flex-col gap-2 mb-4 print:mb-0">
+                            <div className="flex items-center gap-2 print:hidden bg-neutral-800 p-3 rounded-lg cursor-pointer hover:bg-neutral-700 transition-colors border border-neutral-700" onClick={() => toggleSelection(member.id)}>
+                                <input type="checkbox" className="w-5 h-5 accent-red-600 pointer-events-none" checked={selectedIds.includes(member.id)} readOnly />
+                                <span className="font-bold">{member.fullName}</span>
+                                <span className="text-neutral-400 text-sm ml-auto">{role}</span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-4" style={{ pageBreakInside: 'avoid' }}>
+                                {/* ÖN YÜZ */}
+                                <div id={`card-front-${member.id}`} className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.05), inset -4px -4px 10px rgba(255,255,255,0.5)", overflow: "hidden" }}>
                                 <div style={{ width: 320, height: 509, transform: "scale(0.6375)", transformOrigin: "top left", position: "relative" }}>
                                     {/* BORDER BAND */}
                                     <div style={{ position: 'absolute', inset: 0, border: '14px solid #cb2027', borderRadius: '24px', pointerEvents: 'none', zIndex: 20 }}>
@@ -172,7 +256,7 @@ export default function TopluKimlik() {
                             </div>
                             
                             {/* ARKA YÜZ */}
-                            <div className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.05), inset -4px -4px 10px rgba(255,255,255,0.5)", overflow: "hidden" }}>
+                            <div id={`card-back-${member.id}`} className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.05), inset -4px -4px 10px rgba(255,255,255,0.5)", overflow: "hidden" }}>
                                 <div style={{ width: 320, height: 509, transform: "scale(0.6375)", transformOrigin: "top left", position: "relative" }}>
                                     {/* BORDER BAND */}
                                     <div style={{ position: 'absolute', inset: 0, border: '14px solid #cb2027', borderRadius: '24px', pointerEvents: 'none', zIndex: 20 }}>
