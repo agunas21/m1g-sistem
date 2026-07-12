@@ -541,6 +541,33 @@ export default function DepoYonetimi() {
         (filterStatus === "Tümü" || i.status === filterStatus)
     );
 
+    const getBaseName = (name: string) => name.replace(/\s#\d+$/, "");
+
+    const groupedInventoryMap = filteredInventory.reduce((acc: any, item: any) => {
+        const baseName = getBaseName(item.name);
+        if (!acc[baseName]) {
+            acc[baseName] = {
+                id: baseName,
+                name: baseName,
+                category: item.category,
+                items: [],
+                totalCount: 0,
+                inStorageCount: 0,
+                borrowedCount: 0,
+                maintenanceCount: 0,
+                isGroup: true
+            };
+        }
+        acc[baseName].items.push(item);
+        acc[baseName].totalCount++;
+        if (item.status === "Depoda") acc[baseName].inStorageCount++;
+        if (item.status === "Zimmetli") acc[baseName].borrowedCount++;
+        if (item.status === "Bakımda" || item.status === "Kayıp/Hurda") acc[baseName].maintenanceCount++;
+        return acc;
+    }, {} as Record<string, any>);
+
+    const groupedInventory = Object.values(groupedInventoryMap);
+
     // Helpers for UI
     const statusColors: any = {
         "Depoda": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
