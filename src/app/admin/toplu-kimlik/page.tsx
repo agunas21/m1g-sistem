@@ -30,7 +30,6 @@ export default function TopluKimlik() {
     }, []);
 
     const getRole = (m: any) => {
-        if (['cgorgu', 'taksit', 'mtasli', 'mseyre', 'gakdor', 'agunas'].includes(m.id)) return "YÖNETİM KURULU ÜYESİ";
         if (m.honorary === "Evet") return "ONUR ÜYESİ";
         if (m.memberType === "Üye" || m.memberType === "Asil Üye" || m.memberType === "ASİL ÜYE") return "ÜYE";
         if (m.memberType && m.memberType !== "Gönüllü") return m.memberType.toUpperCase();
@@ -216,15 +215,15 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Top text */}
-                                    <div style={{ position: "absolute", top: 22, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                                        <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
-                                        <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
+                                    <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
+                                        <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
+                                        <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
                                     </div>
 
                                     {/* Huge Logo with Black Shadow Background */}
-                                    <div style={{ position: "absolute", top: 75, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
-                                        <div style={{ position: "absolute", width: 130, height: 130, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
-                                        <img src="/m1g-logo.png" alt="Logo" style={{ width: 140, height: 140, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                                    <div style={{ position: "absolute", top: 85, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
+                                        <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
+                                        <img src="/m1g-logo.png" alt="Logo" style={{ width: 130, height: 130, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                                     </div>
 
                                     {/* Photo Box */}
@@ -245,7 +244,7 @@ export default function TopluKimlik() {
 
                                     {/* Role */}
                                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                                        <div style={{ position: "absolute", top: 390, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
+                                        <div style={{ position: "absolute", top: 395, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
                                             <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "4px 16px", borderRadius: "100px", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "2px", boxShadow: "0 4px 10px rgba(0,0,0,0.2)" }}>{role}</span>
                                         </div>
                                     )}
@@ -288,9 +287,9 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Top text */}
-                                    <div style={{ position: "absolute", top: 22, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                                        <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
-                                        <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
+                                    <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
+                                        <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
+                                        <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
                                     </div>
 
                                     {/* Info Text */}
