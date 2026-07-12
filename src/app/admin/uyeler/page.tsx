@@ -69,6 +69,9 @@ export default function UyeYonetimi() {
                         bloodType: m.bloodType || "Belirtilmemiş",
                         emergencyContact: m.emergencyContact || "Belirtilmemiş",
                         address: m.address || "Belirtilmemiş",
+                        passport: m.passport || "Yok",
+                        driverLicense: m.driverLicense || "Yok",
+                        disabilityStatus: m.disabilityStatus || "Yok",
                         inventory: m.inventory || [],
                         operations: m.operations || [],
                         ftrRecords: m.ftrRecords || []
@@ -549,6 +552,9 @@ export default function UyeYonetimi() {
                                             <InfoCard icon={<Droplet size={16} className="text-red-500" />} label="Kan Grubu" value={selectedMember.bloodType} />
                                             <InfoCard icon={<Briefcase size={16} />} label="Meslek" value={selectedMember.profession} />
                                             <InfoCard icon={<GraduationCap size={16} />} label="Eğitim Durumu" value={selectedMember.education} />
+                                            <InfoCard icon={<User size={16} className="text-blue-400" />} label="Ehliyet" value={selectedMember.driverLicense || "Yok"} />
+                                            <InfoCard icon={<User size={16} className="text-green-400" />} label="Pasaport" value={selectedMember.passport || "Yok"} />
+                                            <InfoCard icon={<AlertCircle size={16} className="text-yellow-500" />} label="Engel Durumu" value={selectedMember.disabilityStatus || "Yok"} />
                                         </div>
                                         <div className="bg-white/5 p-4 rounded-xl border border-white/5">
                                             <div className="flex items-center gap-2 text-neutral-400 mb-2">

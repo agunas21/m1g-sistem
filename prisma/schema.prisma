@@ -37,6 +37,9 @@ model Member {
   emergencyContact String?
   address       String?
   avatar        String?
+  passport          String?
+  driverLicense     String?
+  disabilityStatus  String?
   lastLogin         DateTime?
   bannedAt          DateTime?
   bannedBy          String?

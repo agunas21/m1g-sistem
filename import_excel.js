@@ -50,6 +50,9 @@ async function main() {
             
             const birthDateRaw = row["__EMPTY_3"];
             const birthDateStr = parseExcelDate(birthDateRaw);
+            const disabilityStatus = row["__EMPTY_5"] ? String(row["__EMPTY_5"]).trim() : null;
+            const passport = row["__EMPTY_8"] ? String(row["__EMPTY_8"]).trim() : null;
+            const driverLicense = row["__EMPTY_9"] ? String(row["__EMPTY_9"]).trim() : null;
 
             // TC NO üzerinden arama
             const member = await prisma.member.findFirst({
@@ -59,6 +62,9 @@ async function main() {
             if (member) {
                 const updateData = {};
                 if (birthDateStr) updateData.birthDate = birthDateStr;
+                if (disabilityStatus) updateData.disabilityStatus = disabilityStatus;
+                if (passport) updateData.passport = passport;
+                if (driverLicense) updateData.driverLicense = driverLicense;
                 
                 if (Object.keys(updateData).length > 0) {
                     await prisma.member.update({
