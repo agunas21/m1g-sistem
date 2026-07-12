@@ -218,7 +218,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                 {!flipped && (
                     <div
                         id="m1g-card-front"
-                        className="rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
+                        className="overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
                         style={{ 
                             width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
                             backgroundColor: "#ffffff", fontFamily: "'Inter', sans-serif",
@@ -300,7 +300,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                 {flipped && (
                     <div
                         id="m1g-card-back"
-                        className="rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
+                        className="overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
                         style={{ 
                             width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
                             backgroundColor: "#ffffff", fontFamily: "'Inter', sans-serif",
