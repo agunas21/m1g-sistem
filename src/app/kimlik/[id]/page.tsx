@@ -226,7 +226,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         }}
                     >
                         {/* BORDER BAND */}
-                        <div style={{ position: 'absolute', inset: 0, border: '14px solid #cb2027', borderRadius: '16px', pointerEvents: 'none', zIndex: 20 }}>
+                        <div style={{ position: 'absolute', inset: 0, border: '14px solid #cb2027', pointerEvents: 'none', zIndex: 20 }}>
                             {/* Top Text */}
                             <div style={{ position: 'absolute', top: -14, left: 0, right: 0, height: 14, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                 <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
@@ -275,7 +275,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
 
                         {/* Role */}
                         {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                            <div style={{ position: "absolute", top: 390, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
+                            <div style={{ position: "absolute", top: 375, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
                                 <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "4px 16px", borderRadius: "100px", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "2px", boxShadow: "0 4px 10px rgba(0,0,0,0.2)" }}>{role}</span>
                             </div>
                         )}
@@ -308,7 +308,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         }}
                     >
                         {/* BORDER BAND */}
-                        <div style={{ position: 'absolute', inset: 0, border: '14px solid #cb2027', borderRadius: '16px', pointerEvents: 'none', zIndex: 20 }}>
+                        <div style={{ position: 'absolute', inset: 0, border: '14px solid #cb2027', pointerEvents: 'none', zIndex: 20 }}>
                             {/* Top Text */}
                             <div style={{ position: 'absolute', top: -14, left: 0, right: 0, height: 14, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                 <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
