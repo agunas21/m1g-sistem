@@ -246,23 +246,14 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                             <span style={{ fontSize: 13, fontWeight: 900, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
                         </div>
 
-                        {/* Huge Logo */}
-                        <div style={{ position: "absolute", top: 60, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 5 }}>
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 130, height: 130, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
-                        </div>
-
-                        {/* Member Name */}
-                        <div style={{ position: "absolute", top: 215, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
-                            <span style={{ fontSize: 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{member.name}</span>
-                        </div>
-
-                        {/* Role */}
-                        <div style={{ position: "absolute", top: 265, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
-                            <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "4px 24px", borderRadius: "100px", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "4px" }}>{role}</span>
+                        {/* Huge Logo with Black Shadow Background */}
+                        <div style={{ position: "absolute", top: 55, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
+                            <div style={{ position: "absolute", width: 110, height: 110, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
+                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 120, height: 120, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                         </div>
 
                         {/* Photo Box */}
-                        <div style={{ position: "absolute", top: 305, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}>
+                        <div style={{ position: "absolute", top: 185, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
                             <div style={{ width: "100%", height: "100%", borderRadius: 6, overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 {member.avatar ? (
                                     <img src={member.avatar} alt="Foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -270,6 +261,16 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                                     <span style={{ fontSize: 36, color: "#9ca3af", fontWeight: 800 }}>{member.name.charAt(0)}</span>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Member Name */}
+                        <div style={{ position: "absolute", top: 310, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
+                            <span style={{ fontSize: 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{member.name}</span>
+                        </div>
+
+                        {/* Role */}
+                        <div style={{ position: "absolute", top: 360, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
+                            <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "6px 24px", borderRadius: "100px", fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "4px", boxShadow: "0 4px 10px rgba(0,0,0,0.2)" }}>{role}</span>
                         </div>
 
                         {/* Blood Type & Emergency Contact */}
