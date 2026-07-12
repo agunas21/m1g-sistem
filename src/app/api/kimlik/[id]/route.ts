@@ -43,6 +43,13 @@ export async function GET(
         const isPasif = member.status === "Pasif";
         const serial = `M1G-${member.id.substring(0, 4).toUpperCase()}`;
 
+        // Get President's phone number
+        const president = await prisma.member.findFirst({
+            where: { role: 'Yönetim Kurulu Başkanı' },
+            select: { phone: true }
+        });
+        const presidentPhone = president?.phone || '0(532) 703-7976';
+
         const res = NextResponse.json({
             id: member.id,
             fullName: member.fullName,
@@ -55,7 +62,8 @@ export async function GET(
             bloodType: member.bloodType || 'Belirtilmemiş',
             kimlikToken: member.kimlikToken,
             tcNo: showTcNo ? plainTc : maskedTc,
-            serial: serial
+            serial: serial,
+            presidentPhone: presidentPhone
         });
 
         res.headers.set('Cache-Control', 'private, no-store, must-revalidate');

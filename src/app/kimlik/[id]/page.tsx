@@ -97,13 +97,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
     };
 
     const role = (() => {
-        if (memberRaw.role && memberRaw.role !== "Üye" && memberRaw.role !== "Gönüllü") {
-            return memberRaw.role;
-        }
-        if (['cgorgu', 'taksit', 'mtasli', 'mseyre', 'gakdor', 'agunas'].includes(memberRaw.id)) return "Yönetim Kurulu Üyesi";
-        if (memberRaw.honorary === "Evet") return "Onur Üyesi";
-        if (memberRaw.role === "Üye") return "Asil Üye";
-        return "Gönüllü";
+        return "ÜYE";
     })();
 
     let emContactName = "—";
@@ -211,30 +205,32 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                     <div
                         id="m1g-card-front"
                         className="rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
-                        style={{ width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, backgroundColor: "#181818", fontFamily: "'Inter', sans-serif" }}
+                        style={{ width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, background: "linear-gradient(to bottom, #111111 0%, #111111 35%, #ffffff 35%, #ffffff 100%)", fontFamily: "'Inter', sans-serif" }}
                     >
-                        {/* Background subtle pattern */}
-                        <div style={{ position: "absolute", inset: 0, opacity: 0.03, backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm10 10h10v10H10V10zM0 10h10v10H0V10z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E\")" }} />
-
-                        {/* Top Left Texts */}
-                        <div style={{ position: "absolute", top: 24, left: 20, display: "flex", flexDirection: "column" }}>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "white", letterSpacing: "0.5px", lineHeight: 1.2 }}>M1G ARAMA</span>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "white", letterSpacing: "0.5px", lineHeight: 1.2 }}>VE KURTARMA</span>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "white", letterSpacing: "0.5px", lineHeight: 1.2 }}>DERNEĞİ</span>
-                            <span style={{ fontSize: 9, fontWeight: 500, color: "#a3a3a3", marginTop: 4 }}>(Search & Rescue Association)</span>
+                        {/* Top text (Single Line) */}
+                        <div style={{ position: "absolute", top: 24, left: 0, right: 0, textAlign: "center" }}>
+                            <span style={{ fontSize: 13.5, fontWeight: 900, color: "white", letterSpacing: "0.5px" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
                         </div>
 
-                        {/* Top Right Logo */}
-                        <div style={{ position: "absolute", top: 16, right: 16 }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 85, height: 85, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                        {/* Large Logo */}
+                        <div style={{ position: "absolute", top: 60, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
+                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 140, height: 140, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                         </div>
 
-                        {/* Center Photo */}
-                        <div style={{ position: "absolute", top: 115, left: "50%", transform: "translateX(-50%)", width: 110, height: 135, background: "#e5e7eb", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", padding: 4 }}>
-                            <div style={{ width: "100%", height: "100%", borderRadius: 8, overflow: "hidden", background: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {/* Member Name */}
+                        <div style={{ position: "absolute", top: 220, left: 0, right: 0, textAlign: "center", padding: "0 10px" }}>
+                            <span style={{ fontSize: 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", lineHeight: 1.1 }}>{member.name}</span>
+                        </div>
+
+                        {/* Role (Just "ÜYE") */}
+                        <div style={{ position: "absolute", top: 255, left: 0, right: 0, textAlign: "center" }}>
+                            <span style={{ backgroundColor: "#111111", color: "white", padding: "4px 20px", borderRadius: "100px", fontSize: 14, fontWeight: 900, textTransform: "uppercase", letterSpacing: "2px" }}>{role}</span>
+                        </div>
+
+                        {/* Photo */}
+                        <div style={{ position: "absolute", top: 295, left: "50%", transform: "translateX(-50%)", width: 95, height: 115, background: "#ffffff", borderRadius: 12, border: "3px solid #111111", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, overflow: "hidden" }}>
+                            <div style={{ width: "100%", height: "100%", borderRadius: 8, overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 {member.avatar ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
                                     <img src={member.avatar} alt="Foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                 ) : (
                                     <span style={{ fontSize: 40, color: "#9ca3af", fontWeight: 800 }}>{member.name.charAt(0)}</span>
@@ -242,23 +238,16 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                             </div>
                         </div>
 
-                        {/* Below Photo Info */}
-                        <div style={{ position: "absolute", top: 265, left: 0, right: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <span style={{ fontSize: 18, fontWeight: 900, color: "white", textTransform: "uppercase", paddingLeft: 10, paddingRight: 10 }}>{member.name}</span>
-                            <span style={{ color: "#ef4444", fontSize: 12, marginTop: 6, fontWeight: 900, textTransform: "uppercase" }}>{role}</span>
-                            <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 6 }}>TC No: {maskedTc}</span>
-                            <span style={{ fontSize: 10, fontWeight: 500, color: "#d1d5db", marginTop: 2 }}>Kan Grubu: {bloodType}</span>
-                        </div>
-
-                        {/* Red Shape on the right bottom */}
-                        <div style={{ position: "absolute", bottom: 0, right: 0, left: "30%", height: 85, backgroundColor: "#cb2027", borderTopLeftRadius: 16 }} />
-
-                        {/* Center Bottom: QR Code */}
-                        <div style={{ position: "absolute", bottom: 20, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                            <div style={{ background: "white", padding: 6, borderRadius: 8 }}>
-                                <QRCodeSVG value={cardUrl} size={90} level="H" fgColor="#000000" />
+                        {/* Blood Type & Emergency Contact */}
+                        <div style={{ position: "absolute", bottom: 20, left: 20, right: 20, display: "flex", flexDirection: "column", gap: 10 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #e5e7eb", paddingBottom: 6 }}>
+                                <span style={{ fontSize: 12, fontWeight: 900, color: "#111" }}>KAN GRUBU:</span>
+                                <span style={{ fontSize: 16, fontWeight: 900, color: "#dc2626" }}>{bloodType}</span>
                             </div>
-                            <span style={{ fontSize: 9, fontWeight: 800, color: "white", marginTop: 6, letterSpacing: "0.5px" }}>DOĞRULAMA İÇİN TARA</span>
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                <span style={{ fontSize: 10, fontWeight: 900, color: "#666" }}>YAKIN İLETİŞİM (ACİL DURUM):</span>
+                                <span style={{ fontSize: 13, fontWeight: 900, color: "#111", marginTop: 2 }}>{emContactName} • {emContactPhone}</span>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -270,57 +259,33 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                     <div
                         id="m1g-card-back"
                         className="rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
-                        style={{ width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, backgroundColor: "#181818", fontFamily: "'Inter', sans-serif" }}
+                        style={{ width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, background: "linear-gradient(to top, #111111 0%, #111111 40%, #ffffff 40%, #ffffff 100%)", fontFamily: "'Inter', sans-serif" }}
                     >
-                        {/* Background subtle pattern */}
-                        <div style={{ position: "absolute", inset: 0, opacity: 0.03, backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm10 10h10v10H10V10zM0 10h10v10H0V10z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E\")" }} />
-
-                        {/* Top Left Texts */}
-                        <div style={{ position: "absolute", top: 24, left: 20, display: "flex", flexDirection: "column" }}>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "white", letterSpacing: "0.5px", lineHeight: 1.2 }}>M1G ARAMA</span>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "white", letterSpacing: "0.5px", lineHeight: 1.2 }}>VE KURTARMA</span>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "white", letterSpacing: "0.5px", lineHeight: 1.2 }}>DERNEĞİ</span>
-                            <span style={{ fontSize: 9, fontWeight: 500, color: "#a3a3a3", marginTop: 4 }}>(Search & Rescue Association)</span>
+                        {/* Top texts */}
+                        <div style={{ position: "absolute", top: 24, left: 0, right: 0, textAlign: "center" }}>
+                            <span style={{ fontSize: 13.5, fontWeight: 900, color: "#111", letterSpacing: "0.5px" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
                         </div>
 
-                        {/* Top Right Logo */}
-                        <div style={{ position: "absolute", top: 16, right: 16 }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 85, height: 85, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
-                        </div>
-
-                        {/* Middle Content */}
-                        <div style={{ position: "absolute", top: 120, left: 24, right: 24, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-                            <span style={{ fontSize: 13, fontWeight: 900, color: "white", letterSpacing: "0.5px" }}>ÜYELİK ŞARTLARI VE İLETİŞİM BİLGİLERİ</span>
-                            
-                            <p style={{ fontSize: 10.5, fontWeight: 500, color: "#d1d5db", lineHeight: 1.5, marginTop: 14 }}>
-                                Bu kimlik kartı, M1G Arama ve Kurtarma Derneği'ne aittir ve başkasına devredilemez. 
-                                Kartın kaybolması veya bulunması durumunda lütfen aşağıdaki iletişim kanalları 
-                                aracılığıyla derneğimizi derhal bilgilendiriniz veya en yakın kolluk kuvvetine 
-                                (Polis/Jandarma) teslim ediniz.<br/><br/>Anlayışınız için teşekkür ederiz.
+                        {/* Info Text */}
+                        <div style={{ position: "absolute", top: 60, left: 24, right: 24, textAlign: "center" }}>
+                            <p style={{ fontSize: 11, fontWeight: 700, color: "#444", lineHeight: 1.6 }}>
+                                Bu kimlik kartı, M1G Arama ve Kurtarma Derneği'ne aittir ve başkasına devredilemez.
                             </p>
-                            
-                            <span style={{ fontSize: 13, fontWeight: 900, color: "white", letterSpacing: "0.5px", marginTop: 24 }}>İLETİŞİM BİLGİLERİ</span>
-                            {/* Chairman's phone number exactly as requested */}
-                            <span style={{ fontSize: 11.5, fontWeight: 600, color: "white", marginTop: 8 }}>Telefon: +90 {BOARD_PRESIDENT_PHONE.substring(2)}</span>
-                            <span style={{ fontSize: 11.5, fontWeight: 600, color: "white", marginTop: 5 }}>E-posta: info@m1g.org.tr</span>
-                            <span style={{ fontSize: 11.5, fontWeight: 600, color: "white", marginTop: 5 }}>Web Sitesi: {ASSOCIATION_WEB}</span>
                         </div>
 
-                        {/* Red Shape on the right bottom */}
-                        <div style={{ position: "absolute", bottom: 0, right: 0, left: "30%", height: 85, backgroundColor: "#cb2027", borderTopLeftRadius: 16 }} />
+                        {/* QR Code in Center */}
+                        <div style={{ position: "absolute", top: 120, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <div style={{ background: "white", padding: 12, borderRadius: 16, border: "3px solid #111", boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}>
+                                <QRCodeSVG value={cardUrl} size={130} level="H" fgColor="#000000" />
+                            </div>
+                            <span style={{ fontSize: 11, fontWeight: 900, color: "#111", marginTop: 12, letterSpacing: "0.5px" }}>DOĞRULAMA İÇİN TARA</span>
+                        </div>
 
-                        {/* Left Bottom: Emergency Contact */}
-                        <div style={{ position: "absolute", bottom: 20, left: 20, right: 20, display: "flex", flexDirection: "column", alignItems: "flex-start", zIndex: 10 }}>
-                            <span style={{ fontSize: 10, fontWeight: 900, color: "white", letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 6 }}>ACİL DURUMDA ARANACAK KİŞİ</span>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                <span style={{ fontSize: 9, color: "#a3a3a3", fontWeight: 700 }}>İSİM:</span>
-                                <span style={{ fontSize: 10, color: "#ffffff", fontWeight: 700 }}>{emContactName}</span>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                <span style={{ fontSize: 9, color: "#a3a3a3", fontWeight: 700 }}>TEL:</span>
-                                <span style={{ fontSize: 10, color: "#ffffff", fontWeight: 700 }}>{emContactPhone}</span>
-                            </div>
+                        {/* Found/Lost Contact Info */}
+                        <div style={{ position: "absolute", bottom: 30, left: 20, right: 20, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "16px", borderRadius: "16px", backdropFilter: "blur(10px)" }}>
+                            <span style={{ fontSize: 11, fontWeight: 900, color: "#aaa", textTransform: "uppercase" }}>Kaybolduğunda Aranacak Numara</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: "#ff4444", marginTop: 6, letterSpacing: "1px" }}>YÖNETİM KURULU BAŞKANI</span>
+                            <span style={{ fontSize: 18, fontWeight: 900, color: "white", marginTop: 4 }}>{memberRaw?.presidentPhone || "0 532 703 79 73"}</span>
                         </div>
                     </div>
                 )}
