@@ -248,7 +248,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
 
                         {/* Huge Logo */}
                         <div style={{ position: "absolute", top: 60, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 5 }}>
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 130, height: 130, objectFit: "contain", filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.15))" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 130, height: 130, objectFit: "contain" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                         </div>
 
                         {/* Member Name */}
