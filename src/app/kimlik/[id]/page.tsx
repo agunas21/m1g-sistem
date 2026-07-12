@@ -246,18 +246,19 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top text */}
-                        <div style={{ position: "absolute", top: 35, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "#111", letterSpacing: "0px", whiteSpace: "nowrap" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
+                        <div style={{ position: "absolute", top: 22, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
+                            <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
+                            <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
                         </div>
 
                         {/* Huge Logo with Black Shadow Background */}
-                        <div style={{ position: "absolute", top: 90, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
-                            <div style={{ position: "absolute", width: 100, height: 100, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 110, height: 110, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                        <div style={{ position: "absolute", top: 75, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
+                            <div style={{ position: "absolute", width: 130, height: 130, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
+                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 140, height: 140, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                         </div>
 
                         {/* Photo Box */}
-                        <div style={{ position: "absolute", top: 215, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
+                        <div style={{ position: "absolute", top: 225, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
                             <div style={{ width: "100%", height: "100%", borderRadius: 6, overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 {member.avatar ? (
                                     <img src={member.avatar} alt="Foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -268,13 +269,13 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Member Name */}
-                        <div style={{ position: "absolute", top: 340, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
+                        <div style={{ position: "absolute", top: 345, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
                             <span style={{ fontSize: 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{member.name}</span>
                         </div>
 
                         {/* Role */}
                         {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                            <div style={{ position: "absolute", top: 385, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
+                            <div style={{ position: "absolute", top: 390, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
                                 <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "4px 16px", borderRadius: "100px", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "2px", boxShadow: "0 4px 10px rgba(0,0,0,0.2)" }}>{role}</span>
                             </div>
                         )}
@@ -327,12 +328,13 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top text */}
-                        <div style={{ position: "absolute", top: 35, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "#111", letterSpacing: "0px", whiteSpace: "nowrap" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
+                        <div style={{ position: "absolute", top: 22, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
+                            <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
+                            <span style={{ fontSize: 21, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
                         </div>
 
                         {/* Info Text */}
-                        <div style={{ position: "absolute", top: 65, left: 24, right: 24, textAlign: "center" }}>
+                        <div style={{ position: "absolute", top: 95, left: 24, right: 24, textAlign: "center" }}>
                             <p style={{ fontSize: 10, fontWeight: 700, color: "#555", lineHeight: 1.6 }}>
                                 Bu kimlik kartı, M1G Arama ve Kurtarma Derneği'ne aittir ve başkasına devredilemez.
                             </p>
