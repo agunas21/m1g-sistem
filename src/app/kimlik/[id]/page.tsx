@@ -97,7 +97,13 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
     };
 
     const role = (() => {
-        return "ÜYE";
+        if (memberRaw.memberType && memberRaw.memberType !== "Üye" && memberRaw.memberType !== "Gönüllü") {
+            return memberRaw.memberType.toUpperCase();
+        }
+        if (['cgorgu', 'taksit', 'mtasli', 'mseyre', 'gakdor', 'agunas'].includes(memberRaw.id)) return "YÖNETİM KURULU ÜYESİ";
+        if (memberRaw.honorary === "Evet") return "ONUR ÜYESİ";
+        if (memberRaw.memberType === "Üye" || memberRaw.memberType === "Asil Üye") return "ÜYE";
+        return "GÖNÜLLÜ";
     })();
 
     let emContactName = "—";
@@ -242,8 +248,9 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top text */}
-                        <div style={{ position: "absolute", top: 26, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
-                            <span style={{ fontSize: 13, fontWeight: 900, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
+                        <div style={{ position: "absolute", top: 18, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column" }}>
+                            <span style={{ fontSize: 12, fontWeight: 800, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
+                            <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", letterSpacing: "2px", marginTop: -2 }}>DERNEĞİ</span>
                         </div>
 
                         {/* Huge Logo with Black Shadow Background */}
@@ -321,8 +328,9 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         </div>
 
                         {/* Top text */}
-                        <div style={{ position: "absolute", top: 26, left: 0, right: 0, textAlign: "center" }}>
-                            <span style={{ fontSize: 13, fontWeight: 900, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
+                        <div style={{ position: "absolute", top: 18, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column" }}>
+                            <span style={{ fontSize: 12, fontWeight: 800, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
+                            <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", letterSpacing: "2px", marginTop: -2 }}>DERNEĞİ</span>
                         </div>
 
                         {/* Info Text */}

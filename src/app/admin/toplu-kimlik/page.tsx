@@ -28,12 +28,12 @@ export default function TopluKimlik() {
 
     const getRole = (m: any) => {
         if (m.memberType && m.memberType !== "Üye" && m.memberType !== "Gönüllü") {
-            return m.memberType;
+            return m.memberType.toUpperCase();
         }
-        if (['cgorgu', 'taksit', 'mtasli', 'mseyre', 'gakdor', 'agunas'].includes(m.id)) return "Yönetim Kurulu Üyesi";
-        if (m.honorary === "Evet") return "Onur Üyesi";
-        if (m.memberType === "Üye") return "Asil Üye";
-        return "Gönüllü";
+        if (['cgorgu', 'taksit', 'mtasli', 'mseyre', 'gakdor', 'agunas'].includes(m.id)) return "YÖNETİM KURULU ÜYESİ";
+        if (m.honorary === "Evet") return "ONUR ÜYESİ";
+        if (m.memberType === "Üye" || m.memberType === "Asil Üye") return "ÜYE";
+        return "GÖNÜLLÜ";
     };
 
     const handlePrint = () => {
@@ -126,8 +126,9 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Top text */}
-                                    <div style={{ position: "absolute", top: 26, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
-                                        <span style={{ fontSize: 13, fontWeight: 900, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
+                                    <div style={{ position: "absolute", top: 18, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column" }}>
+                                        <span style={{ fontSize: 12, fontWeight: 800, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
+                                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", letterSpacing: "2px", marginTop: -2 }}>DERNEĞİ</span>
                                     </div>
 
                                     {/* Huge Logo with Black Shadow Background */}
@@ -195,8 +196,9 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Top text */}
-                                    <div style={{ position: "absolute", top: 26, left: 0, right: 0, textAlign: "center" }}>
-                                        <span style={{ fontSize: 13, fontWeight: 900, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA DERNEĞİ</span>
+                                    <div style={{ position: "absolute", top: 18, left: 0, right: 0, textAlign: "center", zIndex: 10, display: "flex", flexDirection: "column" }}>
+                                        <span style={{ fontSize: 12, fontWeight: 800, color: "#111111", letterSpacing: "1px" }}>M1G ARAMA KURTARMA</span>
+                                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", letterSpacing: "2px", marginTop: -2 }}>DERNEĞİ</span>
                                     </div>
 
                                     {/* Info Text */}
