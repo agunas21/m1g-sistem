@@ -111,6 +111,26 @@ export default function DepoYonetimi() {
         }
     };
 
+    const handleDeleteItem = async (e: React.MouseEvent, item: any) => {
+        e.stopPropagation();
+        if (confirm(`DİKKAT: "${item.name}" adlı ekipmanı sistemden tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) {
+            try {
+                const res = await fetch(`/api/inventory?id=${item.id}`, {
+                    method: "DELETE"
+                });
+                if (res.ok) {
+                    setInventory(prev => prev.filter(i => i.id !== item.id));
+                    if (selectedItem?.id === item.id) setSelectedItem(null);
+                } else {
+                    alert("Silme başarısız.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Bir hata oluştu.");
+            }
+        }
+    };
+
     const toggleGroupSelection = (e: React.MouseEvent, group: any) => {
         e.stopPropagation();
         const groupItemIds = group.items.map((i: any) => i.id);
@@ -1494,9 +1514,22 @@ export default function DepoYonetimi() {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-3 text-right">
-                                                    <button className="p-1.5 text-neutral-500 hover:text-white hover:bg-white/10 rounded-lg transition-colors inline-flex items-center justify-center">
-                                                        <ChevronRight size={14} />
-                                                    </button>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }}
+                                                            className="p-1.5 text-neutral-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                                                            title="Düzenle / Detaylar"
+                                                        >
+                                                            <Edit2 size={14} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => handleDeleteItem(e, item)}
+                                                            className="p-1.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                            title="Sil"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
