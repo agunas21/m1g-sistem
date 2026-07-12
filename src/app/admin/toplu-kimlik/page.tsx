@@ -59,9 +59,12 @@ export default function TopluKimlik() {
             setExporting(true);
             setExportProgress({ current: 0, total: selectedIds.length });
 
-            const JSZip = (await import('jszip')).default;
-            const { saveAs } = await import('file-saver');
-            const html2canvas = (await import('html2canvas')).default;
+            const JSZipModule = await import('jszip');
+            const JSZip = JSZipModule.default || JSZipModule;
+            const FileSaver = await import('file-saver');
+            const saveAs = FileSaver.saveAs || FileSaver.default;
+            const html2canvasModule = await import('html2canvas');
+            const html2canvas = html2canvasModule.default || html2canvasModule;
 
             const zip = new JSZip();
 
@@ -76,26 +79,31 @@ export default function TopluKimlik() {
                 const backElement = document.getElementById(`card-back-${member.id}`);
 
                 if (frontElement && backElement) {
-                    const canvasOptions = { scale: 4, useCORS: true, logging: false, backgroundColor: "#ffffff" };
-                    
-                    const frontCanvas = await html2canvas(frontElement, canvasOptions);
-                    const backCanvas = await html2canvas(backElement, canvasOptions);
+                    try {
+                        const canvasOptions = { scale: 4, useCORS: true, allowTaint: false, logging: false, backgroundColor: "#ffffff" };
+                        
+                        const frontCanvas = await html2canvas(frontElement, canvasOptions);
+                        const backCanvas = await html2canvas(backElement, canvasOptions);
 
-                    const frontData = frontCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
-                    const backData = backCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
+                        const frontData = frontCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
+                        const backData = backCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
 
-                    const cleanName = member.fullName.replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ ]/g, "").trim().replace(/\s+/g, "_");
+                        const cleanName = member.fullName.replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ ]/g, "").trim().replace(/\s+/g, "_");
 
-                    zip.file(`${cleanName}_ON.png`, frontData, { base64: true });
-                    zip.file(`${cleanName}_ARKA.png`, backData, { base64: true });
+                        zip.file(`${cleanName}_ON.png`, frontData, { base64: true });
+                        zip.file(`${cleanName}_ARKA.png`, backData, { base64: true });
+                    } catch (cardError: any) {
+                        alert(`Hata (${member.fullName} işlenirken): ${cardError?.message || "Bilinmeyen hata"}`);
+                        throw cardError;
+                    }
                 }
             }
 
             const content = await zip.generateAsync({ type: "blob" });
             saveAs(content, "M1G_Secili_Kimlikler.zip");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Dışa aktarma hatası:", error);
-            alert("Dışa aktarma sırasında bir hata oluştu.");
+            alert(`Dışa aktarma sırasında genel bir hata oluştu: ${error?.message || "Bilinmeyen hata"}`);
         } finally {
             setExporting(false);
         }
