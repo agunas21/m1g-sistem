@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
     PackageSearch, PackagePlus, ScanBarcode, Search, Filter, 
-    Box, Wrench, PackageCheck, AlertTriangle, X, User, CheckCircle, QrCode, PenTool, Trash2, Edit2, Check, ChevronRight
+    Box, Wrench, PackageCheck, AlertTriangle, X, User, CheckCircle, QrCode, PenTool, Trash2, Edit2, Check, ChevronRight, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Html5Qrcode } from "html5-qrcode";
@@ -61,6 +61,7 @@ export default function DepoYonetimi() {
     // Drawers & Modals
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [selectedGroup, setSelectedGroup] = useState<any>(null);
+    const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newItemName, setNewItemName] = useState("");
@@ -1412,46 +1413,94 @@ export default function DepoYonetimi() {
                                 const groupItemIds = group.items.map((i: any) => i.id);
                                 const allSelected = groupItemIds.every((id: string) => selectedIds.includes(id)) && groupItemIds.length > 0;
                                 const someSelected = groupItemIds.some((id: string) => selectedIds.includes(id));
+                                const isExpanded = expandedGroups.includes(group.name);
 
                                 return (
-                                    <tr key={group.name} onClick={() => setSelectedGroup(group)} className={`hover:bg-white/5 transition-colors cursor-pointer group ${allSelected ? 'bg-white/5' : ''}`}>
-                                        <td className="px-6 py-4" onClick={(e) => toggleGroupSelection(e, group)}>
-                                            <input type="checkbox" checked={allSelected} ref={input => { if (input) input.indeterminate = someSelected && !allSelected }} readOnly className="w-4 h-4 bg-black/50 border border-white/10 rounded accent-red-600 cursor-pointer" />
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-black border border-white/10 rounded-lg flex items-center justify-center text-white/50 group-hover:text-red-500 transition-colors">
-                                                    <Box size={20} />
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <h4 className="text-white font-bold text-sm group-hover:text-red-400 transition-colors">{group.name}</h4>
+                                    <React.Fragment key={group.name}>
+                                        <tr 
+                                            onClick={() => setExpandedGroups(prev => prev.includes(group.name) ? prev.filter(g => g !== group.name) : [...prev, group.name])} 
+                                            className={`hover:bg-white/5 transition-colors cursor-pointer group ${isExpanded ? 'bg-white/[0.03] border-l-2 border-l-red-500' : ''} ${allSelected ? 'bg-white/5' : ''}`}
+                                        >
+                                            <td className="px-6 py-4" onClick={(e) => toggleGroupSelection(e, group)}>
+                                                <input type="checkbox" checked={allSelected} ref={input => { if (input) input.indeterminate = someSelected && !allSelected }} readOnly className="w-4 h-4 bg-black/50 border border-white/10 rounded accent-red-600 cursor-pointer" />
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-red-500/20 text-red-400' : 'bg-black border border-white/10 text-white/50 group-hover:text-red-500'}`}>
+                                                        <Box size={20} />
                                                     </div>
-                                                    <p className="text-[10px] text-neutral-500 font-mono mt-0.5">{group.totalCount} Adet Sistemde Kayıtlı</p>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <h4 className="text-white font-bold text-sm group-hover:text-red-400 transition-colors">{group.name}</h4>
+                                                            <span className="px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold rounded-full">{group.totalCount} Adet</span>
+                                                        </div>
+                                                        <div className="flex gap-2 mt-1">
+                                                            {group.inStorageCount > 0 && <span className="text-[10px] text-emerald-400">✓ {group.inStorageCount} Depoda</span>}
+                                                            {group.borrowedCount > 0 && <span className="text-[10px] text-blue-400">⇗ {group.borrowedCount} Sahada</span>}
+                                                            {group.maintenanceCount > 0 && <span className="text-[10px] text-amber-400">⚠ {group.maintenanceCount} Bakım</span>}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-3 py-1 bg-white/5 border border-white/10 text-neutral-400 text-[10px] uppercase font-bold tracking-wider rounded-full">
-                                                {group.category}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex gap-2 flex-wrap">
-                                                {group.inStorageCount > 0 && <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-bold rounded-full">Depoda: {group.inStorageCount}</span>}
-                                                {group.borrowedCount > 0 && <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] uppercase font-bold rounded-full">Zimmetli: {group.borrowedCount}</span>}
-                                                {group.maintenanceCount > 0 && <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] uppercase font-bold rounded-full">Bakım/Kayıp: {group.maintenanceCount}</span>}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Detaylar panelinde</span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="p-2 text-neutral-500 group-hover:text-white group-hover:bg-white/10 rounded-lg transition-colors inline-flex items-center justify-center">
-                                                <ChevronRight size={16} />
-                                            </button>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="px-3 py-1 bg-white/5 border border-white/10 text-neutral-400 text-[10px] uppercase font-bold tracking-wider rounded-full">
+                                                    {group.category}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex gap-2 flex-wrap">
+                                                    {group.inStorageCount > 0 && <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-bold rounded-full">Depoda: {group.inStorageCount}</span>}
+                                                    {group.borrowedCount > 0 && <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] uppercase font-bold rounded-full">Zimmetli: {group.borrowedCount}</span>}
+                                                    {group.maintenanceCount > 0 && <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] uppercase font-bold rounded-full">Bakım/Kayıp: {group.maintenanceCount}</span>}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-[10px] text-neutral-500">{isExpanded ? 'Tıkla: Kapat' : 'Tıkla: Genişlet'}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className={`p-2 inline-flex items-center justify-center rounded-lg transition-all ${isExpanded ? 'text-red-400 bg-red-500/10 rotate-0' : 'text-neutral-500 group-hover:text-white group-hover:bg-white/10 -rotate-90'}`}>
+                                                    <ChevronDown size={16} />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {isExpanded && group.items.map((item: any) => (
+                                            <tr key={item.id} className="bg-white/[0.02] border-l-2 border-l-red-500/30 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setSelectedItem(item)}>
+                                                <td className="px-6 py-3 pl-10" onClick={(e) => toggleSelection(e, item.id)}>
+                                                    <input type="checkbox" checked={selectedIds.includes(item.id)} readOnly className="w-3.5 h-3.5 bg-black/50 border border-white/10 rounded accent-red-600 cursor-pointer" />
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    <div className="flex items-center gap-3 pl-6">
+                                                        <span className="text-neutral-600">└</span>
+                                                        <div>
+                                                            <span className="text-white text-xs font-medium">{item.name}</span>
+                                                            <p className="text-[9px] text-neutral-600 font-mono">{item.id}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-3"></td>
+                                                <td className="px-6 py-3">
+                                                    <span className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded-md border ${statusColors[item.status]}`}>
+                                                        {item.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    {item.status === "Zimmetli" && item.assignedToId ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <User size={12} className="text-blue-500" />
+                                                            <span className="text-white text-xs">{membersData.find(m => m.id === item.assignedToId)?.fullName || item.assignedToId}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-neutral-600 text-[10px] italic">Merkez Depo</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-3 text-right">
+                                                    <button className="p-1.5 text-neutral-500 hover:text-white hover:bg-white/10 rounded-lg transition-colors inline-flex items-center justify-center">
+                                                        <ChevronRight size={14} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </React.Fragment>
                                 );
                             })}
                         </tbody>
