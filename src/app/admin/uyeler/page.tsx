@@ -288,17 +288,34 @@ export default function UyeYonetimi() {
         alert("Güncelleme reddedildi.");
     };
 
-    const toggleMemberStatus = (id: number) => {
-        setMembers(members.map(m => {
-            if (m.id === id) {
-                const newStatus = m.status === 'Aktif' ? 'Pasif' : 'Aktif';
-                if (selectedMember && selectedMember.id === id) {
-                    setSelectedMember({ ...selectedMember, status: newStatus });
-                }
-                return { ...m, status: newStatus };
+    const toggleMemberStatus = async (id: number) => {
+        const member = members.find(m => m.id === id);
+        if (!member) return;
+        const newStatus = member.status === 'Aktif' ? 'Pasif' : 'Aktif';
+        
+        try {
+            const res = await fetch('/api/members', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: member.realId, status: newStatus })
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alert(`Hata: ${err.error || 'Durum güncellenemedi.'}`);
+                return;
             }
-            return m;
-        }));
+            setMembers(members.map(m => {
+                if (m.id === id) {
+                    if (selectedMember && selectedMember.id === id) {
+                        setSelectedMember({ ...selectedMember, status: newStatus });
+                    }
+                    return { ...m, status: newStatus };
+                }
+                return m;
+            }));
+        } catch {
+            alert('Sunucu bağlantı hatası. Durum güncellenemedi.');
+        }
     };
 
     // ─── BAN / UNBAN ────────────────────────────────────────────────────
