@@ -45,10 +45,13 @@ export async function GET(
 
         // Get President's phone number
         const president = await prisma.member.findFirst({
-            where: { role: 'Yönetim Kurulu Başkanı' },
+            where: { 
+                memberType: 'Yönetim Kurulu Başkanı',
+                phone: { not: null }
+            },
             select: { phone: true }
         });
-        const presidentPhone = president?.phone || '0(532) 703-7976';
+        const presidentPhone = president?.phone || '0(544) 727-6075';
 
         const res = NextResponse.json({
             id: member.id,
