@@ -10,6 +10,8 @@ import { Html5Qrcode } from "html5-qrcode";
 
 import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 const getExpirationWarning = (dateStr: string) => {
     if (!dateStr) return null;
@@ -61,7 +63,7 @@ export default function DepoYonetimi() {
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newItemName, setNewItemName] = useState("");
-    const [newItemCategory, setNewItemCategory] = useState("Kişisel Koruyucu");
+    const [newItemCategory, setNewItemCategory] = useState("Arama");
     const [newItemType, setNewItemType] = useState("Demirbaş");
     const [newItemIsContainer, setNewItemIsContainer] = useState(false);
     const [newItemExpiration, setNewItemExpiration] = useState("");
@@ -72,6 +74,71 @@ export default function DepoYonetimi() {
     const [kitItemSearch, setKitItemSearch] = useState(""); // Kit içeriği arama filtresi
     const [manualMemberSearch, setManualMemberSearch] = useState("");
     const [isManualMemberDropdownOpen, setIsManualMemberDropdownOpen] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [exporting, setExporting] = useState(false);
+
+    const toggleSelection = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const selectAll = () => {
+        if (selectedIds.length === filteredInventory.length && filteredInventory.length > 0) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredInventory.map(i => i.id));
+        }
+    };
+
+    const exportToZip = async () => {
+        if (selectedIds.length === 0) return;
+        setExporting(true);
+        try {
+            const zip = new JSZip();
+            const folder = zip.folder("QR_Kodlari");
+            if (!folder) return;
+
+            const processItem = (id: string) => new Promise<void>((resolve) => {
+                const svg = document.getElementById(`hidden-qr-${id}`);
+                if (!svg) return resolve();
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                const img = new Image();
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height + 40;
+                    if (ctx) {
+                        ctx.fillStyle = "white";
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                        ctx.font = "bold 16px Inter";
+                        ctx.fillStyle = "black";
+                        ctx.textAlign = "center";
+                        ctx.fillText(id, canvas.width / 2, canvas.height - 15);
+                    }
+                    const pngData = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+                    folder.file(`QR_${id}.png`, pngData, { base64: true });
+                    resolve();
+                };
+                img.onerror = () => resolve();
+                img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+            });
+
+            for (const id of selectedIds) {
+                await processItem(id);
+            }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, "M1G_Depo_QR_Kodlari.zip");
+        } catch (error) {
+            console.error(error);
+            alert("Dışa aktarma başarısız oldu.");
+        } finally {
+            setExporting(false);
+            setSelectedIds([]);
+        }
+    };
 
     useEffect(() => {
         setMounted(true);
@@ -990,15 +1057,10 @@ export default function DepoYonetimi() {
                                     onChange={(e) => setNewItemCategory(e.target.value)}
                                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
                                 >
-                                    <option value="Araç">Motorlu Araç (4x4, Motosiklet)</option>
-                                    <option value="Hava Gözlem">Hava Gözlem (Drone)</option>
-                                    <option value="Kişisel Koruyucu">Kişisel Koruyucu (Baret, Gözlük)</option>
-                                    <option value="Haberleşme">Haberleşme (Telsiz, Uydu)</option>
-                                    <option value="Kıyafet">Kıyafet (Yelek, Mont)</option>
-                                    <option value="Navigasyon">Navigasyon (GPS)</option>
-                                    <option value="Enerji">Enerji (Jeneratör, Güneş Paneli)</option>
-                                    <option value="Enkaz Müdahale">Enkaz Müdahale (Kırıcı, Ayırıcı)</option>
-                                    <option value="Tıbbi">Tıbbi Ekipman</option>
+                                    <option value="Arama">Arama Ekipmanı</option>
+                                    <option value="Kurtarma">Kurtarma Ekipmanı</option>
+                                    <option value="Yönetim">Yönetim Donanımı</option>
+                                    <option value="Lojistik">Lojistik & Kamp Malzemeleri</option>
                                     <option value="Diğer">Diğer Araç Gereç</option>
                                 </select>
                             </div>
@@ -1052,6 +1114,11 @@ export default function DepoYonetimi() {
 
     return (
         <div className="space-y-8 pb-20 relative">
+            <div style={{ display: "none" }}>
+                {inventory.map(item => (
+                    <QRCodeSVG key={item.id} id={`hidden-qr-${item.id}`} value={`${typeof window !== 'undefined' ? window.location.origin : ''}/q/${item.id}`} size={256} level="H" fgColor="#000000" />
+                ))}
+            </div>
             <QRScanner />
             {renderItemDrawer()}
             {renderAddModal()}
@@ -1108,12 +1175,23 @@ export default function DepoYonetimi() {
                                 className="w-full bg-[#020617] border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm focus:border-red-500 outline-none transition-colors"
                             />
                         </div>
-                        <button 
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="w-full md:w-auto px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 transition-colors"
-                        >
-                            <PackagePlus size={16} /> Yeni Ekipman Girişi
-                        </button>
+                        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+                            {selectedIds.length > 0 && (
+                                <button 
+                                    onClick={exportToZip}
+                                    disabled={exporting}
+                                    className="w-full md:w-auto px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                >
+                                    {exporting ? "İndiriliyor..." : `Seçili QR İndir (${selectedIds.length})`}
+                                </button>
+                            )}
+                            <button 
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="w-full md:w-auto px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 transition-colors"
+                            >
+                                <PackagePlus size={16} /> Yeni Ekipman Girişi
+                            </button>
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -1138,6 +1216,9 @@ export default function DepoYonetimi() {
                     <table className="w-full text-left text-sm text-neutral-400 min-w-[600px]">
                         <thead className="bg-[#020617] text-neutral-500 uppercase tracking-widest text-[10px]">
                             <tr>
+                                <th className="px-6 py-5 font-bold cursor-pointer" onClick={selectAll} style={{ width: '50px' }}>
+                                    <input type="checkbox" checked={selectedIds.length === filteredInventory.length && filteredInventory.length > 0} readOnly className="w-4 h-4 bg-black/50 border border-white/10 rounded accent-red-600 cursor-pointer" />
+                                </th>
                                 <th className="px-6 py-5 font-bold">Barkod & Ekipman</th>
                                 <th className="px-6 py-5 font-bold">Kategori</th>
                                 <th className="px-6 py-5 font-bold">Mevcut Durum</th>
@@ -1147,7 +1228,10 @@ export default function DepoYonetimi() {
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {filteredInventory.map((item) => (
-                                <tr key={item.id} onClick={() => setSelectedItem(item)} className="hover:bg-white/5 transition-colors cursor-pointer group">
+                                <tr key={item.id} onClick={() => setSelectedItem(item)} className={`hover:bg-white/5 transition-colors cursor-pointer group ${selectedIds.includes(item.id) ? 'bg-white/5' : ''}`}>
+                                    <td className="px-6 py-4" onClick={(e) => toggleSelection(e, item.id)}>
+                                        <input type="checkbox" checked={selectedIds.includes(item.id)} readOnly className="w-4 h-4 bg-black/50 border border-white/10 rounded accent-red-600 cursor-pointer" />
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 bg-black border border-white/10 rounded-lg flex items-center justify-center text-white/50 group-hover:text-red-500 transition-colors">
