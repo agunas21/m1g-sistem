@@ -72,6 +72,10 @@ export default function TopluKimlik() {
                 {members.map((member, index) => {
                     const role = getRole(member);
                     
+                    // Başkan'ın numarasını bul (Yönetim Kurulu Başkanı olan ve telefonu kayıtlı olan ilk kişi, veya cgorgu id'li kişi)
+                    const baskan = allMembers.find(m => m.memberType === "Yönetim Kurulu Başkanı" && m.phone) || allMembers.find(m => m.id === "cgorgu");
+                    const baskanPhone = baskan?.phone || "+90 544 727 60 75";
+                    
                     let emName = "—";
                     let emPhone = "—";
                     if (member.emergencyContact) {
@@ -171,7 +175,7 @@ export default function TopluKimlik() {
                                     </p>
                                     
                                     <span style={{ fontSize: 11, fontWeight: 900, color: "white", letterSpacing: "0.5px", marginTop: 16 }}>KAYIP DURUMUNDA İLETİŞİM</span>
-                                    <span style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", marginTop: 6 }}>BAŞKAN: [BURAYA BAŞKANIN NUMARASI GELECEK]</span>
+                                    <span style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", marginTop: 6 }}>BAŞKAN: {baskanPhone}</span>
                                     <span style={{ fontSize: 10, fontWeight: 600, color: "white", marginTop: 4 }}>E-posta: info@m1g.org.tr</span>
                                 </div>
                                 
