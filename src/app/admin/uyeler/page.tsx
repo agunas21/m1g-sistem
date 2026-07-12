@@ -63,6 +63,7 @@ export default function UyeYonetimi() {
                         certs: m.certs || [],
                         status: isPasif ? "Pasif" : "Aktif",
                         tcNo: m.tcNo || "Belirtilmemiş",
+                        birthDate: m.birthDate || "Belirtilmemiş",
                         profession: m.profession || "Belirtilmemiş",
                         education: m.education || "Belirtilmemiş",
                         bloodType: m.bloodType || "Belirtilmemiş",
