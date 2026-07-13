@@ -3,6 +3,9 @@
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Download, FlipHorizontal, Loader2, ChevronLeft, Lock } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+import { useAuth } from "@/context/AuthContext";
+
 const BOARD_PRESIDENT_PHONE = "0 532 703 79 73";
 const ASSOCIATION_WEB       = "www.m1g.org.tr";
 
