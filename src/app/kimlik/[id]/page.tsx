@@ -272,7 +272,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
 
                         {/* Role Badge (Overlapping Photo) */}
                         {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                            <div style={{ position: "absolute", top: 322, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 20 }}>
+                            <div style={{ position: "absolute", top: 322, left: "50%", transform: "translateX(-50%)", zIndex: 20, whiteSpace: "nowrap" }}>
                                 <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "3px 12px", borderRadius: "100px", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1.5px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff" }}>
                                     {role}
                                 </span>

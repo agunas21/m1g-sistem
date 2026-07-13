@@ -205,14 +205,14 @@ export default function TopluKimlik() {
                                         <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                     </div>
                                     {/* Left border */}
-                                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                        <div style={{ width: 509, transform: 'rotate(270deg)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
+                                        <div style={{ position: 'absolute', left: 0, top: 509, width: 509, height: 14, transformOrigin: 'top left', transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
                                             <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                         </div>
                                     </div>
                                     {/* Right border */}
-                                    <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                        <div style={{ width: 509, transform: 'rotate(90deg)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                    <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
+                                        <div style={{ position: 'absolute', left: 14, top: 0, width: 509, height: 14, transformOrigin: 'top left', transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
                                             <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                         </div>
                                     </div>
@@ -242,7 +242,7 @@ export default function TopluKimlik() {
 
                                     {/* Role Badge (Overlapping Photo) */}
                                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                                        <div style={{ position: "absolute", top: 322, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 20 }}>
+                                        <div style={{ position: "absolute", top: 322, left: "50%", transform: "translateX(-50%)", zIndex: 20, whiteSpace: "nowrap" }}>
                                             <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "3px 12px", borderRadius: "100px", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1.5px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff" }}>
                                                 {role}
                                             </span>
@@ -281,14 +281,14 @@ export default function TopluKimlik() {
                                         <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                     </div>
                                     {/* Left border */}
-                                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                        <div style={{ width: 509, transform: 'rotate(270deg)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
+                                        <div style={{ position: 'absolute', left: 0, top: 509, width: 509, height: 14, transformOrigin: 'top left', transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
                                             <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                         </div>
                                     </div>
                                     {/* Right border */}
-                                    <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                        <div style={{ width: 509, transform: 'rotate(90deg)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                    <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
+                                        <div style={{ position: 'absolute', left: 14, top: 0, width: 509, height: 14, transformOrigin: 'top left', transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
                                             <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                         </div>
                                     </div>
