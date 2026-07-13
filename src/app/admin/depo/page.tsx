@@ -184,10 +184,7 @@ export default function DepoYonetimi() {
                 const el = document.getElementById(`hidden-qr-label-${id}`);
                 if (!el) continue;
                 
-                // Make it temporarily visible for html2canvas
-                el.style.display = "inline-block";
                 const canvas = await html2canvas(el, { scale: 4, backgroundColor: "#ffffff" });
-                el.style.display = "none";
                 
                 const pngData = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
                 folder.file(`QR_${id}.png`, pngData, { base64: true });
@@ -1332,13 +1329,13 @@ export default function DepoYonetimi() {
     };
     return (
         <div className="space-y-8 pb-20 relative">
-            <div style={{ display: "none" }}>
+            <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
                 {inventory.map(item => (
                     <div
                         key={item.id}
                         id={`hidden-qr-label-${item.id}`}
                         className="bg-white p-4 rounded-xl inline-block shadow-lg mx-auto mb-2"
-                        style={{ textAlign: "center", display: "none" }}
+                        style={{ textAlign: "center" }}
                     >
                         <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/eq/${item.id}`} size={120} level="H" />
                         <div style={{ marginTop: "8px", fontFamily: "sans-serif", fontSize: "11px", color: "#111", fontWeight: "800", letterSpacing: "0.03em", maxWidth: "128px", wordBreak: "break-word" }}>

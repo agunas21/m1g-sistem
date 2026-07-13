@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, Download, FlipHorizontal, Loader2, ChevronLeft, Lock } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "@/context/AuthContext";
+import KimlikCard, { CARD_W, CARD_H } from "@/components/KimlikCard";
 
 const BOARD_PRESIDENT_PHONE = "0 532 703 79 73";
 const ASSOCIATION_WEB       = "www.m1g.org.tr";
@@ -151,10 +152,6 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
         }
     };
 
-    /* ─── Shared card width ─────────────────────────────── */
-    const CARD_W = 320;
-    const CARD_H = Math.round(CARD_W * 86 / 54);
-
     return (
         <div className="min-h-screen bg-[#050a14] flex flex-col items-center py-10 px-4">
             <div className="relative z-10 flex flex-col items-center w-full max-w-xs">
@@ -203,58 +200,13 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                 ══════════════════════════════════════════ */}
                 {!flipped && (
                     <div className="shadow-[0_30px_80px_rgba(0,0,0,0.8)]" style={{ borderRadius: 0, overflow: "hidden", flexShrink: 0, width: CARD_W, height: CARD_H }}>
-                        <div
-                            id="m1g-card-front"
-                            style={{ 
-                                width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
-                                backgroundColor: "#cb2027", fontFamily: "'Inter', sans-serif",
-                                boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.1), inset -4px -4px 10px rgba(255,255,255,0.5)"
-                            }}
-                        >
-                            {/* Inner white background */}
-                            <div style={{ position: "absolute", top: 14, bottom: 14, left: 14, right: 14, backgroundColor: "#ffffff", zIndex: 1 }}></div>
-                            {/* Top border */}
-                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                            </div>
-                        {/* Bottom border */}
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
-                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                        </div>
-                        {/* Left border image */}
-                        <img src={leftBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
-                        
-                        {/* Right border image */}
-                        <img src={rightBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
-
-                        {/* Top text */}
-                        <div style={{ position: "absolute", top: 25, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                            <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
-                            <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
-                        </div>
-
-                        {/* Huge Logo - Fixed using background-image */}
-                        <div style={{ position: "absolute", top: 65, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
-                            <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
-                            <div style={{ width: 130, height: 130, backgroundImage: "url(/m1g-logo.png)", backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat", zIndex: 5 }}></div>
-                        </div>
-                        {/* Member Name */}
-                        <div style={{ position: "absolute", top: 380, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
-                            <span style={{ fontSize: member.name.length > 20 ? 17 : member.name.length > 15 ? 20 : 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{member.name}</span>
-                        </div>
-
-                        {/* Blood Type & Emergency Contact */}
-                        <div style={{ position: "absolute", bottom: 25, left: 24, right: 24, display: "flex", flexDirection: "column", gap: 8, zIndex: 10 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #e5e7eb", paddingBottom: 6 }}>
-                                <span style={{ fontSize: 11, fontWeight: 900, color: "#555", letterSpacing: "1px" }}>KAN GRUBU</span>
-                                <span style={{ fontSize: 16, fontWeight: 900, color: "#cb2027" }}>{bloodType}</span>
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "column" }}>
-                                <span style={{ fontSize: 9, fontWeight: 900, color: "#555", letterSpacing: "0.5px" }}>YAKIN İLETİŞİM (ACİL DURUM)</span>
-                                <span style={{ fontSize: 12, fontWeight: 900, color: "#111111", marginTop: 2 }}>{emContactName} <span style={{ color: "#cb2027", margin: "0 4px" }}>•</span> {emContactPhone}</span>
-                            </div>
-                        </div>
-                    </div>
+                        <KimlikCard
+                            member={member}
+                            origin={origin}
+                            isFront={true}
+                            htmlId="m1g-card-front"
+                            scale={1}
+                        />
                     </div>
                 )}
 
@@ -263,60 +215,13 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                 ══════════════════════════════════════════ */}
                 {flipped && (
                     <div className="shadow-[0_30px_80px_rgba(0,0,0,0.8)]" style={{ borderRadius: 0, overflow: "hidden", flexShrink: 0, width: CARD_W, height: CARD_H }}>
-                        <div
-                            id="m1g-card-back"
-                            style={{ 
-                                width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
-                                backgroundColor: "#cb2027", fontFamily: "'Inter', sans-serif",
-                                boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.1), inset -4px -4px 10px rgba(255,255,255,0.5)"
-                            }}
-                        >
-                            {/* Inner white background */}
-                            <div style={{ position: "absolute", top: 14, bottom: 14, left: 14, right: 14, backgroundColor: "#ffffff", zIndex: 1 }}></div>
-
-                            {/* BORDER BAND */}
-                            {/* Top border */}
-                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                            </div>
-                        {/* Bottom border */}
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
-                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                        </div>
-                        {/* Left border image */}
-                        <img src={leftBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
-                        
-                        {/* Right border image */}
-                        <img src={rightBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
-
-                        {/* Top text */}
-                        <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                            <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
-                            <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
-                        </div>
-
-                        {/* Info Text */}
-                        <div style={{ position: "absolute", top: 95, left: 24, right: 24, textAlign: "center" }}>
-                            <p style={{ fontSize: 11, fontWeight: 700, color: "#555", lineHeight: 1.6 }}>
-                                Bu kimlik kartı, M1G Arama ve Kurtarma Derneği'ne aittir ve başkasına devredilemez.
-                            </p>
-                        </div>
-
-                        {/* QR Code in Center */}
-                        <div style={{ position: "absolute", top: 150, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <div style={{ background: "white", padding: 10, borderRadius: 16, border: "2px solid #111111", boxShadow: "0 6px 16px rgba(0,0,0,0.1)" }}>
-                                <QRCodeSVG value={cardUrl} size={130} level="H" fgColor="#000000" />
-                            </div>
-                            <span style={{ fontSize: 9, fontWeight: 700, color: "#111", marginTop: 8, letterSpacing: "1px" }}>QR KODU OKUTUN</span>
-                        </div>
-
-                        {/* Found/Lost Contact Info */}
-                        <div style={{ position: "absolute", bottom: 30, left: 24, right: 24, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", backgroundColor: "#f3f4f6", border: "2px solid #e5e7eb", padding: "16px", borderRadius: "16px", zIndex: 10 }}>
-                            <span style={{ fontSize: 9, fontWeight: 900, color: "#555", textTransform: "uppercase", letterSpacing: "1px" }}>KAYBOLDUĞUNDA ARANACAK NUMARA</span>
-                            <span style={{ fontSize: 9, fontWeight: 900, color: "#cb2027", marginTop: 6, letterSpacing: "1px" }}>YÖNETİM KURULU BAŞKANI</span>
-                            <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginTop: 2, letterSpacing: "1px" }}>{memberRaw?.presidentPhone || "0(544) 727-6075"}</span>
-                        </div>
-                    </div>
+                        <KimlikCard
+                            member={{ ...member, presidentPhone: memberRaw?.presidentPhone }}
+                            origin={origin}
+                            isFront={false}
+                            htmlId="m1g-card-back"
+                            scale={1}
+                        />
                     </div>
                 )}
 
