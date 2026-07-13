@@ -144,6 +144,7 @@ export default function TopluKimlik() {
 
             <div className="flex flex-wrap gap-6 justify-center print:justify-start">
                 {members.map((member, index) => {
+                    const role = getRole(member);
                     const baskan = allMembers.find(m => m.memberType === "Yönetim Kurulu Başkanı" && m.phone) || allMembers.find(m => m.id === "cgorgu");
                     const baskanPhone = baskan?.phone || "+90 544 727 60 75";
 
