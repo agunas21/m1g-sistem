@@ -85,11 +85,27 @@ export default function DepoYonetimi() {
     const handleUpdateItemName = async () => {
         if (!selectedItem || !editingItemName.trim() || isUpdatingName) return;
         setIsUpdatingName(true);
+        let finalName = editingItemName.trim();
+        if (!/#\d+$/.test(finalName)) {
+            const sameBaseItems = inventory.filter(i => getBaseName(i.name) === finalName && i.id !== selectedItem.id);
+            if (sameBaseItems.length > 0 || inventory.some(i => i.name === finalName && i.id !== selectedItem.id)) {
+                let maxIdx = 0;
+                for (const item of sameBaseItems) {
+                    const match = item.name.match(/#(\d+)$/);
+                    if (match) {
+                        const num = parseInt(match[1]);
+                        if (num > maxIdx) maxIdx = num;
+                    }
+                }
+                finalName = `${finalName} #${maxIdx > 0 ? maxIdx + 1 : sameBaseItems.length + 1}`;
+            }
+        }
+
         try {
             const res = await fetch('/api/inventory', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: selectedItem.id, name: editingItemName.trim() })
+                body: JSON.stringify({ id: selectedItem.id, name: finalName })
             });
             if (res.ok) {
                 const updated = await res.json();
@@ -498,10 +514,28 @@ export default function DepoYonetimi() {
         e.preventDefault();
         if (!newItemName.trim()) return;
 
+        let finalName = newItemName.trim();
+        if (!/#\d+$/.test(finalName)) {
+            const sameBaseItems = inventory.filter(i => getBaseName(i.name) === finalName);
+            if (sameBaseItems.length > 0) {
+                let maxIdx = 0;
+                for (const item of sameBaseItems) {
+                    const match = item.name.match(/#(\d+)$/);
+                    if (match) {
+                        const num = parseInt(match[1]);
+                        if (num > maxIdx) maxIdx = num;
+                    }
+                }
+                finalName = `${finalName} #${maxIdx > 0 ? maxIdx + 1 : sameBaseItems.length + 1}`;
+            } else if (inventory.some(i => i.name === finalName)) {
+                finalName = `${finalName} #2`;
+            }
+        }
+
         const newId = `eq-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
         const newItem: any = {
             id: newId,
-            name: newItemName,
+            name: finalName,
             category: newItemCategory,
             status: "Depoda",
             assignedToId: null,
