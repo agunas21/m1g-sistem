@@ -234,7 +234,7 @@ export default function TopluKimlik() {
                                     </div>
 
                                     {/* Photo Box */}
-                                    <div style={{ position: "absolute", top: 225, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
+                                    <div style={{ position: "absolute", top: 210, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
                                         <div style={{ width: "100%", height: "100%", borderRadius: 6, overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                             {member.avatar ? (
                                                 <img src={member.avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -246,7 +246,7 @@ export default function TopluKimlik() {
 
                                     {/* Role Badge (Overlapping Photo) */}
                                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                                        <table style={{ position: "absolute", top: 322, left: 0, width: 320, zIndex: 20, borderCollapse: "collapse" }}>
+                                        <table style={{ position: "absolute", top: 307, left: 0, width: 320, zIndex: 20, borderCollapse: "collapse" }}>
                                             <tbody>
                                                 <tr>
                                                     <td align="center" style={{ padding: 0 }}>
@@ -260,7 +260,7 @@ export default function TopluKimlik() {
                                     )}
 
                                     {/* Member Name */}
-                                    <div style={{ position: "absolute", top: 345, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
+                                    <div style={{ position: "absolute", top: 330, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
                                         <span style={{ fontSize: 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{member.fullName}</span>
                                     </div>
 
