@@ -61,7 +61,7 @@ export default function TopluKimlik() {
             setExporting(true);
             setExportProgress({ current: 0, total: selectedIds.length });
 
-            const { captureCardWithUnscale } = await import('@/lib/cardCapture');
+            const { captureCard } = await import('@/lib/cardCapture');
 
             const zip = new JSZip();
 
@@ -73,8 +73,8 @@ export default function TopluKimlik() {
                 setExportProgress(prev => ({ ...prev, current: i + 1 }));
 
                 try {
-                    const frontCanvas = await captureCardWithUnscale(`card-inner-front-${member.id}`);
-                    const backCanvas = await captureCardWithUnscale(`card-inner-back-${member.id}`);
+                    const frontCanvas = await captureCard(`export-front-${member.id}`, { scale: 5 });
+                    const backCanvas = await captureCard(`export-back-${member.id}`, { scale: 5 });
 
                     const frontData = frontCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
                     const backData = backCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
@@ -184,6 +184,24 @@ export default function TopluKimlik() {
                                         scale={0.6375}
                                     />
                                 </div>
+                            </div>
+                            
+                            {/* EXPORT İÇİN GİZLİ VE ÖLÇEKLENDİRİLMEMİŞ (SCALE=1) KARTLAR */}
+                            <div style={{ position: "absolute", top: "-9999px", left: "-9999px", opacity: 0, pointerEvents: "none" }}>
+                                <KimlikCard
+                                    member={enhancedMember}
+                                    origin={origin}
+                                    isFront={true}
+                                    htmlId={`export-front-${member.id}`}
+                                    scale={1}
+                                />
+                                <KimlikCard
+                                    member={enhancedMember}
+                                    origin={origin}
+                                    isFront={false}
+                                    htmlId={`export-back-${member.id}`}
+                                    scale={1}
+                                />
                             </div>
                         </div>
                     );
