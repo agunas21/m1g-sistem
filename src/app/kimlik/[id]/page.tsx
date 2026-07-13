@@ -270,17 +270,19 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                             </div>
                         </div>
 
+                        {/* Role Badge (Overlapping Photo) */}
+                        {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
+                            <div style={{ position: "absolute", top: 322, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 20 }}>
+                                <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "3px 12px", borderRadius: "100px", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1.5px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff" }}>
+                                    {role}
+                                </span>
+                            </div>
+                        )}
+
                         {/* Member Name */}
                         <div style={{ position: "absolute", top: 345, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
                             <span style={{ fontSize: 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{member.name}</span>
                         </div>
-
-                        {/* Role */}
-                        {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                            <div style={{ position: "absolute", top: 375, left: 0, right: 0, textAlign: "center", zIndex: 10 }}>
-                                <span style={{ backgroundColor: "#111111", color: "#ffffff", padding: "4px 16px", borderRadius: "100px", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "2px", boxShadow: "0 4px 10px rgba(0,0,0,0.2)" }}>{role}</span>
-                            </div>
-                        )}
 
                         {/* Blood Type & Emergency Contact */}
                         <div style={{ position: "absolute", bottom: 25, left: 24, right: 24, display: "flex", flexDirection: "column", gap: 8, zIndex: 10 }}>
