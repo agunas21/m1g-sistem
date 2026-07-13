@@ -226,22 +226,24 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         }}
                     >
                         {/* BORDER BAND */}
-                        <div style={{ position: 'absolute', inset: 0, border: '14px solid #cb2027', pointerEvents: 'none', zIndex: 20 }}>
-                            {/* Top Text */}
-                            <div style={{ position: 'absolute', top: -14, left: 0, right: 0, height: 14, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        {/* Top border */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        </div>
+                        {/* Bottom border */}
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        </div>
+                        {/* Left border */}
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            <div style={{ width: CARD_H, transform: 'rotate(270deg)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                             </div>
-                            {/* Bottom Text */}
-                            <div style={{ position: 'absolute', bottom: -14, left: 0, right: 0, height: 14, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                            </div>
-                            {/* Left Text */}
-                            <div style={{ position: 'absolute', top: 0, bottom: 0, left: -14, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                            </div>
-                            {/* Right Text */}
-                            <div style={{ position: 'absolute', top: 0, bottom: 0, right: -14, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', writingMode: 'vertical-rl', whiteSpace: 'nowrap' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        </div>
+                        {/* Right border */}
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            <div style={{ width: CARD_H, transform: 'rotate(90deg)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                             </div>
                         </div>
 
@@ -308,22 +310,24 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         }}
                     >
                         {/* BORDER BAND */}
-                        <div style={{ position: 'absolute', inset: 0, border: '14px solid #cb2027', pointerEvents: 'none', zIndex: 20 }}>
-                            {/* Top Text */}
-                            <div style={{ position: 'absolute', top: -14, left: 0, right: 0, height: 14, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        {/* Top border */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        </div>
+                        {/* Bottom border */}
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        </div>
+                        {/* Left border */}
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            <div style={{ width: CARD_H, transform: 'rotate(270deg)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                             </div>
-                            {/* Bottom Text */}
-                            <div style={{ position: 'absolute', bottom: -14, left: 0, right: 0, height: 14, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                            </div>
-                            {/* Left Text */}
-                            <div style={{ position: 'absolute', top: 0, bottom: 0, left: -14, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                            </div>
-                            {/* Right Text */}
-                            <div style={{ position: 'absolute', top: 0, bottom: 0, right: -14, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', writingMode: 'vertical-rl', whiteSpace: 'nowrap' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        </div>
+                        {/* Right border */}
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            <div style={{ width: CARD_H, transform: 'rotate(90deg)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                             </div>
                         </div>
 
