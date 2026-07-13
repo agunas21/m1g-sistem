@@ -64,12 +64,7 @@ export default function TopluKimlik() {
             setExporting(true);
             setExportProgress({ current: 0, total: selectedIds.length });
 
-            const JSZipModule = await import('jszip');
-            const JSZip = JSZipModule.default || JSZipModule;
-            const FileSaver = await import('file-saver');
-            const saveAs = FileSaver.saveAs || FileSaver.default;
-            const html2canvasModule = await import('html2canvas');
-            const html2canvas = html2canvasModule.default || html2canvasModule;
+            const { captureCardWithUnscale } = await import('@/lib/cardCapture');
 
             const zip = new JSZip();
 
@@ -80,39 +75,20 @@ export default function TopluKimlik() {
 
                 setExportProgress(prev => ({ ...prev, current: i + 1 }));
 
-                const frontElement = document.getElementById(`card-inner-front-${member.id}`);
-                const backElement = document.getElementById(`card-inner-back-${member.id}`);
+                try {
+                    const frontCanvas = await captureCardWithUnscale(`card-inner-front-${member.id}`);
+                    const backCanvas = await captureCardWithUnscale(`card-inner-back-${member.id}`);
 
-                if (frontElement && backElement) {
-                    try {
-                        const canvasOptions = { 
-                            scale: 5, 
-                            useCORS: true, 
-                            allowTaint: false, 
-                            logging: false, 
-                            backgroundColor: "#ffffff",
-                            onclone: (clonedDoc: any) => {
-                                const front = clonedDoc.getElementById(`card-inner-front-${member.id}`);
-                                if (front) front.style.transform = "none";
-                                const back = clonedDoc.getElementById(`card-inner-back-${member.id}`);
-                                if (back) back.style.transform = "none";
-                            }
-                        };
-                        
-                        const frontCanvas = await html2canvas(frontElement, canvasOptions);
-                        const backCanvas = await html2canvas(backElement, canvasOptions);
+                    const frontData = frontCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
+                    const backData = backCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
 
-                        const frontData = frontCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
-                        const backData = backCanvas.toDataURL("image/png").replace(/^data:image\/(png|jpg);base64,/, "");
+                    const cleanName = member.fullName.replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ ]/g, "").trim().replace(/\s+/g, "_");
 
-                        const cleanName = member.fullName.replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ ]/g, "").trim().replace(/\s+/g, "_");
-
-                        zip.file(`${cleanName}_ON.png`, frontData, { base64: true });
-                        zip.file(`${cleanName}_ARKA.png`, backData, { base64: true });
-                    } catch (cardError: any) {
-                        alert(`Hata (${member.fullName} işlenirken): ${cardError?.message || "Bilinmeyen hata"}`);
-                        throw cardError;
-                    }
+                    zip.file(`${cleanName}_ON.png`, frontData, { base64: true });
+                    zip.file(`${cleanName}_ARKA.png`, backData, { base64: true });
+                } catch (cardError: any) {
+                    alert(`Hata (${member.fullName} işlenirken): ${cardError?.message || "Bilinmeyen hata"}`);
+                    throw cardError;
                 }
             }
 
@@ -162,7 +138,6 @@ export default function TopluKimlik() {
             </div>
 
             <style dangerouslySetInnerHTML={{__html: `
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
                 @media print {
                     @page { size: A4; margin: 10mm; }
                     body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -199,6 +174,10 @@ export default function TopluKimlik() {
                                 {/* ÖN YÜZ */}
                                 <div id={`card-front-${member.id}`} className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", overflow: "hidden" }}>
                                 <div id={`card-inner-front-${member.id}`} style={{ width: 320, height: 510, transform: "scale(0.6375)", transformOrigin: "top left", position: "relative" }}>
+                                    {/* Top border */}
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                    </div>
                                     {/* Bottom border */}
                                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                         <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
@@ -257,6 +236,10 @@ export default function TopluKimlik() {
                             {/* ARKA YÜZ */}
                             <div id={`card-back-${member.id}`} className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.05), inset -4px -4px 10px rgba(255,255,255,0.5)", overflow: "hidden" }}>
                                 <div id={`card-inner-back-${member.id}`} style={{ width: 320, height: 510, transform: "scale(0.6375)", transformOrigin: "top left", position: "relative" }}>
+                                    {/* Top border */}
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                    </div>
                                     {/* Bottom border */}
                                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                         <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>

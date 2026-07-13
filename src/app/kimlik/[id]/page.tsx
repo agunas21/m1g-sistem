@@ -138,15 +138,8 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
     const handleDownload = async (side: "front" | "back") => {
         setDownloading(true);
         try {
-            const html2canvas = (await import("html2canvas")).default;
-            const el = document.getElementById(`m1g-card-${side}`);
-            if (!el) return;
-            const canvas = await html2canvas(el, {
-                scale: 5,
-                useCORS: true,
-                backgroundColor: null,
-                logging: false
-            });
+            const { captureCard } = await import("@/lib/cardCapture");
+            const canvas = await captureCard(`m1g-card-${side}`);
             const link = document.createElement("a");
             link.download = `M1G_Kimlik_${member.serial}_${side === "front" ? "On" : "Arka"}.png`;
             link.href = canvas.toDataURL("image/png");
@@ -164,9 +157,6 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
 
     return (
         <div className="min-h-screen bg-[#050a14] flex flex-col items-center py-10 px-4">
-            <style dangerouslySetInnerHTML={{__html: `
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-            `}} />
             <div className="relative z-10 flex flex-col items-center w-full max-w-xs">
 
                 {/* ── Header ── */}
