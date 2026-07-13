@@ -202,28 +202,28 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                     ÖN YÜZ
                 ══════════════════════════════════════════ */}
                 {!flipped && (
-                    <div
-                        id="m1g-card-front"
-                        className="overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
-                        style={{ 
-                            width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
-                            backgroundColor: "#ffffff", fontFamily: "'Inter', sans-serif",
-                            boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.1), inset -4px -4px 10px rgba(255,255,255,0.5)"
-                        }}
-                    >
-                        {/* Top border */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                        </div>
+                    <div className="shadow-[0_30px_80px_rgba(0,0,0,0.8)]" style={{ borderRadius: 0, overflow: "hidden", flexShrink: 0, width: CARD_W, height: CARD_H }}>
+                        <div
+                            id="m1g-card-front"
+                            style={{ 
+                                width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
+                                backgroundColor: "#ffffff", fontFamily: "'Inter', sans-serif",
+                                boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.1), inset -4px -4px 10px rgba(255,255,255,0.5)"
+                            }}
+                        >
+                            {/* Top border */}
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                            </div>
                         {/* Bottom border */}
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                         </div>
                         {/* Left border image */}
-                        <img src={leftBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20 }} />
+                        <img src={leftBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
                         
                         {/* Right border image */}
-                        <img src={rightBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20 }} />
+                        <img src={rightBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
 
                         {/* Top text */}
                         <div style={{ position: "absolute", top: 25, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
@@ -234,7 +234,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         {/* Huge Logo */}
                         <div style={{ position: "absolute", top: 65, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
                             <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
-                            <img src="/m1g-logo.png" alt="Logo" style={{ width: 130, height: 130, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                            <img src="/m1g-logo.png" alt="Logo" width={130} height={130} style={{ width: 130, height: 130, objectFit: "contain", zIndex: 5, display: "block" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                         </div>
 
                         {/* Photo Box */}
@@ -251,8 +251,8 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         {/* Role Badge */}
                         {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
                             <div style={{ position: "absolute", top: 345, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 20 }}>
-                                <div style={{ backgroundColor: "#111111", height: 24, padding: "0 14px", borderRadius: 100, border: "2px solid #ffffff", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", boxShadow: "0 4px 10px rgba(0,0,0,0.3)" }}>
-                                    <span style={{ color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px" }}>
+                                <div style={{ backgroundColor: "#111111", height: 24, padding: "0 14px", borderRadius: 100, border: "2px solid #ffffff", textAlign: "center", whiteSpace: "nowrap", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", boxSizing: "border-box" }}>
+                                    <span style={{ color: "#ffffff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px", lineHeight: "20px", display: "inline-block", verticalAlign: "middle" }}>
                                         {role}
                                     </span>
                                 </div>
@@ -276,35 +276,36 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                             </div>
                         </div>
                     </div>
+                    </div>
                 )}
 
                 {/* ══════════════════════════════════════════
                     ARKA YÜZ
                 ══════════════════════════════════════════ */}
                 {flipped && (
-                    <div
-                        id="m1g-card-back"
-                        className="overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
-                        style={{ 
-                            width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
-                            backgroundColor: "#ffffff", fontFamily: "'Inter', sans-serif",
-                            boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.1), inset -4px -4px 10px rgba(255,255,255,0.5)"
-                        }}
-                    >
-                        {/* BORDER BAND */}
-                        {/* Top border */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                        </div>
+                    <div className="shadow-[0_30px_80px_rgba(0,0,0,0.8)]" style={{ borderRadius: 0, overflow: "hidden", flexShrink: 0, width: CARD_W, height: CARD_H }}>
+                        <div
+                            id="m1g-card-back"
+                            style={{ 
+                                width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
+                                backgroundColor: "#ffffff", fontFamily: "'Inter', sans-serif",
+                                boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.1), inset -4px -4px 10px rgba(255,255,255,0.5)"
+                            }}
+                        >
+                            {/* BORDER BAND */}
+                            {/* Top border */}
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                            </div>
                         {/* Bottom border */}
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                         </div>
                         {/* Left border image */}
-                        <img src={leftBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20 }} />
+                        <img src={leftBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
                         
                         {/* Right border image */}
-                        <img src={rightBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20 }} />
+                        <img src={rightBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
 
                         {/* Top text */}
                         <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
@@ -324,7 +325,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                             <div style={{ background: "white", padding: 10, borderRadius: 16, border: "2px solid #111111", boxShadow: "0 6px 16px rgba(0,0,0,0.1)" }}>
                                 <QRCodeSVG value={cardUrl} size={130} level="H" fgColor="#000000" />
                             </div>
-                            <span style={{ fontSize: 11, fontWeight: 900, color: "#111111", marginTop: 12, letterSpacing: "1px" }}>DOĞRULAMA İÇİN TARA</span>
+                            <span style={{ fontSize: 9, fontWeight: 700, color: "#111", marginTop: 8, letterSpacing: "1px" }}>QR KODU OKUTUN</span>
                         </div>
 
                         {/* Found/Lost Contact Info */}
@@ -333,6 +334,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                             <span style={{ fontSize: 9, fontWeight: 900, color: "#cb2027", marginTop: 6, letterSpacing: "1px" }}>YÖNETİM KURULU BAŞKANI</span>
                             <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginTop: 2, letterSpacing: "1px" }}>{memberRaw?.presidentPhone || "0(544) 727-6075"}</span>
                         </div>
+                    </div>
                     </div>
                 )}
 

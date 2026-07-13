@@ -175,18 +175,18 @@ export default function TopluKimlik() {
                                 <div id={`card-front-${member.id}`} className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", overflow: "hidden" }}>
                                 <div id={`card-inner-front-${member.id}`} style={{ width: 320, height: 510, transform: "scale(0.6375)", transformOrigin: "top left", position: "relative" }}>
                                     {/* Top border */}
-                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                     </div>
                                     {/* Bottom border */}
-                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                     </div>
                                     {/* Left border image */}
-                                    <img src={leftBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20 }} />
+                                    <img src={leftBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
                                     
                                     {/* Right border image */}
-                                    <img src={rightBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20 }} />
+                                    <img src={rightBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
 
                                     <div style={{ position: "absolute", top: 25, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
                                         <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
@@ -195,7 +195,7 @@ export default function TopluKimlik() {
 
                                     <div style={{ position: "absolute", top: 65, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
                                         <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
-                                        <img src="/m1g-logo.png" alt="Logo" style={{ width: 130, height: 130, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
+                                        <img src="/m1g-logo.png" alt="Logo" width={130} height={130} style={{ width: 130, height: 130, objectFit: "contain", zIndex: 5, display: "block" }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                                     </div>
 
                                     <div style={{ position: "absolute", top: 220, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
@@ -210,8 +210,8 @@ export default function TopluKimlik() {
 
                                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
                                         <div style={{ position: "absolute", top: 345, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 20 }}>
-                                            <div style={{ backgroundColor: "#111111", height: 24, padding: "0 14px", borderRadius: 100, border: "2px solid #ffffff", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", boxShadow: "0 4px 10px rgba(0,0,0,0.3)" }}>
-                                                <span style={{ color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px" }}>
+                                            <div style={{ backgroundColor: "#111111", height: 24, padding: "0 14px", borderRadius: 100, border: "2px solid #ffffff", textAlign: "center", whiteSpace: "nowrap", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", boxSizing: "border-box" }}>
+                                                <span style={{ color: "#ffffff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px", lineHeight: "20px", display: "inline-block", verticalAlign: "middle" }}>
                                                     {role}
                                                 </span>
                                             </div>
@@ -239,18 +239,18 @@ export default function TopluKimlik() {
                             <div id={`card-back-${member.id}`} className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.05), inset -4px -4px 10px rgba(255,255,255,0.5)", overflow: "hidden" }}>
                                 <div id={`card-inner-back-${member.id}`} style={{ width: 320, height: 510, transform: "scale(0.6375)", transformOrigin: "top left", position: "relative" }}>
                                     {/* Top border */}
-                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                     </div>
                                     {/* Bottom border */}
-                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                                     </div>
                                     {/* Left border image */}
-                                    <img src={leftBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20 }} />
+                                    <img src={leftBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
                                     
                                     {/* Right border image */}
-                                    <img src={rightBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20 }} />
+                                    <img src={rightBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
 
                                     {/* Top text */}
                                     <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
