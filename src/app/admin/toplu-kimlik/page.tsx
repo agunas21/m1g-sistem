@@ -206,15 +206,19 @@ export default function TopluKimlik() {
                                     </div>
                                     {/* Left border */}
                                     <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <div style={{ position: 'absolute', width: 509, height: 14, left: -247.5, top: 247.5, transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
-                                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                                        </div>
+                                        <svg width="14" height="509" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                                            <text x="-254.5" y="10.5" transform="rotate(-90)" fill="white" fontSize="8" fontWeight="bold" letterSpacing="1.5" textAnchor="middle" fontFamily="Inter, sans-serif">
+                                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • 
+                                            </text>
+                                        </svg>
                                     </div>
                                     {/* Right border */}
                                     <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <div style={{ position: 'absolute', width: 509, height: 14, left: -247.5, top: 247.5, transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
-                                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                                        </div>
+                                        <svg width="14" height="509" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                                            <text x="254.5" y="-3.5" transform="rotate(90)" fill="white" fontSize="8" fontWeight="bold" letterSpacing="1.5" textAnchor="middle" fontFamily="Inter, sans-serif">
+                                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • 
+                                            </text>
+                                        </svg>
                                     </div>
 
                                     {/* Top text */}
@@ -242,11 +246,17 @@ export default function TopluKimlik() {
 
                                     {/* Role Badge (Overlapping Photo) */}
                                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                                        <div style={{ position: "absolute", top: 322, left: 0, width: 320, textAlign: "center", zIndex: 20 }}>
-                                            <span style={{ display: "inline-block", backgroundColor: "#111111", color: "#ffffff", padding: "3px 12px", borderRadius: "100px", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1.5px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff", whiteSpace: "nowrap" }}>
-                                                {role}
-                                            </span>
-                                        </div>
+                                        <table style={{ position: "absolute", top: 322, left: 0, width: 320, zIndex: 20, borderCollapse: "collapse" }}>
+                                            <tbody>
+                                                <tr>
+                                                    <td align="center" style={{ padding: 0 }}>
+                                                        <div style={{ display: "inline-block", backgroundColor: "#111111", color: "#ffffff", padding: "3px 12px", borderRadius: "100px", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1.5px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff", whiteSpace: "nowrap" }}>
+                                                            {role}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     )}
 
                                     {/* Member Name */}
@@ -282,15 +292,19 @@ export default function TopluKimlik() {
                                     </div>
                                     {/* Left border */}
                                     <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <div style={{ position: 'absolute', width: 509, height: 14, left: -247.5, top: 247.5, transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
-                                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                                        </div>
+                                        <svg width="14" height="509" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                                            <text x="-254.5" y="10.5" transform="rotate(-90)" fill="white" fontSize="8" fontWeight="bold" letterSpacing="1.5" textAnchor="middle" fontFamily="Inter, sans-serif">
+                                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • 
+                                            </text>
+                                        </svg>
                                     </div>
                                     {/* Right border */}
                                     <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <div style={{ position: 'absolute', width: 509, height: 14, left: -247.5, top: 247.5, transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
-                                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                                        </div>
+                                        <svg width="14" height="509" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                                            <text x="254.5" y="-3.5" transform="rotate(90)" fill="white" fontSize="8" fontWeight="bold" letterSpacing="1.5" textAnchor="middle" fontFamily="Inter, sans-serif">
+                                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • 
+                                            </text>
+                                        </svg>
                                     </div>
 
                                     {/* Top text */}
