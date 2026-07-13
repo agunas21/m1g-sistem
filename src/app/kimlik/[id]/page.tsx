@@ -3,11 +3,12 @@
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Download, FlipHorizontal, Loader2, ChevronLeft, Lock } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
-import { useAuth } from "@/context/AuthContext";
-
 const BOARD_PRESIDENT_PHONE = "0 532 703 79 73";
 const ASSOCIATION_WEB       = "www.m1g.org.tr";
+
+const borderText = "M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA";
+const leftBorderSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="14" height="510" xmlns="http://www.w3.org/2000/svg"><rect width="14" height="510" fill="#cb2027" /><text x="-255" y="7" transform="rotate(-90)" fill="white" font-size="8" font-weight="900" font-family="Inter, Arial, sans-serif" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">${borderText}</text></svg>`)}`;
+const rightBorderSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="14" height="510" xmlns="http://www.w3.org/2000/svg"><rect width="14" height="510" fill="#cb2027" /><text x="255" y="-7" transform="rotate(90)" fill="white" font-size="8" font-weight="900" font-family="Inter, Arial, sans-serif" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">${borderText}</text></svg>`)}`;
 
 export default function KimlikPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -141,9 +142,7 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                 scale: 5,
                 useCORS: true,
                 backgroundColor: null,
-                logging: false,
-                width: 320,
-                height: 509,
+                logging: false
             });
             const link = document.createElement("a");
             link.download = `M1G_Kimlik_${member.serial}_${side === "front" ? "On" : "Arka"}.png`;
@@ -162,6 +161,9 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
 
     return (
         <div className="min-h-screen bg-[#050a14] flex flex-col items-center py-10 px-4">
+            <style dangerouslySetInnerHTML={{__html: `
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+            `}} />
             <div className="relative z-10 flex flex-col items-center w-full max-w-xs">
 
                 {/* ── Header ── */}
@@ -224,20 +226,11 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                             <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                         </div>
-                        {/* Left border background & text */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, width: 14, height: 509, backgroundColor: '#cb2027', zIndex: 10 }}></div>
-                        <div style={{ position: 'absolute', top: 509, left: 0, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, whiteSpace: 'nowrap' }}>
-                            <span style={{ color: 'white', fontSize: 8, fontWeight: 900, letterSpacing: '2px' }}>
-                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA
-                            </span>
-                        </div>
-                        {/* Right border background & text */}
-                        <div style={{ position: 'absolute', top: 0, right: 0, width: 14, height: 509, backgroundColor: '#cb2027', zIndex: 10 }}></div>
-                        <div style={{ position: 'absolute', top: 0, left: 320, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, whiteSpace: 'nowrap' }}>
-                            <span style={{ color: 'white', fontSize: 8, fontWeight: 900, letterSpacing: '2px' }}>
-                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA
-                            </span>
-                        </div>
+                        {/* Left border image */}
+                        <img src={leftBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20 }} />
+                        
+                        {/* Right border image */}
+                        <img src={rightBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20 }} />
 
                         {/* Top text */}
                         <div style={{ position: "absolute", top: 25, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
@@ -264,19 +257,13 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
 
                         {/* Role Badge */}
                         {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                            <table style={{ position: "absolute", top: 345, left: 0, width: 320, zIndex: 20, borderCollapse: "collapse" }}>
-                                <tbody>
-                                    <tr>
-                                        <td align="center" style={{ padding: 0 }}>
-                                            <div style={{ display: "inline-block", backgroundColor: "#111111", padding: "0 14px", borderRadius: "100px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff", whiteSpace: "nowrap" }}>
-                                                <span style={{ display: "block", color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px", lineHeight: "22px" }}>
-                                                    {role}
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div style={{ position: "absolute", top: 345, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 20 }}>
+                                <div style={{ backgroundColor: "#111111", height: 24, padding: "0 14px", borderRadius: 100, border: "2px solid #ffffff", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", boxShadow: "0 4px 10px rgba(0,0,0,0.3)" }}>
+                                    <span style={{ color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px", transform: "translateY(1px)" }}>
+                                        {role}
+                                    </span>
+                                </div>
+                            </div>
                         )}
 
                         {/* Member Name */}
@@ -320,20 +307,11 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
                         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                             <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
                         </div>
-                        {/* Left border background & text */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, width: 14, height: 509, backgroundColor: '#cb2027', zIndex: 10 }}></div>
-                        <div style={{ position: 'absolute', top: 509, left: 0, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, whiteSpace: 'nowrap' }}>
-                            <span style={{ color: 'white', fontSize: 8, fontWeight: 900, letterSpacing: '2px' }}>
-                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA
-                            </span>
-                        </div>
-                        {/* Right border background & text */}
-                        <div style={{ position: 'absolute', top: 0, right: 0, width: 14, height: 509, backgroundColor: '#cb2027', zIndex: 10 }}></div>
-                        <div style={{ position: 'absolute', top: 0, left: 320, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, whiteSpace: 'nowrap' }}>
-                            <span style={{ color: 'white', fontSize: 8, fontWeight: 900, letterSpacing: '2px' }}>
-                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA
-                            </span>
-                        </div>
+                        {/* Left border image */}
+                        <img src={leftBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20 }} />
+                        
+                        {/* Right border image */}
+                        <img src={rightBorderSvg} alt="" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20 }} />
 
                         {/* Top text */}
                         <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
