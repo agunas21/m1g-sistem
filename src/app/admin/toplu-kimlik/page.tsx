@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from 'qrcode.react';
 import { Loader2 } from "lucide-react";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 export default function TopluKimlik() {
     const [members, setMembers] = useState<any[]>([]);
@@ -18,7 +20,6 @@ export default function TopluKimlik() {
             .then(res => res.json())
             .then(data => {
                 setAllMembers(data);
-                // Sadece aktif ve geçerli üyeleri al
                 const activeMembers = data.filter((m: any) => {
                     const isPasif = (m.dir?.includes("PASİF") || m.dir?.includes("İPTAL")) || m.status === "Pasif" || m.status === "Banlı";
                     return !isPasif && m.fullName && m.memberType;
@@ -155,8 +156,6 @@ export default function TopluKimlik() {
             <div className="flex flex-wrap gap-6 justify-center print:justify-start">
                 {members.map((member, index) => {
                     const role = getRole(member);
-                    
-                    // Başkan'ın numarasını bul (Yönetim Kurulu Başkanı olan ve telefonu kayıtlı olan ilk kişi, veya cgorgu id'li kişi)
                     const baskan = allMembers.find(m => m.memberType === "Yönetim Kurulu Başkanı" && m.phone) || allMembers.find(m => m.id === "cgorgu");
                     const baskanPhone = baskan?.phone || "+90 544 727 60 75";
                     
@@ -172,18 +171,6 @@ export default function TopluKimlik() {
                         }
                     }
 
-                    let maskedTc = "Belirtilmemiş";
-                    if (member.tcNo) {
-                        const cleanTc = member.tcNo.replace(/\*/g, '');
-                        if (cleanTc.length >= 4) {
-                            maskedTc = "*******" + cleanTc.slice(-4);
-                        } else if (member.tcNo.includes('*')) {
-                            maskedTc = member.tcNo; // already heavily masked
-                        } else {
-                            maskedTc = "*".repeat(Math.max(0, cleanTc.length - 4)) + cleanTc.slice(-4);
-                        }
-                    }
-
                     return (
                         <div key={index} className="flex flex-col gap-2 mb-4 print:mb-0">
                             <div className="flex items-center gap-2 print:hidden bg-neutral-800 p-3 rounded-lg cursor-pointer hover:bg-neutral-700 transition-colors border border-neutral-700" onClick={() => toggleSelection(member.id)}>
@@ -193,65 +180,51 @@ export default function TopluKimlik() {
                             </div>
                             <div className="flex flex-col sm:flex-row gap-4" style={{ pageBreakInside: 'avoid' }}>
                                 {/* ÖN YÜZ */}
-                                <div id={`card-front-${member.id}`} className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.05), inset -4px -4px 10px rgba(255,255,255,0.5)", overflow: "hidden" }}>
+                                <div id={`card-front-${member.id}`} className="relative shadow-2xl" style={{ width: "54mm", height: "86mm", backgroundColor: "#ffffff", border: "1px solid #e5e7eb", fontFamily: "'Inter', sans-serif", overflow: "hidden" }}>
                                 <div style={{ width: 320, height: 509, transform: "scale(0.6375)", transformOrigin: "top left", position: "relative" }}>
-                                    {/* BORDER BAND */}
-                                    {/* Top border */}
-                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                    {/* Left border background & text */}
+                                    <div style={{ position: 'absolute', top: 0, left: 0, width: 14, height: 509, backgroundColor: '#cb2027', zIndex: 10 }}></div>
+                                    <div style={{ position: 'absolute', top: 509, left: 0, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, whiteSpace: 'nowrap' }}>
+                                        <span style={{ color: 'white', fontSize: 8, fontWeight: 900, letterSpacing: '2px' }}>
+                                            M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA
+                                        </span>
                                     </div>
-                                    {/* Bottom border */}
-                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                                    </div>
-                                    {/* Left border */}
-                                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <svg width="14" height="509" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                                            <text x="-254.5" y="10.5" transform="rotate(-90)" fill="white" fontSize="8" fontWeight="bold" letterSpacing="1.5" textAnchor="middle" fontFamily="Inter, sans-serif">
-                                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • 
-                                            </text>
-                                        </svg>
-                                    </div>
-                                    {/* Right border */}
-                                    <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <svg width="14" height="509" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                                            <text x="254.5" y="-3.5" transform="rotate(90)" fill="white" fontSize="8" fontWeight="bold" letterSpacing="1.5" textAnchor="middle" fontFamily="Inter, sans-serif">
-                                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • 
-                                            </text>
-                                        </svg>
+                                    
+                                    {/* Right border background & text */}
+                                    <div style={{ position: 'absolute', top: 0, right: 0, width: 14, height: 509, backgroundColor: '#cb2027', zIndex: 10 }}></div>
+                                    <div style={{ position: 'absolute', top: 0, left: 320, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, whiteSpace: 'nowrap' }}>
+                                        <span style={{ color: 'white', fontSize: 8, fontWeight: 900, letterSpacing: '2px' }}>
+                                            M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA
+                                        </span>
                                     </div>
 
-                                    {/* Top text */}
-                                    <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
+                                    <div style={{ position: "absolute", top: 25, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
                                         <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
                                         <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
                                     </div>
 
-                                    {/* Huge Logo with Black Shadow Background */}
-                                    <div style={{ position: "absolute", top: 85, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
+                                    <div style={{ position: "absolute", top: 65, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
                                         <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
                                         <img src="/m1g-logo.png" alt="Logo" style={{ width: 130, height: 130, objectFit: "contain", zIndex: 5 }} onError={(e) => { (e.target as any).style.display = "none"; }} />
                                     </div>
 
-                                    {/* Photo Box */}
-                                    <div style={{ position: "absolute", top: 200, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
+                                    <div style={{ position: "absolute", top: 220, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
                                         <div style={{ width: "100%", height: "100%", borderRadius: 6, overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                             {member.avatar ? (
-                                                <img src={member.avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                <img src={member.avatar} alt="Foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                             ) : (
                                                 <span style={{ fontSize: 36, color: "#9ca3af", fontWeight: 800 }}>{member.fullName.charAt(0)}</span>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* Role Badge (No Overlap) */}
                                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                                        <table style={{ position: "absolute", top: 318, left: 0, width: 320, zIndex: 20, borderCollapse: "collapse" }}>
+                                        <table style={{ position: "absolute", top: 345, left: 0, width: 320, zIndex: 20, borderCollapse: "collapse" }}>
                                             <tbody>
                                                 <tr>
                                                     <td align="center" style={{ padding: 0 }}>
-                                                        <div style={{ display: "inline-block", backgroundColor: "#111111", padding: "0 12px", borderRadius: "100px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff", whiteSpace: "nowrap" }}>
-                                                            <span style={{ display: "block", color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1.5px", lineHeight: "20px" }}>
+                                                        <div style={{ display: "inline-block", backgroundColor: "#111111", padding: "0 14px", borderRadius: "100px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff", whiteSpace: "nowrap" }}>
+                                                            <span style={{ display: "block", color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px", lineHeight: "22px" }}>
                                                                 {role}
                                                             </span>
                                                         </div>
@@ -261,12 +234,10 @@ export default function TopluKimlik() {
                                         </table>
                                     )}
 
-                                    {/* Member Name */}
-                                    <div style={{ position: "absolute", top: 348, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
+                                    <div style={{ position: "absolute", top: 380, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
                                         <span style={{ fontSize: 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{member.fullName}</span>
                                     </div>
 
-                                    {/* Blood Type & Emergency Contact */}
                                     <div style={{ position: "absolute", bottom: 25, left: 24, right: 24, display: "flex", flexDirection: "column", gap: 8, zIndex: 10 }}>
                                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #e5e7eb", paddingBottom: 6 }}>
                                             <span style={{ fontSize: 11, fontWeight: 900, color: "#555", letterSpacing: "1px" }}>KAN GRUBU</span>
@@ -285,24 +256,20 @@ export default function TopluKimlik() {
                                 <div style={{ width: 320, height: 509, transform: "scale(0.6375)", transformOrigin: "top left", position: "relative" }}>
                                     {/* BORDER BAND */}
                                     {/* Top border */}
-                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                    {/* Left border background & text */}
+                                    <div style={{ position: 'absolute', top: 0, left: 0, width: 14, height: 509, backgroundColor: '#cb2027', zIndex: 10 }}></div>
+                                    <div style={{ position: 'absolute', top: 509, left: 0, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, whiteSpace: 'nowrap' }}>
+                                        <span style={{ color: 'white', fontSize: 8, fontWeight: 900, letterSpacing: '2px' }}>
+                                            M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA
+                                        </span>
                                     </div>
-                                    {/* Bottom border */}
-                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, backgroundColor: '#cb2027', zIndex: 20, display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                        <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                                    </div>
-                                    {/* Left border */}
-                                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <div style={{ position: 'absolute', top: 509, left: 0, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
-                                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                                        </div>
-                                    </div>
-                                    {/* Right border */}
-                                    <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <div style={{ position: 'absolute', top: 0, left: 14, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
-                                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
-                                        </div>
+                                    
+                                    {/* Right border background & text */}
+                                    <div style={{ position: 'absolute', top: 0, right: 0, width: 14, height: 509, backgroundColor: '#cb2027', zIndex: 10 }}></div>
+                                    <div style={{ position: 'absolute', top: 0, left: 320, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, whiteSpace: 'nowrap' }}>
+                                        <span style={{ color: 'white', fontSize: 8, fontWeight: 900, letterSpacing: '2px' }}>
+                                            M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA
+                                        </span>
                                     </div>
 
                                     {/* Top text */}
