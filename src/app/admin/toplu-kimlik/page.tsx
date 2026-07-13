@@ -80,7 +80,7 @@ export default function TopluKimlik() {
 
                 if (frontElement && backElement) {
                     try {
-                        const canvasOptions = { scale: 4, useCORS: true, allowTaint: false, logging: false, backgroundColor: "#ffffff" };
+                        const canvasOptions = { scale: 4, useCORS: true, allowTaint: false, logging: false, backgroundColor: "#ffffff", width: 320, height: 509 };
                         
                         const frontCanvas = await html2canvas(frontElement, canvasOptions);
                         const backCanvas = await html2canvas(backElement, canvasOptions);
@@ -250,8 +250,10 @@ export default function TopluKimlik() {
                                             <tbody>
                                                 <tr>
                                                     <td align="center" style={{ padding: 0 }}>
-                                                        <div style={{ display: "inline-block", backgroundColor: "#111111", color: "#ffffff", padding: "3px 12px", borderRadius: "100px", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1.5px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff", whiteSpace: "nowrap" }}>
-                                                            {role}
+                                                        <div style={{ display: "inline-block", backgroundColor: "#111111", padding: "0 12px", borderRadius: "100px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", border: "2px solid #ffffff", whiteSpace: "nowrap" }}>
+                                                            <span style={{ display: "block", color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1.5px", lineHeight: "20px" }}>
+                                                                {role}
+                                                            </span>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -292,19 +294,15 @@ export default function TopluKimlik() {
                                     </div>
                                     {/* Left border */}
                                     <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <svg width="14" height="509" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                                            <text x="-254.5" y="10.5" transform="rotate(-90)" fill="white" fontSize="8" fontWeight="bold" letterSpacing="1.5" textAnchor="middle" fontFamily="Inter, sans-serif">
-                                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • 
-                                            </text>
-                                        </svg>
+                                        <div style={{ position: 'absolute', top: 509, left: 0, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
+                                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                        </div>
                                     </div>
                                     {/* Right border */}
                                     <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, backgroundColor: '#cb2027', zIndex: 20, overflow: 'hidden' }}>
-                                        <svg width="14" height="509" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                                            <text x="254.5" y="-3.5" transform="rotate(90)" fill="white" fontSize="8" fontWeight="bold" letterSpacing="1.5" textAnchor="middle" fontFamily="Inter, sans-serif">
-                                                M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • 
-                                            </text>
-                                        </svg>
+                                        <div style={{ position: 'absolute', top: 0, left: 14, width: 509, height: 14, transformOrigin: '0 0', transform: 'rotate(90deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
+                                            <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px' }}>M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • </span>
+                                        </div>
                                     </div>
 
                                     {/* Top text */}
