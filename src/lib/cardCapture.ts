@@ -37,20 +37,18 @@ export async function captureCard(
   await ensureInterFont();
   await document.fonts.ready;
 
-  // 2. Import html2canvas
-  const html2canvas = (await import('html2canvas')).default;
+  // 2. Import html-to-image
+  const htmlToImage = await import('html-to-image');
 
   // 3. Find element
   const el = document.getElementById(elementId);
   if (!el) throw new Error(`Element #${elementId} not found`);
 
   // 4. Render
-  const canvas = await html2canvas(el, {
-    scale: options?.scale ?? 5,
-    useCORS: true,
-    allowTaint: false,
+  const canvas = await htmlToImage.toCanvas(el, {
+    pixelRatio: options?.scale ?? 5,
     backgroundColor: '#ffffff',
-    logging: false,
+    skipFonts: true, // we already preloaded Inter font
   });
 
   return canvas;
@@ -64,26 +62,22 @@ export async function captureCardWithUnscale(
   await ensureInterFont();
   await document.fonts.ready;
 
-  // 2. Import html2canvas
-  const html2canvas = (await import('html2canvas')).default;
+  // 2. Import html-to-image
+  const htmlToImage = await import('html-to-image');
 
   // 3. Find element
   const el = document.getElementById(elementId);
   if (!el) throw new Error(`Element #${elementId} not found`);
 
-  // 4. Render with onclone to remove CSS scale transform
-  const canvas = await html2canvas(el, {
-    scale: options?.scale ?? 5,
-    useCORS: true,
-    allowTaint: false,
+  // 4. Render with custom style to remove scale transform
+  const canvas = await htmlToImage.toCanvas(el, {
+    pixelRatio: options?.scale ?? 5,
     backgroundColor: '#ffffff',
-    logging: false,
-    onclone: (clonedDoc: Document) => {
-      const clonedEl = clonedDoc.getElementById(elementId);
-      if (clonedEl) {
-        clonedEl.style.transform = 'none';
-      }
+    style: {
+      transform: 'none',
+      transformOrigin: 'top left'
     },
+    skipFonts: true, // we already preloaded Inter font
   });
 
   return canvas;

@@ -95,10 +95,10 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
     }
 
     const member = {
-        name:             memberRaw.fullName   || "İsimsiz",
-        serial:           memberRaw.serial || "M1G-0000",
-        avatar:           memberRaw.avatar      || "",
-        status:           memberRaw.status || "Aktif",
+        ...memberRaw,
+        id: memberRaw.id || id,
+        name: memberRaw.fullName || "İsimsiz",
+        serial: memberRaw.serial || "M1G-0000",
     };
 
     const role = (() => {

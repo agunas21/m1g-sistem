@@ -175,7 +175,7 @@ export default function DepoYonetimi() {
         if (selectedIds.length === 0) return;
         setExporting(true);
         try {
-            const html2canvas = (await import("html2canvas")).default;
+            const htmlToImage = await import("html-to-image");
             const zip = new JSZip();
             const folder = zip.folder("QR_Kodlari");
             if (!folder) return;
@@ -184,7 +184,7 @@ export default function DepoYonetimi() {
                 const el = document.getElementById(`hidden-qr-label-${id}`);
                 if (!el) continue;
                 
-                const canvas = await html2canvas(el, { scale: 4, backgroundColor: "#ffffff" });
+                const canvas = await htmlToImage.toCanvas(el, { pixelRatio: 4, backgroundColor: "#ffffff", skipFonts: true });
                 
                 const pngData = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
                 folder.file(`QR_${id}.png`, pngData, { base64: true });
@@ -746,10 +746,10 @@ export default function DepoYonetimi() {
                                 <button
                                     onClick={async () => {
                                         try {
-                                            const html2canvas = (await import("html2canvas")).default;
+                                            const htmlToImage = await import("html-to-image");
                                             const el = document.getElementById(`qr-label-${selectedItem.id}`);
                                             if (!el) return;
-                                            const canvas = await html2canvas(el, { scale: 4, backgroundColor: "#ffffff" });
+                                            const canvas = await htmlToImage.toCanvas(el, { pixelRatio: 4, backgroundColor: "#ffffff", skipFonts: true });
                                             const link = document.createElement("a");
                                             link.download = `M1G_QR_${selectedItem.id}.png`;
                                             link.href = canvas.toDataURL("image/png");
