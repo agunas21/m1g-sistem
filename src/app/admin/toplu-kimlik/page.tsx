@@ -210,8 +210,10 @@ export default function TopluKimlik() {
 
                                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
                                         <div style={{ position: "absolute", top: 345, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 20 }}>
-                                            <div style={{ backgroundColor: "#111111", padding: "4px 12px", borderRadius: 100, border: "2px solid #ffffff", boxShadow: "0 4px 10px rgba(0,0,0,0.3)" }}>
-                                                <span style={{ color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase" }}>{role}</span>
+                                            <div style={{ backgroundColor: "#111111", height: 24, padding: "0 14px", borderRadius: 100, border: "2px solid #ffffff", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", boxShadow: "0 4px 10px rgba(0,0,0,0.3)" }}>
+                                                <span style={{ color: "#ffffff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px", transform: "translateY(1px)" }}>
+                                                    {role}
+                                                </span>
                                             </div>
                                         </div>
                                     )}

@@ -175,39 +175,22 @@ export default function DepoYonetimi() {
         if (selectedIds.length === 0) return;
         setExporting(true);
         try {
+            const html2canvas = (await import("html2canvas")).default;
             const zip = new JSZip();
             const folder = zip.folder("QR_Kodlari");
             if (!folder) return;
 
-            const processItem = (id: string) => new Promise<void>((resolve) => {
-                const svg = document.getElementById(`hidden-qr-${id}`);
-                if (!svg) return resolve();
-                const svgData = new XMLSerializer().serializeToString(svg);
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-                const img = new Image();
-                img.onload = () => {
-                    canvas.width = img.width;
-                    canvas.height = img.height + 40;
-                    if (ctx) {
-                        ctx.fillStyle = "white";
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(img, 0, 0);
-                        ctx.font = "bold 16px Inter";
-                        ctx.fillStyle = "black";
-                        ctx.textAlign = "center";
-                        ctx.fillText(id, canvas.width / 2, canvas.height - 15);
-                    }
-                    const pngData = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
-                    folder.file(`QR_${id}.png`, pngData, { base64: true });
-                    resolve();
-                };
-                img.onerror = () => resolve();
-                img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
-            });
-
             for (const id of selectedIds) {
-                await processItem(id);
+                const el = document.getElementById(`hidden-qr-label-${id}`);
+                if (!el) continue;
+                
+                // Make it temporarily visible for html2canvas
+                el.style.display = "inline-block";
+                const canvas = await html2canvas(el, { scale: 4, backgroundColor: "#ffffff" });
+                el.style.display = "none";
+                
+                const pngData = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+                folder.file(`QR_${id}.png`, pngData, { base64: true });
             }
 
             const content = await zip.generateAsync({ type: "blob" });
@@ -1351,7 +1334,23 @@ export default function DepoYonetimi() {
         <div className="space-y-8 pb-20 relative">
             <div style={{ display: "none" }}>
                 {inventory.map(item => (
-                    <QRCodeSVG key={item.id} id={`hidden-qr-${item.id}`} value={`${typeof window !== 'undefined' ? window.location.origin : ''}/q/${item.id}`} size={256} level="H" fgColor="#000000" />
+                    <div
+                        key={item.id}
+                        id={`hidden-qr-label-${item.id}`}
+                        className="bg-white p-4 rounded-xl inline-block shadow-lg mx-auto mb-2"
+                        style={{ textAlign: "center", display: "none" }}
+                    >
+                        <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/eq/${item.id}`} size={120} level="H" />
+                        <div style={{ marginTop: "8px", fontFamily: "sans-serif", fontSize: "11px", color: "#111", fontWeight: "800", letterSpacing: "0.03em", maxWidth: "128px", wordBreak: "break-word" }}>
+                            {item.name}
+                        </div>
+                        <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#555", marginTop: "3px", letterSpacing: "0.1em" }}>
+                            {item.id}
+                        </div>
+                        <div style={{ fontSize: "8px", color: "#888", marginTop: "2px", letterSpacing: "0.05em" }}>
+                            M1G ARAMA KURTARMA DERNEĞİ
+                        </div>
+                    </div>
                 ))}
             </div>
             <QRScanner />
