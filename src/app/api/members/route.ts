@@ -100,6 +100,7 @@ export async function POST(req: NextRequest) {
             profession: body.profession || null,
             education: body.education || null,
             memberType: body.memberType || 'Üye',
+            role: body.role || body.memberType || 'Üye',
             honorary: body.honorary || 'Hayır',
             status: 'Aktif',
             birthDate: body.birthDate || null,
@@ -165,13 +166,19 @@ export async function PATCH(req: NextRequest) {
         updateData.tcNo = encryptField(updateData.tcNo)
     }
 
-    // Şifre güncellemesi varsa hash'le
-    // (login/change-password rotalarına bırakılmış)
-    const { password, ...safeUpdate } = updateData
+    const updateDataToUse = { ...updateData }
+    if (updateDataToUse.memberType && !updateDataToUse.role) {
+        updateDataToUse.role = updateDataToUse.memberType
+    }
+    
+    // Şifre güncelleme kontrolü
+    if (updateDataToUse.password) {
+        updateDataToUse.password = await encryptPassword(updateDataToUse.password)
+    }
 
     const updated = await prisma.member.update({
         where: { id },
-        data: safeUpdate
+        data: updateDataToUse
     })
 
     await logAudit('member.update', `${actorName}, "${updated.fullName}" üyesini güncelledi.`, {
