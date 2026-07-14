@@ -29,13 +29,13 @@ export interface KimlikCardProps {
 }
 
 export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId }: KimlikCardProps) {
-    const cardUrl = `${origin}/kimlik/${member.id}`;
+    const cardUrl = `${origin}/kimlik/${member.kimlikToken || member.id}`;
 
     const getRole = (m: any) => {
-        if (m.role && m.role !== "Üye" && m.role !== "Gönüllü" && m.role !== "ÜYE" && m.role !== "GÖNÜLLÜ") return m.role.toUpperCase();
+        if (m.role && m.role.trim() !== "" && m.role !== "Üye" && m.role !== "Gönüllü" && m.role !== "ÜYE" && m.role !== "GÖNÜLLÜ") return m.role.trim().toUpperCase();
         if (m.honorary === "Evet" || m.honorary === "EVET") return "ONUR ÜYESİ";
         if (m.memberType === "Üye" || m.memberType === "Asil Üye" || m.memberType === "ASİL ÜYE" || m.role === "Üye" || m.role === "ÜYE") return "ÜYE";
-        if (m.memberType && m.memberType !== "Gönüllü" && m.memberType !== "GÖNÜLLÜ") return m.memberType.toUpperCase();
+        if (m.memberType && m.memberType.trim() !== "" && m.memberType !== "Gönüllü" && m.memberType !== "GÖNÜLLÜ") return m.memberType.trim().toUpperCase();
         return "GÖNÜLLÜ";
     };
 
@@ -204,7 +204,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
 
                     {/* ROL ROZET (sadece Üye/Gönüllü olmayanlara) */}
                     {/* top: 202+132+12 = 346 */}
-                    {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
+                    {role !== "ÜYE" && role !== "GÖNÜLLÜ" && role !== "" && (
                         <div style={{
                             position: "absolute",
                             top: 346,
