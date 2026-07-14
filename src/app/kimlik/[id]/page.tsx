@@ -145,8 +145,8 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
             link.download = `M1G_Kimlik_${member.serial}_${side === "front" ? "On" : "Arka"}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
-        } catch {
-            alert("İndirme başarısız. Lütfen tekrar deneyin.");
+        } catch (error: any) {
+            alert(`İndirme başarısız. Hata: ${error?.message || "Bilinmeyen hata"}`);
         } finally {
             setDownloading(false);
         }

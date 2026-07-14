@@ -37,48 +37,30 @@ export async function captureCard(
   await ensureInterFont();
   await document.fonts.ready;
 
-  // 2. Import html-to-image
-  const htmlToImage = await import('html-to-image');
+  // 2. Import html2canvas
+  const html2canvas = (await import('html2canvas')).default;
 
   // 3. Find element
   const el = document.getElementById(elementId);
   if (!el) throw new Error(`Element #${elementId} not found`);
 
-  // 4. Render
-  const canvas = await htmlToImage.toCanvas(el, {
-    pixelRatio: options?.scale ?? 5,
+  // 4. Render with html2canvas
+  const canvas = await html2canvas(el, {
+    scale: options?.scale ?? 5,
+    useCORS: true,
     backgroundColor: '#ffffff',
-    skipFonts: true, // we already preloaded Inter font
+    allowTaint: false,
+    logging: false
   });
 
   return canvas;
 }
 
+// Deprecated: Do not use this function anymore. Render unscaled elements and use captureCard instead.
 export async function captureCardWithUnscale(
   elementId: string,
   options?: { scale?: number }
 ): Promise<HTMLCanvasElement> {
-  // 1. Ensure Inter font is loaded
-  await ensureInterFont();
-  await document.fonts.ready;
-
-  // 2. Import html-to-image
-  const htmlToImage = await import('html-to-image');
-
-  // 3. Find element
-  const el = document.getElementById(elementId);
-  if (!el) throw new Error(`Element #${elementId} not found`);
-
-  // 4. Render with custom style to remove scale transform
-  const canvas = await htmlToImage.toCanvas(el, {
-    pixelRatio: options?.scale ?? 5,
-    backgroundColor: '#ffffff',
-    style: {
-      transform: 'none',
-      transformOrigin: 'top left'
-    },
-    skipFonts: true, // we already preloaded Inter font
-  });
-
-  return canvas;
+  return captureCard(elementId, options);
 }
+
