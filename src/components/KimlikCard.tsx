@@ -202,41 +202,28 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                         </div>
                     </div>
 
-                    {/* ROL ROZET (sadece Üye/Gönüllü olmayanlara) */}
-                    {/* top: 202+132+12 = 346 */}
-                    {role !== "ÜYE" && role !== "GÖNÜLLÜ" && role !== "" && (
+                    {/* ROL METNİ (sadece Yönetim, Denetim ve Onur Üyeleri) */}
+                    {/* top: 202+132+12 = 346 civarı ortalanmış */}
+                    {(role.includes("YÖNETİM") || role.includes("DENETİM") || role.includes("ONUR ÜYESİ")) && (
                         <div style={{
                             position: "absolute",
-                            top: 346,
+                            top: 350,
                             left: 14,
                             right: 14,
                             textAlign: "center",
                             zIndex: 5
                         }}>
-                            <div style={{
-                                display: "inline-block",
-                                backgroundColor: "#111111",
-                                borderRadius: 50,
-                                border: "2px solid #ffffff",
-                                paddingLeft: 16,
-                                paddingRight: 16,
-                                paddingTop: 4,
-                                height: 26,
-                                boxSizing: "border-box",
-                                boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
+                            <span style={{
+                                color: "#111111",
+                                fontSize: 13,
+                                fontWeight: "900",
+                                fontFamily: "'Inter', sans-serif",
+                                display: "block",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px"
                             }}>
-                                <span style={{
-                                    color: "#ffffff",
-                                    fontSize: 11,
-                                    fontWeight: "bold",
-                                    fontFamily: "'Inter', sans-serif",
-                                    lineHeight: "14px",
-                                    display: "block",
-                                    textTransform: "uppercase"
-                                }}>
-                                    {role}
-                                </span>
-                            </div>
+                                {role}
+                            </span>
                         </div>
                     )}
 
