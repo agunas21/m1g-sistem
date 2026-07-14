@@ -5,10 +5,9 @@ import { QRCodeSVG } from 'qrcode.react';
 
 export const CARD_W = 320;
 export const CARD_H = 510;
+const BAND = 14;
 
 const borderText = "M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • ";
-const leftBorderSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="14" height="510" xmlns="http://www.w3.org/2000/svg"><rect width="14" height="510" fill="#cb2027" /><text x="-255" y="10" transform="rotate(-90)" fill="white" font-size="8" font-weight="900" font-family="Inter, Arial, sans-serif" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central">${borderText}</text></svg>`)}`;
-const rightBorderSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="14" height="510" xmlns="http://www.w3.org/2000/svg"><rect width="14" height="510" fill="#cb2027" /><text x="255" y="-4" transform="rotate(90)" fill="white" font-size="8" font-weight="900" font-family="Inter, Arial, sans-serif" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central">${borderText}</text></svg>`)}`;
 
 export interface KimlikCardProps {
     member: {
@@ -21,12 +20,12 @@ export interface KimlikCardProps {
         role?: string;
         memberType?: string;
         honorary?: string;
-        presidentPhone?: string; // Optional custom president phone
+        presidentPhone?: string;
     };
     origin: string;
     isFront: boolean;
-    scale?: number; // E.g., 0.6375 for toplu kimlik
-    htmlId?: string; // E.g., card-inner-front-123
+    scale?: number;
+    htmlId?: string;
 }
 
 export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId }: KimlikCardProps) {
@@ -64,111 +63,116 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
             style={{ 
                 width: CARD_W, height: CARD_H, position: "relative", flexShrink: 0, 
                 backgroundColor: "#cb2027", fontFamily: "'Inter', sans-serif",
-                boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.1), inset -4px -4px 10px rgba(255,255,255,0.5)",
+                boxSizing: "border-box",
+                overflow: "hidden",
                 ...transformStyle
             }}
         >
             {/* Inner white background */}
-            <div style={{ position: "absolute", top: 14, bottom: 14, left: 14, right: 14, backgroundColor: "#ffffff", zIndex: 1 }}></div>
+            <div style={{ position: "absolute", top: BAND, bottom: BAND, left: BAND, right: BAND, backgroundColor: "#ffffff", zIndex: 1 }}></div>
             
             {/* Top border text */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', display: "flex", alignItems: "center" }}>
-                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>{borderText}</span>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: CARD_W, height: BAND, backgroundColor: "#cb2027", zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: `${BAND}px` }}>{borderText}</span>
             </div>
             
             {/* Bottom border text */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', display: "flex", alignItems: "center" }}>
-                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4 }}>{borderText}</span>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, width: CARD_W, height: BAND, backgroundColor: "#cb2027", zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: `${BAND}px` }}>{borderText}</span>
             </div>
             
-            {/* Left border image */}
-            <img src={leftBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
+            {/* Left border text - NO SVG, WRITING MODE */}
+            <div style={{ position: 'absolute', top: BAND, left: 0, width: BAND, height: CARD_H - (BAND * 2), backgroundColor: "#cb2027", zIndex: 20, overflow: 'hidden', color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', writingMode: "vertical-rl", textOrientation: "mixed", transform: "rotate(180deg)", textAlign: "left", lineHeight: `${BAND}px`, whiteSpace: "nowrap" }}>
+                <span style={{ paddingTop: 4 }}>{borderText}</span>
+            </div>
             
-            {/* Right border image */}
-            <img src={rightBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
+            {/* Right border text - NO SVG, WRITING MODE */}
+            <div style={{ position: 'absolute', top: BAND, right: 0, width: BAND, height: CARD_H - (BAND * 2), backgroundColor: "#cb2027", zIndex: 20, overflow: 'hidden', color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', writingMode: "vertical-rl", textOrientation: "mixed", textAlign: "left", lineHeight: `${BAND}px`, whiteSpace: "nowrap" }}>
+                <span style={{ paddingTop: 4 }}>{borderText}</span>
+            </div>
 
             {isFront ? (
                 <>
-                    {/* Top text */}
-            <div style={{ position: "absolute", top: 22, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                <span style={{ fontSize: 22, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
-                <span style={{ fontSize: 22, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
-            </div>
-
-            {/* Logo - Circle */}
-            <div style={{ position: "absolute", top: 82, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 10 }}>
-                <div style={{ width: 110, height: 110, borderRadius: 110, overflow: "hidden", border: "3px solid #111111", background: "white", boxShadow: "0 6px 16px rgba(0,0,0,0.15)", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                    <img src="/m1g-logo.png" alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} crossOrigin="anonymous" />
-                </div>
-            </div>
-
-            {/* Photo Box */}
-            <div style={{ position: "absolute", top: 205, left: "50%", transform: "translateX(-50%)", width: 105, height: 130, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
-                <div style={{ width: "100%", height: "100%", borderRadius: 6, overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {member.avatar ? (
-                        <img src={member.avatar} alt="Foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} crossOrigin="anonymous" />
-                    ) : (
-                        <span style={{ fontSize: 36, color: "#9ca3af", fontWeight: 800 }}>{fullName.charAt(0)}</span>
-                    )}
-                </div>
-            </div>
-
-            {/* Role Badge - Fixed centering */}
-            {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                <div style={{ position: "absolute", top: 350, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 20 }}>
-                    <div style={{ backgroundColor: "#111111", padding: "6px 16px", borderRadius: 100, border: "2px solid #ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 10px rgba(0,0,0,0.3)" }}>
-                        <span style={{ color: "#ffffff", fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", lineHeight: 1 }}>
-                            {role}
-                        </span>
+                    {/* Top text - ABSOLUTE ALIGN, NO FLEX */}
+                    <div style={{ position: "absolute", top: 22, left: 0, width: CARD_W, textAlign: "center", zIndex: 10 }}>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: "24px" }}>M1G ARAMA KURTARMA</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: "24px" }}>DERNEĞİ</div>
                     </div>
-                </div>
-            )}
+
+                    {/* Logo - NO OVERFLOW CLIPPING, MANUAL MATH */}
+                    {/* 320 / 2 = 160. 110 width -> 160 - 55 = 105 left */}
+                    <div style={{ position: "absolute", top: 82, left: 105, width: 110, height: 110, borderRadius: 55, border: "3px solid #111111", background: "white", boxShadow: "0 6px 16px rgba(0,0,0,0.15)", textAlign: "center", lineHeight: "104px", zIndex: 10, boxSizing: "border-box" }}>
+                        <img src="/m1g-logo.png" alt="Logo" crossOrigin="anonymous" style={{ width: 94, height: 94, borderRadius: 47, objectFit: "contain", verticalAlign: "middle", display: "inline-block" }} />
+                    </div>
+
+                    {/* Photo Box - NO OVERFLOW CLIPPING */}
+                    {/* 320 / 2 = 160. 105 width -> 160 - 52.5 = 107.5 left */}
+                    <div style={{ position: "absolute", top: 205, left: 107.5, width: 105, height: 130, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", textAlign: "center", lineHeight: "124px", zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)", boxSizing: "border-box" }}>
+                        {member.avatar ? (
+                            <img src={member.avatar} alt="Foto" crossOrigin="anonymous" style={{ width: 99, height: 124, borderRadius: 9, objectFit: "cover", verticalAlign: "middle", display: "inline-block", backgroundColor: "#f3f4f6" }} />
+                        ) : (
+                            <div style={{ display: "inline-block", verticalAlign: "middle", width: 99, height: 124, borderRadius: 9, background: "#f3f4f6", lineHeight: "124px" }}>
+                                <span style={{ fontSize: 36, color: "#9ca3af", fontWeight: 800 }}>{fullName.charAt(0)}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Role Badge - LINE-HEIGHT TRICK */}
+                    {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
+                        {/* 320 / 2 = 160. 200 width -> left 60 */}
+                        <div style={{ position: "absolute", top: 350, left: 60, width: 200, height: 26, backgroundColor: "#111111", borderRadius: 13, border: "2px solid #ffffff", textAlign: "center", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", zIndex: 20, boxSizing: "border-box", lineHeight: "22px" }}>
+                            <span style={{ color: "#ffffff", fontSize: "11px", fontWeight: "bold", textTransform: "uppercase" }}>
+                                {role}
+                            </span>
+                        </div>
+                    )}
 
                     {/* Member Name */}
-                    <div style={{ position: "absolute", top: 380, left: 0, right: 0, textAlign: "center", padding: "0 15px", zIndex: 10 }}>
-                        <span style={{ fontSize: fullName.length > 20 ? 17 : fullName.length > 15 ? 20 : 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: 1.1 }}>{fullName}</span>
+                    <div style={{ position: "absolute", top: 385, left: 15, width: 290, textAlign: "center", zIndex: 10 }}>
+                        <span style={{ fontSize: fullName.length > 20 ? 17 : fullName.length > 15 ? 20 : 24, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "0px", lineHeight: "26px" }}>{fullName}</span>
                     </div>
 
-                    {/* Blood Type & Emergency Contact */}
-                    <div style={{ position: "absolute", bottom: 25, left: 24, right: 24, display: "flex", flexDirection: "column", gap: 8, zIndex: 10 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #e5e7eb", paddingBottom: 6 }}>
-                            <span style={{ fontSize: 11, fontWeight: 900, color: "#555", letterSpacing: "1px" }}>KAN GRUBU</span>
-                            <span style={{ fontSize: 16, fontWeight: 900, color: "#cb2027" }}>{bloodType}</span>
+                    {/* Blood Type & Emergency Contact - FLOAT INSTEAD OF FLEX */}
+                    <div style={{ position: "absolute", bottom: 25, left: 24, width: 272, zIndex: 10 }}>
+                        <div style={{ borderBottom: "2px solid #e5e7eb", paddingBottom: 6, marginBottom: 8, height: 20 }}>
+                            <span style={{ float: "left", fontSize: 11, fontWeight: 900, color: "#555", letterSpacing: "1px", lineHeight: "20px" }}>KAN GRUBU</span>
+                            <span style={{ float: "right", fontSize: 16, fontWeight: 900, color: "#cb2027", lineHeight: "20px" }}>{bloodType}</span>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                            <span style={{ fontSize: 9, fontWeight: 900, color: "#555", letterSpacing: "0.5px" }}>YAKIN İLETİŞİM (ACİL DURUM)</span>
-                            <span style={{ fontSize: 12, fontWeight: 900, color: "#111111", marginTop: 2 }}>{emContactName} <span style={{ color: "#cb2027", margin: "0 4px" }}>•</span> {emContactPhone}</span>
+                        <div style={{ clear: "both" }}>
+                            <div style={{ fontSize: 9, fontWeight: 900, color: "#555", letterSpacing: "0.5px", lineHeight: "12px" }}>YAKIN İLETİŞİM (ACİL DURUM)</div>
+                            <div style={{ fontSize: 12, fontWeight: 900, color: "#111111", marginTop: 2, lineHeight: "14px" }}>{emContactName} <span style={{ color: "#cb2027", margin: "0 4px" }}>•</span> {emContactPhone}</div>
                         </div>
                     </div>
                 </>
             ) : (
                 <>
-                    {/* Top text */}
-                    <div style={{ position: "absolute", top: 32, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                        <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>M1G ARAMA KURTARMA</span>
-                        <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
+                    {/* Top text - ABSOLUTE ALIGN, NO FLEX */}
+                    <div style={{ position: "absolute", top: 32, left: 0, width: CARD_W, textAlign: "center", zIndex: 10 }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: "22px" }}>M1G ARAMA KURTARMA</div>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: "22px" }}>DERNEĞİ</div>
                     </div>
 
                     {/* Info Text */}
-                    <div style={{ position: "absolute", top: 95, left: 24, right: 24, textAlign: "center", zIndex: 10 }}>
-                        <p style={{ fontSize: 11, fontWeight: 700, color: "#555", lineHeight: 1.6 }}>
+                    <div style={{ position: "absolute", top: 95, left: 24, width: 272, textAlign: "center", zIndex: 10 }}>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: "#555", lineHeight: "16px", margin: 0 }}>
                             Bu kimlik kartı, M1G Arama ve Kurtarma Derneği'ne aittir ve başkasına devredilemez.
                         </p>
                     </div>
 
-                    {/* QR Code in Center */}
-                    <div style={{ position: "absolute", top: 150, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 10 }}>
-                        <div style={{ background: "white", padding: 10, borderRadius: 16, border: "2px solid #111111", boxShadow: "0 6px 16px rgba(0,0,0,0.1)" }}>
+                    {/* QR Code in Center - FLOAT/MARGIN MATH INSTEAD OF FLEX */}
+                    {/* 320 / 2 = 160. QR Box is 130 + 20(padding) + 4(border) = 154 width. Left = 160 - 77 = 83 */}
+                    <div style={{ position: "absolute", top: 150, left: 83, width: 154, zIndex: 10, textAlign: "center" }}>
+                        <div style={{ width: 154, height: 154, background: "white", padding: 10, borderRadius: 16, border: "2px solid #111111", boxShadow: "0 6px 16px rgba(0,0,0,0.1)", boxSizing: "border-box" }}>
                             <QRCodeSVG value={cardUrl} size={130} level="H" fgColor="#000000" />
                         </div>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: "#111", marginTop: 8 }}>QR KODU OKUTUN</span>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: "#111", marginTop: 8, lineHeight: "12px" }}>QR KODU OKUTUN</div>
                     </div>
 
-                    {/* Found/Lost Contact Info */}
-                    <div style={{ position: "absolute", bottom: 30, left: 24, right: 24, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", backgroundColor: "#f3f4f6", border: "2px solid #e5e7eb", padding: "16px", borderRadius: "16px", zIndex: 10 }}>
-                        <span style={{ fontSize: 9, fontWeight: 900, color: "#555", textTransform: "uppercase" }}>KAYBOLDUĞUNDA ARANACAK NUMARA</span>
-                        <span style={{ fontSize: 9, fontWeight: 900, color: "#cb2027", marginTop: 6 }}>YÖNETİM KURULU BAŞKANI</span>
-                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginTop: 2 }}>{member.presidentPhone || "0(544) 727-6075"}</span>
+                    {/* Found/Lost Contact Info - ABSOLUTE ALIGN */}
+                    <div style={{ position: "absolute", bottom: 30, left: 24, width: 272, textAlign: "center", backgroundColor: "#f3f4f6", border: "2px solid #e5e7eb", padding: "16px", borderRadius: "16px", zIndex: 10, boxSizing: "border-box" }}>
+                        <div style={{ fontSize: 9, fontWeight: 900, color: "#555", textTransform: "uppercase", lineHeight: "12px" }}>KAYBOLDUĞUNDA ARANACAK NUMARA</div>
+                        <div style={{ fontSize: 9, fontWeight: 900, color: "#cb2027", marginTop: 6, lineHeight: "12px" }}>YÖNETİM KURULU BAŞKANI</div>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginTop: 2, lineHeight: "20px" }}>{member.presidentPhone || "0(544) 727-6075"}</div>
                     </div>
                 </>
             )}
