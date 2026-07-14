@@ -204,7 +204,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
 
                     {/* ROL METNİ (sadece Yönetim, Denetim ve Onur Üyeleri) */}
                     {/* top: 202+132+12 = 346 civarı ortalanmış */}
-                    {(role.includes("YÖNETİM") || role.includes("DENETİM") || role.includes("ONUR ÜYESİ")) && (
+                    {(role.includes("YÖNETİM") || role.includes("DENETİM") || role.includes("ONUR ÜYESİ") || role.includes("BAŞKAN") || role.includes("SAYMAN") || role.includes("SEKRETER") || role.includes("KURUCU")) && (
                         <div style={{
                             position: "absolute",
                             top: 350,
