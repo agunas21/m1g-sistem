@@ -7,8 +7,6 @@ export const CARD_W = 320;
 export const CARD_H = 510;
 
 const borderText = "M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • ";
-const leftBorderSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="14" height="510" xmlns="http://www.w3.org/2000/svg"><rect width="14" height="510" fill="#cb2027" /><text x="-255" y="8" transform="rotate(-90)" fill="white" font-size="8" font-weight="900" font-family="Inter, Arial, sans-serif" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central">${borderText}</text></svg>`)}`;
-const rightBorderSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="14" height="510" xmlns="http://www.w3.org/2000/svg"><rect width="14" height="510" fill="#cb2027" /><text x="255" y="-6" transform="rotate(90)" fill="white" font-size="8" font-weight="900" font-family="Inter, Arial, sans-serif" letter-spacing="1.5" text-anchor="middle" dominant-baseline="central">${borderText}</text></svg>`)}`;
 
 export interface KimlikCardProps {
     member: {
@@ -71,21 +69,93 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
             {/* Inner white background */}
             <div style={{ position: "absolute", top: 14, bottom: 14, left: 14, right: 14, backgroundColor: "#ffffff", zIndex: 1 }}></div>
             
-            {/* Top border text */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
-                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>{borderText}</span>
-            </div>
+            {/* Top border SVG inline */}
+            <svg 
+                width="320" 
+                height="14" 
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, width: 320, height: 14, zIndex: 20 }}
+            >
+                <rect width="320" height="14" fill="#cb2027" />
+                <text 
+                    x="4" 
+                    y="7" 
+                    fill="white" 
+                    fontSize="8" 
+                    fontWeight="900" 
+                    fontFamily="Inter, Arial, sans-serif" 
+                    letterSpacing="1.5" 
+                    dominantBaseline="central"
+                >
+                    {borderText}
+                </text>
+            </svg>
             
-            {/* Bottom border text */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 14, zIndex: 20, overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>
-                <span style={{ color: 'white', fontSize: '8px', fontWeight: 900, letterSpacing: '1.5px', paddingLeft: 4, lineHeight: '14px', display: 'inline-block', verticalAlign: 'top' }}>{borderText}</span>
-            </div>
+            {/* Bottom border SVG inline */}
+            <svg 
+                width="320" 
+                height="14" 
+                style={{ position: 'absolute', bottom: 0, left: 0, right: 0, width: 320, height: 14, zIndex: 20 }}
+            >
+                <rect width="320" height="14" fill="#cb2027" />
+                <text 
+                    x="4" 
+                    y="7" 
+                    fill="white" 
+                    fontSize="8" 
+                    fontWeight="900" 
+                    fontFamily="Inter, Arial, sans-serif" 
+                    letterSpacing="1.5" 
+                    dominantBaseline="central"
+                >
+                    {borderText}
+                </text>
+            </svg>
             
-            {/* Left border image */}
-            <img src={leftBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
+            {/* Left border SVG inline */}
+            <svg 
+                width="14" 
+                height="510" 
+                style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 14, height: 510, zIndex: 20 }}
+            >
+                <rect width="14" height="510" fill="#cb2027" />
+                <text 
+                    x="-255" 
+                    y="7" 
+                    transform="rotate(-90)" 
+                    fill="white" 
+                    fontSize="8" 
+                    fontWeight="900" 
+                    fontFamily="Inter, Arial, sans-serif" 
+                    letterSpacing="1.5" 
+                    textAnchor="middle" 
+                    dominantBaseline="central"
+                >
+                    {borderText}
+                </text>
+            </svg>
             
-            {/* Right border image */}
-            <img src={rightBorderSvg} alt="" width={14} height={510} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20, display: 'block' }} />
+            {/* Right border SVG inline */}
+            <svg 
+                width="14" 
+                height="510" 
+                style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 14, height: 510, zIndex: 20 }}
+            >
+                <rect width="14" height="510" fill="#cb2027" />
+                <text 
+                    x="255" 
+                    y="-7" 
+                    transform="rotate(90)" 
+                    fill="white" 
+                    fontSize="8" 
+                    fontWeight="900" 
+                    fontFamily="Inter, Arial, sans-serif" 
+                    letterSpacing="1.5" 
+                    textAnchor="middle" 
+                    dominantBaseline="central"
+                >
+                    {borderText}
+                </text>
+            </svg>
 
             {isFront ? (
                 <>
