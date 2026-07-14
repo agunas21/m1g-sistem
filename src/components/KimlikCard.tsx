@@ -32,10 +32,10 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
     const cardUrl = `${origin}/kimlik/${member.kimlikToken || member.id}`;
 
     const getRole = (m: any) => {
-        if (m.role && m.role.trim() !== "" && m.role !== "Üye" && m.role !== "Gönüllü" && m.role !== "ÜYE" && m.role !== "GÖNÜLLÜ") return m.role.trim().toUpperCase();
+        if (m.role && m.role.trim() !== "" && m.role !== "Üye" && m.role !== "Gönüllü" && m.role !== "ÜYE" && m.role !== "GÖNÜLLÜ") return m.role.trim().toLocaleUpperCase('tr-TR');
         if (m.honorary === "Evet" || m.honorary === "EVET") return "ONUR ÜYESİ";
         if (m.memberType === "Üye" || m.memberType === "Asil Üye" || m.memberType === "ASİL ÜYE" || m.role === "Üye" || m.role === "ÜYE") return "ÜYE";
-        if (m.memberType && m.memberType.trim() !== "" && m.memberType !== "Gönüllü" && m.memberType !== "GÖNÜLLÜ") return m.memberType.trim().toUpperCase();
+        if (m.memberType && m.memberType.trim() !== "" && m.memberType !== "Gönüllü" && m.memberType !== "GÖNÜLLÜ") return m.memberType.trim().toLocaleUpperCase('tr-TR');
         return "GÖNÜLLÜ";
     };
 

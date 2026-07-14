@@ -102,10 +102,10 @@ export default function KimlikPage({ params }: { params: Promise<{ id: string }>
     };
 
     const role = (() => {
-        if (memberRaw.role && memberRaw.role.trim() !== "" && memberRaw.role !== "Üye" && memberRaw.role !== "Gönüllü") return memberRaw.role.trim().toUpperCase();
+        if (memberRaw.role && memberRaw.role.trim() !== "" && memberRaw.role !== "Üye" && memberRaw.role !== "Gönüllü") return memberRaw.role.trim().toLocaleUpperCase('tr-TR');
         if (memberRaw.honorary === "Evet") return "ONUR ÜYESİ";
         if (memberRaw.memberType === "Üye" || memberRaw.memberType === "Asil Üye" || memberRaw.memberType === "ASİL ÜYE") return "ÜYE";
-        if (memberRaw.memberType && memberRaw.memberType.trim() !== "" && memberRaw.memberType !== "Gönüllü") return memberRaw.memberType.trim().toUpperCase();
+        if (memberRaw.memberType && memberRaw.memberType.trim() !== "" && memberRaw.memberType !== "Gönüllü") return memberRaw.memberType.trim().toLocaleUpperCase('tr-TR');
         return "GÖNÜLLÜ";
     })();
 

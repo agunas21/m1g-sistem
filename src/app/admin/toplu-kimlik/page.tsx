@@ -32,10 +32,10 @@ export default function TopluKimlik() {
     }, []);
 
     const getRole = (m: any) => {
-        if (m.role && m.role.trim() !== "" && m.role !== "Üye" && m.role !== "Gönüllü") return m.role.trim().toUpperCase();
+        if (m.role && m.role.trim() !== "" && m.role !== "Üye" && m.role !== "Gönüllü") return m.role.trim().toLocaleUpperCase('tr-TR');
         if (m.honorary === "Evet") return "ONUR ÜYESİ";
         if (m.memberType === "Üye" || m.memberType === "Asil Üye" || m.memberType === "ASİL ÜYE") return "ÜYE";
-        if (m.memberType && m.memberType.trim() !== "" && m.memberType !== "Gönüllü") return m.memberType.trim().toUpperCase();
+        if (m.memberType && m.memberType.trim() !== "" && m.memberType !== "Gönüllü") return m.memberType.trim().toLocaleUpperCase('tr-TR');
         return "GÖNÜLLÜ";
     };
 
