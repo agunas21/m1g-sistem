@@ -58,7 +58,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
     const nameFontSize = fullName.length > 20 ? 17 : fullName.length > 15 ? 20 : 24;
 
     // Yan bantlar için tekrar eden metin - arka arkaya yeterince
-    const repeatText = "M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • M1G ARAMA KURTARMA • ";
+    const repeatText = Array(15).fill("M1G ARAMA KURTARMA DERNEĞİ").join(" • ") + " • ";
 
     const transformStyle = scale !== 1 ? { transform: `scale(${scale})`, transformOrigin: "top left" } : {};
 
@@ -76,74 +76,32 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                 ...transformStyle
             }}
         >
-            {/* ===== KIRMIZI BANTLAR (4 taraf) ===== */}
-
-            {/* Üst bant */}
-            <div style={{
-                position: "absolute", top: 0, left: 0, width: 320, height: 14,
-                backgroundColor: "#cb2027", zIndex: 10, overflow: "hidden"
-            }}>
-                <span style={{
-                    position: "absolute", top: 0, left: 0,
-                    color: "#ffffff", fontSize: 7, fontWeight: "900",
-                    letterSpacing: "1.5px", lineHeight: "14px",
-                    whiteSpace: "nowrap", fontFamily: "'Inter', sans-serif"
-                }}>{repeatText}</span>
-            </div>
-
-            {/* Alt bant */}
-            <div style={{
-                position: "absolute", bottom: 0, left: 0, width: 320, height: 14,
-                backgroundColor: "#cb2027", zIndex: 10, overflow: "hidden"
-            }}>
-                <span style={{
-                    position: "absolute", top: 0, left: 0,
-                    color: "#ffffff", fontSize: 7, fontWeight: "900",
-                    letterSpacing: "1.5px", lineHeight: "14px",
-                    whiteSpace: "nowrap", fontFamily: "'Inter', sans-serif"
-                }}>{repeatText}</span>
-            </div>
-
-            {/* Sol bant - SVG ile döndürülmüş yazı */}
+            {/* ===== KIRMIZI BANTLAR (Tek parça SVG ile kesintisiz çerçeve) ===== */}
             <svg
-                width={14}
+                width={320}
                 height={510}
-                style={{ position: "absolute", top: 0, left: 0, zIndex: 10 }}
+                style={{ position: "absolute", top: 0, left: 0, zIndex: 10, pointerEvents: "none" }}
             >
-                <rect width={14} height={510} fill="#cb2027" />
-                <text
-                    x={-496}
-                    y={7}
-                    transform="rotate(-90)"
-                    fill="white"
-                    fontSize={7}
-                    fontWeight="900"
-                    fontFamily="'Inter', sans-serif"
-                    letterSpacing={1.5}
-                    dominantBaseline="central"
-                >
+                {/* 14px kalınlığında, içi boş dış çerçeve */}
+                <path d="M0,0 h320 v510 h-320 v-510 M14,14 v482 h292 v-482 h-292" fill="#cb2027" fillRule="evenodd" />
+
+                {/* Üst bant metni (Sağa doğru) */}
+                <text x={14} y={10.5} fill="white" fontSize={7} fontWeight="900" fontFamily="'Inter', sans-serif" letterSpacing={1.5}>
                     {repeatText}
                 </text>
-            </svg>
 
-            {/* Sağ bant - SVG ile döndürülmüş yazı */}
-            <svg
-                width={14}
-                height={510}
-                style={{ position: "absolute", top: 0, right: 0, zIndex: 10 }}
-            >
-                <rect width={14} height={510} fill="#cb2027" />
-                <text
-                    x={10}
-                    y={-7}
-                    transform="rotate(90)"
-                    fill="white"
-                    fontSize={7}
-                    fontWeight="900"
-                    fontFamily="'Inter', sans-serif"
-                    letterSpacing={1.5}
-                    dominantBaseline="central"
-                >
+                {/* Sağ bant metni (Aşağı doğru) */}
+                <text x={14} y={-309.5} transform="rotate(90)" fill="white" fontSize={7} fontWeight="900" fontFamily="'Inter', sans-serif" letterSpacing={1.5}>
+                    {repeatText}
+                </text>
+
+                {/* Alt bant metni (Sola doğru) */}
+                <text x={-306} y={-499.5} transform="rotate(180)" fill="white" fontSize={7} fontWeight="900" fontFamily="'Inter', sans-serif" letterSpacing={1.5}>
+                    {repeatText}
+                </text>
+
+                {/* Sol bant metni (Yukarı doğru) */}
+                <text x={-496} y={10.5} transform="rotate(-90)" fill="white" fontSize={7} fontWeight="900" fontFamily="'Inter', sans-serif" letterSpacing={1.5}>
                     {repeatText}
                 </text>
             </svg>
@@ -262,6 +220,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                                 border: "2px solid #ffffff",
                                 paddingLeft: 16,
                                 paddingRight: 16,
+                                paddingTop: 4,
                                 height: 26,
                                 boxSizing: "border-box",
                                 boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
@@ -271,9 +230,8 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                                     fontSize: 11,
                                     fontWeight: "bold",
                                     fontFamily: "'Inter', sans-serif",
-                                    lineHeight: "22px",
-                                    display: "inline-block",
-                                    verticalAlign: "top",
+                                    lineHeight: "14px",
+                                    display: "block",
                                     textTransform: "uppercase"
                                 }}>
                                     {role}
