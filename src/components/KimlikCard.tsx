@@ -119,7 +119,6 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
 
                     {/* Role Badge - LINE-HEIGHT TRICK */}
                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
-                        {/* 320 / 2 = 160. 200 width -> left 60 */}
                         <div style={{ position: "absolute", top: 350, left: 60, width: 200, height: 26, backgroundColor: "#111111", borderRadius: 13, border: "2px solid #ffffff", textAlign: "center", boxShadow: "0 4px 10px rgba(0,0,0,0.3)", zIndex: 20, boxSizing: "border-box", lineHeight: "22px" }}>
                             <span style={{ color: "#ffffff", fontSize: "11px", fontWeight: "bold", textTransform: "uppercase" }}>
                                 {role}
