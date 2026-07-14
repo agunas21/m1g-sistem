@@ -165,11 +165,9 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                 <span style={{ fontSize: 22, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
             </div>
 
-            {/* Logo - Circle */}
+            {/* Logo */}
             <div style={{ position: "absolute", top: 82, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 10 }}>
-                <div style={{ width: 110, height: 110, borderRadius: 110, overflow: "hidden", border: "3px solid #111111", background: "white", boxShadow: "0 6px 16px rgba(0,0,0,0.15)", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                    <img src="/m1g-logo.png" alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} crossOrigin="anonymous" />
-                </div>
+                <img src="/m1g-logo.png" alt="Logo" style={{ width: 116, height: 116, objectFit: "contain" }} crossOrigin="anonymous" />
             </div>
 
             {/* Photo Box */}
