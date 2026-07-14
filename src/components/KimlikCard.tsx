@@ -95,17 +95,18 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                         <span style={{ fontSize: 20, fontWeight: 900, color: "#111", letterSpacing: "0px", lineHeight: 1.1 }}>DERNEĞİ</span>
                     </div>
 
-                    {/* Huge Logo - Fixed using background-image */}
-                    <div style={{ position: "absolute", top: 65, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 5 }}>
-                        <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)", zIndex: 4 }}></div>
-                        <div style={{ width: 130, height: 130, backgroundImage: "url(/m1g-logo.png)", backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat", zIndex: 5 }}></div>
+                    {/* Logo - Circle */}
+                    <div style={{ position: "absolute", top: 100, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 10 }}>
+                        <div style={{ width: 100, height: 100, borderRadius: 100, overflow: "hidden", border: "3px solid #111111", background: "white", boxShadow: "0 6px 16px rgba(0,0,0,0.15)", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                            <img src="/m1g-logo.png" alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} crossOrigin="anonymous" />
+                        </div>
                     </div>
 
                     {/* Photo Box */}
                     <div style={{ position: "absolute", top: 220, left: "50%", transform: "translateX(-50%)", width: 90, height: 110, borderRadius: 12, border: "3px solid #111111", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", padding: 2, zIndex: 10, boxShadow: "0 6px 16px rgba(0,0,0,0.15)" }}>
                         <div style={{ width: "100%", height: "100%", borderRadius: 6, overflow: "hidden", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             {member.avatar ? (
-                                <img src={member.avatar} alt="Foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                <img src={member.avatar} alt="Foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} crossOrigin="anonymous" />
                             ) : (
                                 <span style={{ fontSize: 36, color: "#9ca3af", fontWeight: 800 }}>{fullName.charAt(0)}</span>
                             )}
@@ -116,7 +117,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                     {role !== "ÜYE" && role !== "GÖNÜLLÜ" && (
                         <div style={{ position: "absolute", top: 345, left: 0, right: 0, textAlign: "center", zIndex: 20 }}>
                             <div style={{ backgroundColor: "#111111", padding: "4px 14px", borderRadius: 100, border: "2px solid #ffffff", display: "inline-block", boxShadow: "0 4px 10px rgba(0,0,0,0.3)" }}>
-                                <span style={{ color: "#ffffff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "1px", display: "block" }}>
+                                <span style={{ color: "#ffffff", fontSize: "10px", fontWeight: "bold", textTransform: "uppercase" }}>
                                     {role}
                                 </span>
                             </div>
@@ -160,14 +161,14 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                         <div style={{ background: "white", padding: 10, borderRadius: 16, border: "2px solid #111111", boxShadow: "0 6px 16px rgba(0,0,0,0.1)" }}>
                             <QRCodeSVG value={cardUrl} size={130} level="H" fgColor="#000000" />
                         </div>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: "#111", marginTop: 8, letterSpacing: "1px" }}>QR KODU OKUTUN</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: "#111", marginTop: 8 }}>QR KODU OKUTUN</span>
                     </div>
 
                     {/* Found/Lost Contact Info */}
                     <div style={{ position: "absolute", bottom: 30, left: 24, right: 24, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", backgroundColor: "#f3f4f6", border: "2px solid #e5e7eb", padding: "16px", borderRadius: "16px", zIndex: 10 }}>
-                        <span style={{ fontSize: 9, fontWeight: 900, color: "#555", textTransform: "uppercase", letterSpacing: "1px" }}>KAYBOLDUĞUNDA ARANACAK NUMARA</span>
-                        <span style={{ fontSize: 9, fontWeight: 900, color: "#cb2027", marginTop: 6, letterSpacing: "1px" }}>YÖNETİM KURULU BAŞKANI</span>
-                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginTop: 2, letterSpacing: "1px" }}>{member.presidentPhone || "0(544) 727-6075"}</span>
+                        <span style={{ fontSize: 9, fontWeight: 900, color: "#555", textTransform: "uppercase" }}>KAYBOLDUĞUNDA ARANACAK NUMARA</span>
+                        <span style={{ fontSize: 9, fontWeight: 900, color: "#cb2027", marginTop: 6 }}>YÖNETİM KURULU BAŞKANI</span>
+                        <span style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginTop: 2 }}>{member.presidentPhone || "0(544) 727-6075"}</span>
                     </div>
                 </>
             )}
