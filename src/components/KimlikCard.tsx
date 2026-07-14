@@ -71,7 +71,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                 position: "relative",
                 flexShrink: 0,
                 backgroundColor: "#ffffff",
-                fontFamily: "Arial, Helvetica, sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 overflow: "hidden",
                 ...transformStyle
             }}
@@ -87,7 +87,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                     position: "absolute", top: 0, left: 0,
                     color: "#ffffff", fontSize: 7, fontWeight: "900",
                     letterSpacing: "1.5px", lineHeight: "14px",
-                    whiteSpace: "nowrap", fontFamily: "Arial, Helvetica, sans-serif"
+                    whiteSpace: "nowrap", fontFamily: "'Inter', sans-serif"
                 }}>{repeatText}</span>
             </div>
 
@@ -100,7 +100,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                     position: "absolute", top: 0, left: 0,
                     color: "#ffffff", fontSize: 7, fontWeight: "900",
                     letterSpacing: "1.5px", lineHeight: "14px",
-                    whiteSpace: "nowrap", fontFamily: "Arial, Helvetica, sans-serif"
+                    whiteSpace: "nowrap", fontFamily: "'Inter', sans-serif"
                 }}>{repeatText}</span>
             </div>
 
@@ -118,7 +118,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                     fill="white"
                     fontSize={7}
                     fontWeight="900"
-                    fontFamily="Arial, Helvetica, sans-serif"
+                    fontFamily="'Inter', sans-serif"
                     letterSpacing={1.5}
                     dominantBaseline="central"
                 >
@@ -140,7 +140,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                     fill="white"
                     fontSize={7}
                     fontWeight="900"
-                    fontFamily="Arial, Helvetica, sans-serif"
+                    fontFamily="'Inter', sans-serif"
                     letterSpacing={1.5}
                     dominantBaseline="central"
                 >
@@ -160,14 +160,14 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                     }}>
                         <div style={{
                             fontSize: 22, fontWeight: "900", color: "#111111",
-                            lineHeight: "26px", fontFamily: "Arial, Helvetica, sans-serif",
+                            lineHeight: "26px", fontFamily: "'Inter', sans-serif",
                             letterSpacing: "0px"
                         }}>
                             M1G ARAMA KURTARMA
                         </div>
                         <div style={{
                             fontSize: 22, fontWeight: "900", color: "#111111",
-                            lineHeight: "26px", fontFamily: "Arial, Helvetica, sans-serif",
+                            lineHeight: "26px", fontFamily: "'Inter', sans-serif",
                             letterSpacing: "0px"
                         }}>
                             DERNEĞİ
@@ -263,13 +263,14 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                                 paddingLeft: 16,
                                 paddingRight: 16,
                                 height: 26,
-                                boxSizing: "border-box"
+                                boxSizing: "border-box",
+                                boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
                             }}>
                                 <span style={{
                                     color: "#ffffff",
                                     fontSize: 11,
                                     fontWeight: "bold",
-                                    fontFamily: "Arial, Helvetica, sans-serif",
+                                    fontFamily: "'Inter', sans-serif",
                                     lineHeight: "22px",
                                     display: "inline-block",
                                     verticalAlign: "top",
@@ -296,7 +297,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             fontWeight: "900",
                             color: "#111111",
                             textTransform: "uppercase",
-                            fontFamily: "Arial, Helvetica, sans-serif",
+                            fontFamily: "'Inter', sans-serif",
                             lineHeight: "1.1",
                             letterSpacing: "0px"
                         }}>
@@ -331,7 +332,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             fontWeight: "900",
                             color: "#555555",
                             letterSpacing: "1px",
-                            fontFamily: "Arial, Helvetica, sans-serif"
+                            fontFamily: "'Inter', sans-serif"
                         }}>
                             KAN GRUBU
                         </span>
@@ -343,7 +344,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             fontSize: 16,
                             fontWeight: "900",
                             color: "#cb2027",
-                            fontFamily: "Arial, Helvetica, sans-serif"
+                            fontFamily: "'Inter', sans-serif"
                         }}>
                             {bloodType}
                         </span>
@@ -363,7 +364,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             fontWeight: "900",
                             color: "#555555",
                             letterSpacing: "0.5px",
-                            fontFamily: "Arial, Helvetica, sans-serif",
+                            fontFamily: "'Inter', sans-serif",
                             lineHeight: "14px"
                         }}>
                             YAKIN İLETİŞİM (ACİL DURUM)
@@ -372,7 +373,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             fontSize: 12,
                             fontWeight: "900",
                             color: "#111111",
-                            fontFamily: "Arial, Helvetica, sans-serif",
+                            fontFamily: "'Inter', sans-serif",
                             lineHeight: "18px",
                             marginTop: 2
                         }}>
@@ -393,13 +394,13 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                     }}>
                         <div style={{
                             fontSize: 20, fontWeight: "900", color: "#111111",
-                            lineHeight: "24px", fontFamily: "Arial, Helvetica, sans-serif"
+                            lineHeight: "24px", fontFamily: "'Inter', sans-serif"
                         }}>
                             M1G ARAMA KURTARMA
                         </div>
                         <div style={{
                             fontSize: 20, fontWeight: "900", color: "#111111",
-                            lineHeight: "24px", fontFamily: "Arial, Helvetica, sans-serif"
+                            lineHeight: "24px", fontFamily: "'Inter', sans-serif"
                         }}>
                             DERNEĞİ
                         </div>
@@ -412,7 +413,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                     }}>
                         <span style={{
                             fontSize: 11, fontWeight: "700", color: "#555555",
-                            lineHeight: "18px", fontFamily: "Arial, Helvetica, sans-serif"
+                            lineHeight: "18px", fontFamily: "'Inter', sans-serif"
                         }}>
                             Bu kimlik kartı, M1G Arama ve Kurtarma Derneği'ne aittir ve başkasına devredilemez.
                         </span>
@@ -441,7 +442,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             fontWeight: "700",
                             color: "#111111",
                             marginTop: 8,
-                            fontFamily: "Arial, Helvetica, sans-serif"
+                            fontFamily: "'Inter', sans-serif"
                         }}>
                             QR KODU OKUTUN
                         </div>
@@ -463,7 +464,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                         <div style={{
                             fontSize: 9, fontWeight: "900", color: "#555555",
                             textTransform: "uppercase",
-                            fontFamily: "Arial, Helvetica, sans-serif",
+                            fontFamily: "'Inter', sans-serif",
                             letterSpacing: "0.5px"
                         }}>
                             KAYBOLDUĞUNDA ARANACAK NUMARA
@@ -471,14 +472,14 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                         <div style={{
                             fontSize: 9, fontWeight: "900", color: "#cb2027",
                             marginTop: 6,
-                            fontFamily: "Arial, Helvetica, sans-serif"
+                            fontFamily: "'Inter', sans-serif"
                         }}>
                             YÖNETİM KURULU BAŞKANI
                         </div>
                         <div style={{
                             fontSize: 18, fontWeight: "900", color: "#111111",
                             marginTop: 2,
-                            fontFamily: "Arial, Helvetica, sans-serif"
+                            fontFamily: "'Inter', sans-serif"
                         }}>
                             {member.presidentPhone || "0(544) 727-6075"}
                         </div>
