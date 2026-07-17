@@ -129,10 +129,10 @@ export default function CoordinateLocator() {
     const bearingToTarget = (userLocation && currentLatLon) ? calculateBearing(userLocation, currentLatLon) : null;
 
     return (
-        <div className="w-full min-h-[calc(100vh-80px)] mt-20 flex flex-col md:flex-row text-white overflow-hidden bg-neutral-950">
+        <div className="w-full h-[calc(100dvh-80px)] mt-20 flex flex-col md:flex-row text-white overflow-hidden bg-neutral-950">
             
             {/* SOL/ÜST PANEL: Girdi ve Bilgi */}
-            <div className="w-full md:w-1/3 bg-neutral-900 p-4 md:p-6 flex flex-col h-[60vh] md:h-[calc(100vh-80px)] overflow-y-auto border-b md:border-b-0 md:border-r border-neutral-800">
+            <div className="w-full md:w-1/3 bg-neutral-900 p-3 md:p-6 flex flex-col h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r border-neutral-800">
                 
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-black text-red-500 tracking-tighter">NOKTA ATIŞI</h2>
@@ -253,7 +253,7 @@ export default function CoordinateLocator() {
             </div>
 
             {/* SAĞ/ALT PANEL: Harita */}
-            <div className="w-full md:w-2/3 h-[50vh] md:h-[calc(100vh-80px)] relative bg-neutral-800 flex items-center justify-center">
+            <div className="w-full md:w-2/3 h-1/2 md:h-full relative bg-neutral-800 flex items-center justify-center">
                 <CoordinateLocatorMap 
                     currentLatLon={currentLatLon}
                     markers={markers}

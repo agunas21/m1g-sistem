@@ -23,6 +23,17 @@ function MapCenter({ position }: { position: [number, number] | null }) {
     return null;
 }
 
+function MapResizer() {
+    const map = useMap();
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [map]);
+    return null;
+}
+
 export default function CoordinateLocatorMap({ currentLatLon, markers, userLocation, handleMapClick }: any) {
     const [icons, setIcons] = useState<any>(null);
 
@@ -68,6 +79,7 @@ export default function CoordinateLocatorMap({ currentLatLon, markers, userLocat
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <MapResizer />
             <MapEvents onMapClick={handleMapClick} />
             
             {currentLatLon && <MapCenter position={[currentLatLon.lat, currentLatLon.lon]} />}

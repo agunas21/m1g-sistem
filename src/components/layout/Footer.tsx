@@ -42,7 +42,7 @@ export default function Footer() {
             .catch(console.error);
     }, []);
 
-    if (pathname?.startsWith("/admin")) return null;
+    if (pathname?.startsWith("/admin") || pathname === "/koordinat") return null;
 
     return (
         <>
