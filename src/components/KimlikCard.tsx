@@ -410,7 +410,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                         }}>
                             QR KODU OKUTUN
                         </div>
-                    </div>
+
 
                     {/* Kaybolunca aranacak kutu */}
                     <div style={{
