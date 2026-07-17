@@ -7,36 +7,6 @@ import { latLonToDMS, latLonToUTM, dmsToLatLon } from '@/lib/coordinates/convert
 import { calculateDistance, calculateBearing, formatDistance, bearingToCardinal } from '@/lib/coordinates/geo-math';
 
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-
-// Fix Leaflet default icon path issues in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
-
-// Create custom icons for different markers
-const redIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
-
-const blueIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
-
 // Component to handle map clicks
 function MapEvents({ onMapClick }: { onMapClick: (latlng: L.LatLng) => void }) {
     useMapEvents({
@@ -67,6 +37,38 @@ interface MarkerData {
 
 export default function CoordinateLocator() {
     const [isOpen, setIsOpen] = useState(false);
+    const [icons, setIcons] = useState<{red: L.Icon, blue: L.Icon, green: L.Icon} | null>(null);
+
+    // Setup Leaflet icons on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined' && L) {
+            delete (L.Icon.Default.prototype as any)._getIconUrl;
+            L.Icon.Default.mergeOptions({
+                iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+            });
+
+            setIcons({
+                red: new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                }),
+                blue: new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                }),
+                green: new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                })
+            });
+        }
+    }, []);
+
     
     // Core state
     const [inputStr, setInputStr] = useState("");
@@ -340,7 +342,7 @@ export default function CoordinateLocator() {
                         <Marker 
                             key={m.id} 
                             position={[m.latLon.lat, m.latLon.lon]}
-                            icon={m.color === 'red' ? redIcon : blueIcon}
+                            icon={icons ? (m.color === 'red' ? icons.red : icons.blue) : undefined}
                         >
                             <Popup>
                                 <div className="font-bold">{m.label}</div>
@@ -353,11 +355,7 @@ export default function CoordinateLocator() {
                     {userLocation && (
                         <Marker 
                             position={[userLocation.lat, userLocation.lon]}
-                            icon={new L.Icon({
-                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-                            })}
+                            icon={icons ? icons.green : undefined}
                         >
                             <Popup>Sizin Konumunuz</Popup>
                         </Marker>
