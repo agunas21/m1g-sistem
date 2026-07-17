@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import QRCode from 'qrcode';
+import React from "react";
+import qrcode from 'qrcode-generator';
 
 export const CARD_W = 320;
 export const CARD_H = 510;
@@ -30,13 +30,17 @@ export interface KimlikCardProps {
 
 export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId }: KimlikCardProps) {
     const cardUrl = `${origin}/kimlik/${member.kimlikToken || member.id}`;
-    const [qrSrc, setQrSrc] = useState<string>('');
-
-    useEffect(() => {
-        QRCode.toDataURL(cardUrl, { width: 130, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
-            .then(url => setQrSrc(url))
-            .catch(err => console.error("QR kod hatası:", err));
-    }, [cardUrl]);
+    
+    // SYNCHRONOUS QR CODE GENERATION
+    let qrSrc = "";
+    try {
+        const qr = qrcode(0, 'H');
+        qr.addData(cardUrl);
+        qr.make();
+        qrSrc = qr.createDataURL(4, 0); // 4px cell size, 0 margin
+    } catch (e) {
+        console.error("QR Code Sync generation error:", e);
+    }
 
     const getRole = (m: any) => {
         if (m.role && m.role.trim() !== "" && m.role !== "Üye" && m.role !== "Gönüllü" && m.role !== "ÜYE" && m.role !== "GÖNÜLLÜ") return m.role.trim().toLocaleUpperCase('tr-TR');
