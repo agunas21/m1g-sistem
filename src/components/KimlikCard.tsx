@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import qrcode from 'qrcode-generator';
+import { QRCodeCanvas } from "qrcode.react";
 
 export const CARD_W = 320;
 export const CARD_H = 510;
@@ -31,19 +31,7 @@ export interface KimlikCardProps {
 export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId }: KimlikCardProps) {
     const cardUrl = `${origin}/kimlik/${member.kimlikToken || member.id}`;
     
-    // SYNCHRONOUS FAST SVG BASE64 IMAGE GENERATION
-    let qrSrc = "";
-    try {
-        const qr = qrcode(0, 'H');
-        qr.addData(cardUrl);
-        qr.make();
-        const svgString = qr.createSvgTag(4, 0); // Creates a pure SVG string with xmlns
-        // Convert the SVG string directly to a base64 Data URL for the <img> tag.
-        // This is perfectly captured by html2canvas and is extremely lightweight.
-        qrSrc = "data:image/svg+xml;base64," + btoa(svgString);
-    } catch (e) {
-        console.error("QR Code Sync generation error:", e);
-    }
+    // (Replaced fast generation with QRCodeCanvas below)
 
     const getRole = (m: any) => {
         if (m.role && m.role.trim() !== "" && m.role !== "Üye" && m.role !== "Gönüllü" && m.role !== "ÜYE" && m.role !== "GÖNÜLLÜ") return m.role.trim().toLocaleUpperCase('tr-TR');
@@ -393,7 +381,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             borderRadius: 12,
                             display: "inline-block"
                         }}>
-                            {qrSrc ? <img src={qrSrc} width={130} height={130} alt="QR" /> : <div style={{width: 130, height: 130, backgroundColor: "#fff"}}></div>}
+                            <QRCodeCanvas value={cardUrl} size={130} level="H" includeMargin={false} />
                         </div>
                         <div style={{
                             textAlign: "center",

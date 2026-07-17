@@ -187,7 +187,7 @@ export default function TopluKimlik() {
                             </div>
                             
                             {/* EXPORT İÇİN GİZLİ VE ÖLÇEKLENDİRİLMEMİŞ (SCALE=1) KARTLAR */}
-                            <div style={{ position: "absolute", top: "-9999px", left: "-9999px", opacity: 0, pointerEvents: "none" }}>
+                            <div style={{ position: "absolute", top: "-9999px", left: "-9999px", zIndex: -9999, pointerEvents: "none" }}>
                                 <KimlikCard
                                     member={enhancedMember}
                                     origin={origin}
