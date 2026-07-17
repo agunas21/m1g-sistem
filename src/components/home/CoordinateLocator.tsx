@@ -285,8 +285,26 @@ export default function CoordinateLocator() {
 
                 {/* Çeviri Sonuçları */}
                 {currentLatLon && (
-                    <div className="flex-1 overflow-y-auto">
-                        <h3 className="text-sm text-neutral-400 mb-2 font-bold">ÇEVİRİ SONUÇLARI</h3>
+                    <div className="flex-1 overflow-y-auto pb-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-sm text-neutral-400 font-bold">ÇEVİRİ SONUÇLARI</h3>
+                            <div className="flex gap-2">
+                                <a 
+                                    href={`https://maps.google.com/?q=${currentLatLon.lat},${currentLatLon.lon}`} 
+                                    target="_blank"
+                                    className="bg-white text-black font-bold px-3 py-1.5 rounded text-sm text-center hover:bg-gray-200"
+                                >
+                                    Maps
+                                </a>
+                                <a 
+                                    href={`https://wa.me/?text=Konum:%20${currentLatLon.lat},${currentLatLon.lon}`}
+                                    target="_blank"
+                                    className="bg-green-600 text-white font-bold px-3 py-1.5 rounded text-sm text-center hover:bg-green-700"
+                                >
+                                    WhatsApp
+                                </a>
+                            </div>
+                        </div>
                         <div className="space-y-3">
                             
                             {/* DD */}
@@ -337,24 +355,6 @@ export default function CoordinateLocator() {
                             </div>
                             )}
 
-                        </div>
-
-                        {/* Aksiyonlar */}
-                        <div className="mt-6 flex gap-2">
-                            <a 
-                                href={`https://maps.google.com/?q=${currentLatLon.lat},${currentLatLon.lon}`} 
-                                target="_blank"
-                                className="flex-1 bg-white text-black font-bold py-3 rounded-lg text-center hover:bg-gray-200"
-                            >
-                                Google Maps
-                            </a>
-                            <a 
-                                href={`https://wa.me/?text=Konum:%20${currentLatLon.lat},${currentLatLon.lon}`}
-                                target="_blank"
-                                className="flex-1 bg-green-600 text-white font-bold py-3 rounded-lg text-center hover:bg-green-700"
-                            >
-                                WhatsApp
-                            </a>
                         </div>
                         
                         {distanceToTarget !== null && bearingToTarget !== null && (
