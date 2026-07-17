@@ -12,11 +12,10 @@ import GlobalDisasterIntel from "@/components/home/GlobalDisasterIntel";
 import { GlowCard } from "@/components/ui/spotlight-card";
 import { CircularGallery } from "@/components/ui/circular-gallery";
 import { SparklesCore } from "@/components/ui/sparkles";
-import dynamic from 'next/dynamic';
-
-const CoordinateLocator = dynamic(() => import('@/components/home/CoordinateLocator'), { ssr: false });
+import CoordinateLocator from "@/components/home/CoordinateLocator";
 
 import { prisma } from "@/lib/prisma";
+
 import { getSiteSettingsDB, getSiteImagesDB } from "@/lib/settings";
 
 async function getSiteSettings() {

@@ -6,27 +6,10 @@ import { parseCoordinates } from '@/lib/coordinates/parsers';
 import { latLonToDMS, latLonToUTM, dmsToLatLon } from '@/lib/coordinates/converters';
 import { calculateDistance, calculateBearing, formatDistance, bearingToCardinal } from '@/lib/coordinates/geo-math';
 
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
-// Component to handle map clicks
-function MapEvents({ onMapClick }: { onMapClick: (latlng: L.LatLng) => void }) {
-    useMapEvents({
-        click(e) {
-            onMapClick(e.latlng);
-        },
-    });
-    return null;
-}
+import dynamic from 'next/dynamic';
 
-// Component to center map
-function MapCenter({ position }: { position: [number, number] | null }) {
-    const map = useMap();
-    useEffect(() => {
-        if (position) {
-            map.flyTo(position, 15);
-        }
-    }, [position, map]);
-    return null;
-}
+const CoordinateLocatorMap = dynamic(() => import('./CoordinateLocatorMap'), { ssr: false });
+
 
 interface MarkerData {
     id: string;
@@ -37,37 +20,7 @@ interface MarkerData {
 
 export default function CoordinateLocator() {
     const [isOpen, setIsOpen] = useState(false);
-    const [icons, setIcons] = useState<{red: L.Icon, blue: L.Icon, green: L.Icon} | null>(null);
 
-    // Setup Leaflet icons on mount
-    useEffect(() => {
-        if (typeof window !== 'undefined' && L) {
-            delete (L.Icon.Default.prototype as any)._getIconUrl;
-            L.Icon.Default.mergeOptions({
-                iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-            });
-
-            setIcons({
-                red: new L.Icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                }),
-                blue: new L.Icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                }),
-                green: new L.Icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                })
-            });
-        }
-    }, []);
 
     
     // Core state
@@ -156,7 +109,7 @@ export default function CoordinateLocator() {
         setMarkers([...markers, newMarker]);
     };
 
-    const handleMapClick = (latlng: L.LatLng) => {
+    const handleMapClick = (latlng: any) => {
         const newLatLon: LatLon = { lat: latlng.lat, lon: latlng.lng, datum: "WGS84" };
         setCurrentLatLon(newLatLon);
         
@@ -323,44 +276,13 @@ export default function CoordinateLocator() {
             </div>
 
             {/* SAĞ/ALT PANEL: Harita */}
-            <div className="w-full md:w-2/3 h-[50vh] md:h-full relative bg-neutral-800">
-                <MapContainer 
-                    center={[39.0, 35.0]} 
-                    zoom={6} 
-                    style={{ height: "100%", width: "100%" }}
-                    className="z-0"
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <MapEvents onMapClick={handleMapClick} />
-                    
-                    {currentLatLon && <MapCenter position={[currentLatLon.lat, currentLatLon.lon]} />}
-
-                    {markers.map(m => (
-                        <Marker 
-                            key={m.id} 
-                            position={[m.latLon.lat, m.latLon.lon]}
-                            icon={icons ? (m.color === 'red' ? icons.red : icons.blue) : undefined}
-                        >
-                            <Popup>
-                                <div className="font-bold">{m.label}</div>
-                                <div className="text-xs">{m.latLon.lat.toFixed(5)}, {m.latLon.lon.toFixed(5)}</div>
-                            </Popup>
-                        </Marker>
-                    ))}
-                    
-                    {/* User Location */}
-                    {userLocation && (
-                        <Marker 
-                            position={[userLocation.lat, userLocation.lon]}
-                            icon={icons ? icons.green : undefined}
-                        >
-                            <Popup>Sizin Konumunuz</Popup>
-                        </Marker>
-                    )}
-                </MapContainer>
+            <div className="w-full md:w-2/3 h-[50vh] md:h-full relative bg-neutral-800 flex items-center justify-center">
+                <CoordinateLocatorMap 
+                    currentLatLon={currentLatLon}
+                    markers={markers}
+                    userLocation={userLocation}
+                    handleMapClick={handleMapClick}
+                />
                 
                 {/* Nişangah / Center Marker Overlay */}
                 <div className="absolute top-1/2 left-1/2 w-8 h-8 -mt-4 -ml-4 pointer-events-none z-[400] opacity-50">
