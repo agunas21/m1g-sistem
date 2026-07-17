@@ -31,13 +31,15 @@ export interface KimlikCardProps {
 export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId }: KimlikCardProps) {
     const cardUrl = `${origin}/kimlik/${member.kimlikToken || member.id}`;
     
-    // SYNCHRONOUS QR CODE GENERATION
-    let qrSrc = "";
+    // SYNCHRONOUS PURE HTML TABLE QR CODE GENERATION
+    let qrHtml = "";
     try {
         const qr = qrcode(0, 'H');
         qr.addData(cardUrl);
         qr.make();
-        qrSrc = qr.createDataURL(4, 0); // 4px cell size, 0 margin
+        // createTableTag(cellSize, margin)
+        // With size 130px, 4px cell size gives about 33 cells (4*33=132px).
+        qrHtml = qr.createTableTag(4, 0); 
     } catch (e) {
         console.error("QR Code Sync generation error:", e);
     }
@@ -390,7 +392,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             borderRadius: 12,
                             display: "inline-block"
                         }}>
-                            {qrSrc ? <img src={qrSrc} width={130} height={130} alt="QR" /> : <div style={{width: 130, height: 130, backgroundColor: "#fff"}}></div>}
+                            {qrHtml ? <div style={{width: 130, height: 130, display: "flex", alignItems: "center", justifyContent: "center"}} dangerouslySetInnerHTML={{ __html: qrHtml }} /> : <div style={{width: 130, height: 130, backgroundColor: "#fff"}}></div>}
                         </div>
                         <div style={{
                             textAlign: "center",
