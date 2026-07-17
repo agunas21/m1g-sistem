@@ -1,5 +1,6 @@
 import { LatLon, ParseResult, CoordinateFormat } from './types';
 import * as mgrs from 'mgrs';
+import { utmToLatLon } from './converters';
 
 export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84"): ParseResult | null {
     if (!input || input.trim() === "") return null;
@@ -35,13 +36,18 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
         const zoneLetter = utmMatch[2] || 'T'; // Default to Turkey roughly
         const easting = parseFloat(utmMatch[3]);
         const northing = parseFloat(utmMatch[4]);
-        
-        // This requires converters, we should parse into UTM object, then convert.
-        // For this parser, we will return the UTM info to the caller to convert.
-        // To avoid circular dependencies, we'll implement the logic in the component
-        // or a facade. Here we just return null to fallback to the manual inputs 
-        // if we can't fully parse it to LatLon directly here without converters.ts
-        // Actually, let's keep it simple for auto-detect: we just auto-detect DD and DMS robustly.
+        try {
+            const latLon = utmToLatLon({ zoneNum, zoneLetter, easting, northing }, datum);
+            if (isValidLatLon(latLon.lat, latLon.lon)) {
+                return {
+                    format: "UTM",
+                    latLon,
+                    originalStr: input
+                };
+            }
+        } catch (e) {
+            // ignore fallback
+        }
     }
 
     // 3. Try DD (Decimal Degrees) e.g. 40.4250, 29.9194
