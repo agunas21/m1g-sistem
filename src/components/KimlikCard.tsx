@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { QRCodeCanvas } from 'qrcode.react';
+import React, { useState, useEffect } from "react";
+import QRCode from 'qrcode';
 
 export const CARD_W = 320;
 export const CARD_H = 510;
@@ -30,6 +30,13 @@ export interface KimlikCardProps {
 
 export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId }: KimlikCardProps) {
     const cardUrl = `${origin}/kimlik/${member.kimlikToken || member.id}`;
+    const [qrSrc, setQrSrc] = useState<string>('');
+
+    useEffect(() => {
+        QRCode.toDataURL(cardUrl, { width: 130, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
+            .then(url => setQrSrc(url))
+            .catch(err => console.error("QR kod hatası:", err));
+    }, [cardUrl]);
 
     const getRole = (m: any) => {
         if (m.role && m.role.trim() !== "" && m.role !== "Üye" && m.role !== "Gönüllü" && m.role !== "ÜYE" && m.role !== "GÖNÜLLÜ") return m.role.trim().toLocaleUpperCase('tr-TR');
@@ -379,7 +386,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             borderRadius: 12,
                             display: "inline-block"
                         }}>
-                            <QRCodeCanvas value={cardUrl} size={130} level="H" fgColor="#000000" />
+                            {qrSrc ? <img src={qrSrc} width={130} height={130} alt="QR" /> : <div style={{width: 130, height: 130, backgroundColor: "#fff"}}></div>}
                         </div>
                         <div style={{
                             textAlign: "center",
