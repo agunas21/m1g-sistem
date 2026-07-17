@@ -372,21 +372,38 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                         top: 148,
                         left: 79,   /* (320-162)/2 = 79 */
                         width: 162,
+                        height: 162,
                         zIndex: 5
                     }}>
+                        {/* Arka plan ve kenarlık (Kardeş öğe) */}
                         <div style={{
+                            position: "absolute",
+                            top: 0, left: 0, right: 0, bottom: 0,
                             backgroundColor: "#ffffff",
-                            padding: 10,
                             border: "2px solid #111111",
                             borderRadius: 12,
-                            display: "inline-block"
+                            zIndex: 1
+                        }}></div>
+                        
+                        {/* QR Kod (Kardeş öğe, zIndex 2) */}
+                        <div style={{
+                            position: "absolute",
+                            top: 14, left: 14, // Center inside 162x162 (162 - 130 = 32 / 2 = 16, minus 2px border = 14)
+                            width: 130, height: 130,
+                            zIndex: 2,
+                            backgroundColor: "#ffffff"
                         }}>
                             <QRCodeCanvas value={cardUrl} size={130} level="H" includeMargin={false} />
                         </div>
-                        <div style={{
-                            textAlign: "center",
-                            fontSize: 9,
-                            fontWeight: "700",
+                    </div>
+                    <div style={{
+                        position: "absolute",
+                        top: 320,
+                        left: 0,
+                        right: 0,
+                        textAlign: "center",
+                        fontSize: 9,
+                        fontWeight: "700",
                             color: "#111111",
                             marginTop: 8,
                             fontFamily: "'Inter', sans-serif"
