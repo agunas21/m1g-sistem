@@ -31,13 +31,16 @@ export interface KimlikCardProps {
 export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId }: KimlikCardProps) {
     const cardUrl = `${origin}/kimlik/${member.kimlikToken || member.id}`;
     
-    // SYNCHRONOUS FAST BASE64 IMAGE GENERATION
+    // SYNCHRONOUS FAST SVG BASE64 IMAGE GENERATION
     let qrSrc = "";
     try {
         const qr = qrcode(0, 'H');
         qr.addData(cardUrl);
         qr.make();
-        qrSrc = qr.createDataURL(4, 0); // Synchronously creates a base64 gif image
+        const svgString = qr.createSvgTag(4, 0); // Creates a pure SVG string with xmlns
+        // Convert the SVG string directly to a base64 Data URL for the <img> tag.
+        // This is perfectly captured by html2canvas and is extremely lightweight.
+        qrSrc = "data:image/svg+xml;base64," + btoa(svgString);
     } catch (e) {
         console.error("QR Code Sync generation error:", e);
     }
