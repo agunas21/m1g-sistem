@@ -26,10 +26,16 @@ function MapCenter({ position }: { position: [number, number] | null }) {
 function MapResizer() {
     const map = useMap();
     useEffect(() => {
-        const timer = setTimeout(() => {
+        const resizeObserver = new ResizeObserver(() => {
             map.invalidateSize();
-        }, 500);
-        return () => clearTimeout(timer);
+        });
+        const container = map.getContainer();
+        if (container) {
+            resizeObserver.observe(container);
+        }
+        return () => {
+            resizeObserver.disconnect();
+        };
     }, [map]);
     return null;
 }
