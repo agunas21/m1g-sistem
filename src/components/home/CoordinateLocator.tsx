@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LatLon, Datum } from '@/lib/coordinates/types';
 import { parseCoordinates } from '@/lib/coordinates/parsers';
-import { latLonToDMS, latLonToUTM, dmsToLatLon } from '@/lib/coordinates/converters';
+import { latLonToDMS, latLonToUTM, latLonToMGRS, dmsToLatLon } from '@/lib/coordinates/converters';
 import { calculateDistance, calculateBearing, formatDistance, bearingToCardinal } from '@/lib/coordinates/geo-math';
 
 import dynamic from 'next/dynamic';
@@ -20,7 +20,18 @@ interface MarkerData {
 
 export default function CoordinateLocator() {
     // Core state
+    const [inputMode, setInputMode] = useState<'AUTO'|'DD'|'UTM'|'MGRS'>('AUTO');
     const [inputStr, setInputStr] = useState("");
+    
+    // Specific Inputs
+    const [ddLat, setDdLat] = useState("");
+    const [ddLon, setDdLon] = useState("");
+    
+    const [utmZone, setUtmZone] = useState("");
+    const [utmEasting, setUtmEasting] = useState("");
+    const [utmNorthing, setUtmNorthing] = useState("");
+    
+    const [mgrsInput, setMgrsInput] = useState("");
 
     const [selectedDatum, setSelectedDatum] = useState<Datum>("WGS84");
     
@@ -75,9 +86,19 @@ export default function CoordinateLocator() {
         setWarningMsg(null);
         setErrorMsg(null);
         
-        if (!inputStr.trim()) return;
+        let query = "";
+        if (inputMode === 'AUTO') {
+            if (!inputStr.trim()) return;
+            query = inputStr;
+        } else if (inputMode === 'DD') {
+            query = `${ddLat}, ${ddLon}`;
+        } else if (inputMode === 'UTM') {
+            query = `${utmZone} ${utmEasting} ${utmNorthing}`;
+        } else if (inputMode === 'MGRS') {
+            query = mgrsInput;
+        }
 
-        const result = parseCoordinates(inputStr, selectedDatum);
+        const result = parseCoordinates(query, selectedDatum);
         
         if (!result) {
             setErrorMsg("Format anlaşılamadı. Lütfen kontrol edin.");
@@ -124,6 +145,7 @@ export default function CoordinateLocator() {
     // Derived Conversions for display
     const dms = currentLatLon ? latLonToDMS(currentLatLon) : null;
     const utm = currentLatLon ? latLonToUTM(currentLatLon) : null;
+    const mgrsStr = currentLatLon ? latLonToMGRS(currentLatLon) : null;
     
     const distanceToTarget = (userLocation && currentLatLon) ? calculateDistance(userLocation, currentLatLon) : null;
     const bearingToTarget = (userLocation && currentLatLon) ? calculateBearing(userLocation, currentLatLon) : null;
@@ -138,25 +160,111 @@ export default function CoordinateLocator() {
                     <h2 className="text-2xl font-black text-red-500 tracking-tighter">NOKTA ATIŞI</h2>
                 </div>
 
-                {/* Hızlı Giriş */}
-                <div className="mb-4">
-                    <label className="block text-sm text-neutral-400 mb-2 font-bold">HIZLI GİRİŞ (DMS, DD, UTM)</label>
-                    <div className="flex gap-2">
-                        <input 
-                            type="text" 
-                            className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-lg font-mono outline-none focus:border-red-500"
-                            placeholder="Örn: 40.4250, 29.9194"
-                            value={inputStr}
-                            onChange={(e) => setInputStr(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleParse()}
-                        />
+                {/* Giriş Yöntemi Sekmeleri */}
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
+                    {['AUTO', 'DD', 'UTM', 'MGRS'].map((mode) => (
                         <button 
-                            onClick={handleParse}
-                            className="bg-red-600 hover:bg-red-700 px-6 font-bold rounded-lg transition-colors"
+                            key={mode}
+                            onClick={() => setInputMode(mode as any)}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${inputMode === mode ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
                         >
-                            BUL
+                            {mode === 'AUTO' ? 'Akıllı / Hızlı' : mode}
                         </button>
-                    </div>
+                    ))}
+                </div>
+
+                {/* Dinamik Giriş Alanı */}
+                <div className="mb-4">
+                    {inputMode === 'AUTO' && (
+                        <div>
+                            <label className="block text-sm text-neutral-400 mb-2 font-bold">HIZLI GİRİŞ (DMS, DD, UTM, MGRS)</label>
+                            <input 
+                                type="text" 
+                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-lg font-mono outline-none focus:border-red-500 mb-2"
+                                placeholder="Örn: 40.4250, 29.9194"
+                                value={inputStr}
+                                onChange={(e) => setInputStr(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleParse()}
+                            />
+                        </div>
+                    )}
+
+                    {inputMode === 'DD' && (
+                        <div>
+                            <label className="block text-sm text-neutral-400 mb-2 font-bold">ENLEM / BOYLAM (Ondalık Derece)</label>
+                            <div className="flex gap-2 mb-2">
+                                <input 
+                                    type="text" 
+                                    className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-lg font-mono outline-none focus:border-red-500"
+                                    placeholder="Enlem (Örn: 38.4552)"
+                                    value={ddLat}
+                                    onChange={(e) => setDdLat(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleParse()}
+                                />
+                                <input 
+                                    type="text" 
+                                    className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-lg font-mono outline-none focus:border-red-500"
+                                    placeholder="Boylam (Örn: 27.2471)"
+                                    value={ddLon}
+                                    onChange={(e) => setDdLon(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleParse()}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {inputMode === 'UTM' && (
+                        <div>
+                            <label className="block text-sm text-neutral-400 mb-2 font-bold">UTM KOORDİNATI</label>
+                            <div className="flex gap-2 mb-2">
+                                <input 
+                                    type="text" 
+                                    className="w-1/4 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-lg font-mono outline-none focus:border-red-500"
+                                    placeholder="Zon"
+                                    value={utmZone}
+                                    onChange={(e) => setUtmZone(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleParse()}
+                                />
+                                <input 
+                                    type="text" 
+                                    className="w-2/4 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-lg font-mono outline-none focus:border-red-500"
+                                    placeholder="Doğu (Easting)"
+                                    value={utmEasting}
+                                    onChange={(e) => setUtmEasting(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleParse()}
+                                />
+                                <input 
+                                    type="text" 
+                                    className="w-2/4 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-lg font-mono outline-none focus:border-red-500"
+                                    placeholder="Kuzey (Northing)"
+                                    value={utmNorthing}
+                                    onChange={(e) => setUtmNorthing(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleParse()}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {inputMode === 'MGRS' && (
+                        <div>
+                            <label className="block text-sm text-neutral-400 mb-2 font-bold">MGRS KOORDİNATI</label>
+                            <input 
+                                type="text" 
+                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-lg font-mono outline-none focus:border-red-500 mb-2"
+                                placeholder="Örn: 35S NC 4843 5590"
+                                value={mgrsInput}
+                                onChange={(e) => setMgrsInput(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleParse()}
+                            />
+                        </div>
+                    )}
+
+                    <button 
+                        onClick={handleParse}
+                        className="w-full bg-red-600 hover:bg-red-700 py-3 font-bold text-lg rounded-lg transition-colors shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)]"
+                    >
+                        HESAPLA & BUL
+                    </button>
                 </div>
 
                 {/* Datum Seçimi */}
@@ -212,6 +320,18 @@ export default function CoordinateLocator() {
                                     <div className="text-xs text-neutral-500 mb-1">UTM</div>
                                     <div className="font-mono text-lg">
                                         {utm.zoneNum}{utm.zoneLetter} {utm.easting} {utm.northing}
+                                    </div>
+                                </div>
+                            </div>
+                            )}
+
+                            {/* MGRS */}
+                            {mgrsStr && (
+                            <div className="bg-neutral-800 p-3 rounded-lg flex justify-between items-center group">
+                                <div>
+                                    <div className="text-xs text-neutral-500 mb-1">MGRS</div>
+                                    <div className="font-mono text-lg text-yellow-400">
+                                        {mgrsStr.replace(/(.{3})(.{2})(.{5})(.{5})/, "$1 $2 $3 $4")}
                                     </div>
                                 </div>
                             </div>

@@ -1,4 +1,5 @@
 import { LatLon, ParseResult, CoordinateFormat } from './types';
+import * as mgrs from 'mgrs';
 
 export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84"): ParseResult | null {
     if (!input || input.trim() === "") return null;
@@ -10,15 +11,20 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
     // Format: 1-60 + C-X + 2 letters + even number of digits
     const mgrsMatch = normalized.match(/^(\d{1,2})([C-X])\s*([A-Z]{2})\s*(\d{2,10})$/);
     if (mgrsMatch) {
-        // Full MGRS to LatLon is complex and requires specialized library like proj4-mgrs or mgrs
-        // For MVP, we will identify it but return a warning that conversion is not fully implemented yet
-        // A complete SAR app should include the 'mgrs' npm package.
-        return {
-            format: "MGRS",
-            latLon: { lat: 0, lon: 0, datum }, // Placeholder
-            originalStr: input,
-            warning: "MGRS format recognized but precise conversion requires additional library."
-        };
+        try {
+            const mgrsStr = normalized.replace(/\s+/g, '');
+            const point = mgrs.toPoint(mgrsStr);
+            if (isValidLatLon(point[1], point[0])) {
+                let latLon: LatLon = { lat: point[1], lon: point[0], datum: "WGS84" };
+                return {
+                    format: "MGRS",
+                    latLon: latLon,
+                    originalStr: input
+                };
+            }
+        } catch (e) {
+            // Ignore and fallback if invalid
+        }
     }
 
     // 2. Try UTM (e.g. 35T 123456 1234567)

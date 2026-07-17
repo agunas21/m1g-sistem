@@ -1,5 +1,6 @@
 import proj4 from 'proj4';
 import { LatLon, Datum, UTM, DMS } from './types';
+import * as mgrs from 'mgrs';
 
 // Define ED50 for Turkey
 // This is a common set of parameters for ED50 in Turkey.
@@ -71,6 +72,10 @@ export function utmToLatLon(utm: UTM, datum: Datum = "WGS84"): LatLon {
        result = shiftDatum(result, "ED50");
     }
     return result;
+}
+
+export function latLonToMGRS(latLon: LatLon): string {
+    return mgrs.forward([latLon.lon, latLon.lat], 5); // 5 digits = 1m precision
 }
 
 export function latLonToDMS(latLon: LatLon): DMS {
