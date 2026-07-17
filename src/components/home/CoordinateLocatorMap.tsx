@@ -26,8 +26,11 @@ function MapCenter({ position }: { position: [number, number] | null }) {
 function MapResizer() {
     const map = useMap();
     useEffect(() => {
+        // Aggressive invalidation on mount for tricky mobile layouts
+        const timers = [100, 500, 1000, 2000].map(t => setTimeout(() => map.invalidateSize(), t));
+        
         const resizeObserver = new ResizeObserver(() => {
-            map.invalidateSize();
+            setTimeout(() => map.invalidateSize(), 50);
         });
         const container = map.getContainer();
         if (container) {
@@ -35,6 +38,7 @@ function MapResizer() {
         }
         return () => {
             resizeObserver.disconnect();
+            timers.forEach(clearTimeout);
         };
     }, [map]);
     return null;
@@ -75,6 +79,8 @@ export default function CoordinateLocatorMap({ currentLatLon, markers, userLocat
     if (!icons) return <div className="flex items-center justify-center h-full text-neutral-500">Harita yükleniyor...</div>;
 
     return (
+        <>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <MapContainer 
             center={[39.0, 35.0]} 
             zoom={6} 
@@ -112,5 +118,6 @@ export default function CoordinateLocatorMap({ currentLatLon, markers, userLocat
                 </Marker>
             )}
         </MapContainer>
+        </>
     );
 }
