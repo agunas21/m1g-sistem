@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 export const CARD_W = 320;
 export const CARD_H = 510;
@@ -379,7 +379,7 @@ export default function KimlikCard({ member, origin, isFront, scale = 1, htmlId 
                             borderRadius: 12,
                             display: "inline-block"
                         }}>
-                            <QRCodeSVG value={cardUrl} size={130} level="H" fgColor="#000000" />
+                            <QRCodeCanvas value={cardUrl} size={130} level="H" fgColor="#000000" />
                         </div>
                         <div style={{
                             textAlign: "center",
