@@ -19,12 +19,9 @@ interface MarkerData {
 }
 
 export default function CoordinateLocator() {
-    const [isOpen, setIsOpen] = useState(false);
-
-
-    
     // Core state
     const [inputStr, setInputStr] = useState("");
+
     const [selectedDatum, setSelectedDatum] = useState<Datum>("WGS84");
     
     // Derived state
@@ -41,7 +38,7 @@ export default function CoordinateLocator() {
 
     // Initial load - try to get GPS
     useEffect(() => {
-        if (isOpen && !userLocation && navigator.geolocation) {
+        if (!userLocation && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     setUserLocation({
@@ -67,11 +64,11 @@ export default function CoordinateLocator() {
             }
         };
         
-        if (isOpen && window.DeviceOrientationEvent) {
+        if (window.DeviceOrientationEvent) {
             window.addEventListener('deviceorientation', handleOrientation);
             return () => window.removeEventListener('deviceorientation', handleOrientation);
         }
-    }, [isOpen]);
+    }, []);
 
     // Handle Quick Parse
     const handleParse = () => {
@@ -131,34 +128,14 @@ export default function CoordinateLocator() {
     const distanceToTarget = (userLocation && currentLatLon) ? calculateDistance(userLocation, currentLatLon) : null;
     const bearingToTarget = (userLocation && currentLatLon) ? calculateBearing(userLocation, currentLatLon) : null;
 
-    if (!isOpen) {
-        return (
-            <button 
-                onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 bg-red-600 text-white p-4 rounded-full shadow-2xl hover:bg-red-700 transition-all z-50 flex items-center gap-2 font-bold"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Koordinat Bulucu
-            </button>
-        );
-    }
-
     return (
-        <div className="fixed inset-0 bg-black/90 z-[9999] flex flex-col md:flex-row text-white overflow-hidden">
+        <div className="w-full min-h-[calc(100vh-80px)] mt-20 flex flex-col md:flex-row text-white overflow-hidden bg-neutral-950">
             
             {/* SOL/ÜST PANEL: Girdi ve Bilgi */}
-            <div className="w-full md:w-1/3 bg-neutral-900 p-4 md:p-6 flex flex-col h-[50vh] md:h-full overflow-y-auto border-b md:border-b-0 md:border-r border-neutral-800">
+            <div className="w-full md:w-1/3 bg-neutral-900 p-4 md:p-6 flex flex-col h-[60vh] md:h-[calc(100vh-80px)] overflow-y-auto border-b md:border-b-0 md:border-r border-neutral-800">
                 
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-black text-red-500">NOKTA ATIŞI</h2>
-                    <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-neutral-800 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <h2 className="text-2xl font-black text-red-500 tracking-tighter">NOKTA ATIŞI</h2>
                 </div>
 
                 {/* Hızlı Giriş */}
@@ -276,7 +253,7 @@ export default function CoordinateLocator() {
             </div>
 
             {/* SAĞ/ALT PANEL: Harita */}
-            <div className="w-full md:w-2/3 h-[50vh] md:h-full relative bg-neutral-800 flex items-center justify-center">
+            <div className="w-full md:w-2/3 h-[50vh] md:h-[calc(100vh-80px)] relative bg-neutral-800 flex items-center justify-center">
                 <CoordinateLocatorMap 
                     currentLatLon={currentLatLon}
                     markers={markers}
