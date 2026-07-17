@@ -26,19 +26,35 @@ function MapCenter({ position }: { position: [number, number] | null }) {
 function MapResizer() {
     const map = useMap();
     useEffect(() => {
-        // Aggressive invalidation on mount for tricky mobile layouts
-        const timers = [100, 500, 1000, 2000].map(t => setTimeout(() => map.invalidateSize(), t));
+        // Ultimate force invalidation on mount for tricky mobile layouts
+        const interval = setInterval(() => {
+            map.invalidateSize();
+        }, 200);
+
+        const timeout = setTimeout(() => {
+            clearInterval(interval);
+        }, 3000);
+        
+        const handleResize = () => {
+            map.invalidateSize();
+        };
+        
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
         
         const resizeObserver = new ResizeObserver(() => {
-            setTimeout(() => map.invalidateSize(), 50);
+            map.invalidateSize();
         });
         const container = map.getContainer();
         if (container) {
             resizeObserver.observe(container);
         }
         return () => {
+            clearInterval(interval);
+            clearTimeout(timeout);
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
             resizeObserver.disconnect();
-            timers.forEach(clearTimeout);
         };
     }, [map]);
     return null;
@@ -84,7 +100,7 @@ export default function CoordinateLocatorMap({ currentLatLon, markers, userLocat
         <MapContainer 
             center={[39.0, 35.0]} 
             zoom={6} 
-            style={{ height: "100%", width: "100%" }}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
             className="z-0"
         >
             <TileLayer
