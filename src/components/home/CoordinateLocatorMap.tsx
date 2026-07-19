@@ -96,7 +96,6 @@ export default function CoordinateLocatorMap({ currentLatLon, markers, userLocat
 
     return (
         <>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <MapContainer 
             center={[39.0, 35.0]} 
             zoom={6} 
