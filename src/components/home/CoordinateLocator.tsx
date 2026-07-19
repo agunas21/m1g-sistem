@@ -151,10 +151,10 @@ export default function CoordinateLocator() {
     const bearingToTarget = (userLocation && currentLatLon) ? calculateBearing(userLocation, currentLatLon) : null;
 
     return (
-        <div className="w-full h-[calc(100dvh-80px)] mt-20 flex flex-col md:flex-row text-white overflow-hidden bg-neutral-950">
+        <div className="w-full min-h-[calc(100vh-80px)] mt-20 flex flex-col md:flex-row text-white bg-neutral-950">
             
             {/* SOL/ÜST PANEL: Girdi ve Bilgi */}
-            <div className="w-full md:w-1/3 bg-neutral-900 p-3 md:p-6 flex flex-col h-1/2 md:h-full overflow-y-auto border-b md:border-b-0 md:border-r border-neutral-800">
+            <div className="w-full md:w-1/3 bg-neutral-900 p-4 md:p-6 flex flex-col border-b md:border-b-0 md:border-r border-neutral-800 shadow-xl z-10">
                 
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-black text-red-500 tracking-tighter">NOKTA ATIŞI</h2>
@@ -285,21 +285,21 @@ export default function CoordinateLocator() {
 
                 {/* Çeviri Sonuçları */}
                 {currentLatLon && (
-                    <div className="flex-1 overflow-y-auto pb-4">
-                        <div className="flex justify-between items-center mb-4">
+                    <div className="flex-1 pb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                             <h3 className="text-sm text-neutral-400 font-bold">ÇEVİRİ SONUÇLARI</h3>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 w-full sm:w-auto">
                                 <a 
                                     href={`https://maps.google.com/?q=${currentLatLon.lat},${currentLatLon.lon}`} 
                                     target="_blank"
-                                    className="bg-white text-black font-bold px-3 py-1.5 rounded text-sm text-center hover:bg-gray-200"
+                                    className="flex-1 sm:flex-none bg-white text-black font-bold px-4 py-2 rounded text-sm text-center hover:bg-gray-200"
                                 >
                                     Maps
                                 </a>
                                 <a 
                                     href={`https://wa.me/?text=Konum:%20${currentLatLon.lat},${currentLatLon.lon}`}
                                     target="_blank"
-                                    className="bg-green-600 text-white font-bold px-3 py-1.5 rounded text-sm text-center hover:bg-green-700"
+                                    className="flex-1 sm:flex-none bg-green-600 text-white font-bold px-4 py-2 rounded text-sm text-center hover:bg-green-700"
                                 >
                                     WhatsApp
                                 </a>
@@ -373,7 +373,7 @@ export default function CoordinateLocator() {
             </div>
 
             {/* SAĞ/ALT PANEL: Harita */}
-            <div className="w-full md:w-2/3 h-1/2 md:h-full relative bg-neutral-800 flex items-center justify-center">
+            <div className="w-full md:w-2/3 min-h-[60vh] md:min-h-[calc(100vh-80px)] relative bg-neutral-800 flex-1 flex items-center justify-center">
                 <CoordinateLocatorMap 
                     currentLatLon={currentLatLon}
                     markers={markers}
