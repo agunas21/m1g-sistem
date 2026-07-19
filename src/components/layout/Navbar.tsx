@@ -35,7 +35,7 @@ export default function Navbar() {
         { href: "/etkinlikler", label: "Etkinlikler" },
         { href: "/vizyon", label: "Vizyon" },
         { href: "/iletisim", label: "İletişim" },
-        { href: "/koordinat", label: "Nokta Atışı" },
+        { href: "/koordinat", label: "Konum Tespiti" },
     ];
 
     return (
