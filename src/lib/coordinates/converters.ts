@@ -62,16 +62,15 @@ export function latLonToUTM(latLon: LatLon): UTM {
 
 export function utmToLatLon(utm: UTM, datum: Datum = "WGS84"): LatLon {
     const isNorth = utm.zoneLetter.toUpperCase() >= 'N';
-    const utmProjStr = `+proj=utm +zone=${utm.zoneNum} ${isNorth ? '+north' : '+south'} +datum=WGS84 +units=m +no_defs`;
+    let utmProjStr = `+proj=utm +zone=${utm.zoneNum} ${isNorth ? '+north' : '+south'} +datum=WGS84 +units=m +no_defs`;
+    
+    if (datum === "ED50") {
+        utmProjStr = `+proj=utm +zone=${utm.zoneNum} ${isNorth ? '+north' : '+south'} +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs`;
+    }
     
     const [lon, lat] = proj4(utmProjStr, "EPSG:4326", [utm.easting, utm.northing]);
     
-    let result: LatLon = { lat, lon, datum: "WGS84" };
-    
-    if (datum === "ED50") {
-       result = shiftDatum(result, "ED50");
-    }
-    return result;
+    return { lat, lon, datum: "WGS84" };
 }
 
 export function latLonToMGRS(latLon: LatLon): string {

@@ -103,8 +103,8 @@ export default function CoordinateLocatorMap({ currentLatLon, markers, userLocat
             className="z-0"
         >
             <TileLayer
-                attribution='&copy; Esri, HERE, Garmin, USGS, Intermap, INCREMENT P, NRCan, Esri Japan, METI, Esri China (Hong Kong), Esri Korea, Esri (Thailand), NGCC, (c) OpenStreetMap contributors, and the GIS User Community'
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
+                attribution='&copy; Google Maps'
+                url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
             />
             <MapResizer />
             <MapEvents onMapClick={handleMapClick} />

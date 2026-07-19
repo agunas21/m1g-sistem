@@ -16,7 +16,7 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
             const mgrsStr = normalized.replace(/\s+/g, '');
             const point = mgrs.toPoint(mgrsStr);
             if (isValidLatLon(point[1], point[0])) {
-                let latLon: LatLon = { lat: point[1], lon: point[0], datum: "WGS84" };
+                let latLon: LatLon = { lat: point[1], lon: point[0], datum: datum };
                 return {
                     format: "MGRS",
                     latLon: latLon,

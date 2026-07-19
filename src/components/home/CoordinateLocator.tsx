@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LatLon, Datum } from '@/lib/coordinates/types';
 import { parseCoordinates } from '@/lib/coordinates/parsers';
-import { latLonToDMS, latLonToUTM, latLonToMGRS, dmsToLatLon } from '@/lib/coordinates/converters';
+import { latLonToDMS, latLonToUTM, latLonToMGRS, dmsToLatLon, shiftDatum } from '@/lib/coordinates/converters';
 import { calculateDistance, calculateBearing, formatDistance, bearingToCardinal } from '@/lib/coordinates/geo-math';
 
 import dynamic from 'next/dynamic';
@@ -115,12 +115,17 @@ export default function CoordinateLocator() {
             setWarningMsg("⚠️ Bu koordinat Türkiye sınırları dışında görünüyor.");
         }
 
-        setCurrentLatLon(result.latLon);
+        let finalLatLon = result.latLon;
+        if (finalLatLon.datum === "ED50") {
+            finalLatLon = shiftDatum(finalLatLon, "WGS84");
+        }
+
+        setCurrentLatLon(finalLatLon);
         
         // Add to markers if not exists
         const newMarker: MarkerData = {
             id: Date.now().toString(),
-            latLon: result.latLon,
+            latLon: finalLatLon,
             label: `Nokta ${markers.length + 1}`,
             color: 'red'
         };
@@ -145,7 +150,15 @@ export default function CoordinateLocator() {
     // Derived Conversions for display
     const dms = currentLatLon ? latLonToDMS(currentLatLon) : null;
     const utm = currentLatLon ? latLonToUTM(currentLatLon) : null;
-    const mgrsStr = currentLatLon ? latLonToMGRS(currentLatLon) : null;
+    const formatMGRSStr = (str: string) => {
+        const m = str.match(/^(\d{1,2}[A-Z])([A-Z]{2})(\d+)$/);
+        if (!m) return str;
+        const digits = m[3];
+        const half = Math.floor(digits.length / 2);
+        return `${m[1]} ${m[2]} ${digits.slice(0, half)} ${digits.slice(half)}`;
+    };
+
+    const mgrsStr = currentLatLon ? formatMGRSStr(latLonToMGRS(currentLatLon)) : null;
     
     const distanceToTarget = (userLocation && currentLatLon) ? calculateDistance(userLocation, currentLatLon) : null;
     const bearingToTarget = (userLocation && currentLatLon) ? calculateBearing(userLocation, currentLatLon) : null;
