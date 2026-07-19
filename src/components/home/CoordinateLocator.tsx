@@ -151,24 +151,29 @@ export default function CoordinateLocator() {
     const bearingToTarget = (userLocation && currentLatLon) ? calculateBearing(userLocation, currentLatLon) : null;
 
     return (
-        <div className="w-full min-h-[calc(100vh-80px)] mt-20 flex flex-col md:flex-row text-white bg-neutral-950">
+        <div className="w-full mt-20 flex flex-col md:flex-row text-white bg-neutral-950 md:h-[calc(100vh-80px)]">
             
             {/* SOL/ÜST PANEL: Girdi ve Bilgi */}
-            <div className="w-full md:w-1/3 bg-neutral-900 p-4 md:p-6 flex flex-col border-b md:border-b-0 md:border-r border-neutral-800 shadow-xl z-10">
+            <div className="w-full md:w-1/3 bg-neutral-900 p-4 md:p-6 flex flex-col border-b md:border-b-0 md:border-r border-neutral-800 shadow-xl z-10 md:overflow-y-auto">
                 
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-black text-red-500 tracking-tighter">NOKTA ATIŞI</h2>
+                    <h2 className="text-2xl font-black text-red-500 tracking-tighter">KOORDİNAT ÇEVİRİCİ</h2>
                 </div>
 
                 {/* Giriş Yöntemi Sekmeleri */}
                 <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
-                    {['AUTO', 'DD', 'UTM', 'MGRS'].map((mode) => (
+                    {[
+                        { id: 'AUTO', label: 'Akıllı / Hızlı' },
+                        { id: 'DD', label: 'DD (Ondalık)' },
+                        { id: 'UTM', label: 'UTM (Metrik)' },
+                        { id: 'MGRS', label: 'MGRS (Askeri)' }
+                    ].map((mode) => (
                         <button 
-                            key={mode}
-                            onClick={() => setInputMode(mode as any)}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${inputMode === mode ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                            key={mode.id}
+                            onClick={() => setInputMode(mode.id as any)}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${inputMode === mode.id ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
                         >
-                            {mode === 'AUTO' ? 'Akıllı / Hızlı' : mode}
+                            {mode.label}
                         </button>
                     ))}
                 </div>
@@ -373,7 +378,7 @@ export default function CoordinateLocator() {
             </div>
 
             {/* SAĞ/ALT PANEL: Harita */}
-            <div className="w-full md:w-2/3 min-h-[60vh] md:min-h-[calc(100vh-80px)] relative bg-neutral-800 flex-1 flex items-center justify-center">
+            <div className="w-full md:w-2/3 min-h-[60vh] md:min-h-0 md:h-full relative bg-neutral-800 flex-1 flex items-center justify-center">
                 <CoordinateLocatorMap 
                     currentLatLon={currentLatLon}
                     markers={markers}
