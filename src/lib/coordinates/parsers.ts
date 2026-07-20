@@ -58,10 +58,17 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
 
         // Check for directions to apply negative signs
         const latPart = normalized.substring(0, normalized.indexOf(numbers[1]));
-        if (latPart.includes('S') || latPart.includes('GÜNEY') || (latPart.includes('G') && !latPart.includes('DOĞU'))) lat = -Math.abs(lat);
+        // Clean up noise words
+        let cleanLat = latPart.replace(/SAAT|DAK[Iİ]KA|DAK|SAN[Iİ]YE|SAN|DERECE/g, '')
+                              .replace(/KUZEY/g, 'N').replace(/GÜNEY|GUNEY/g, 'S')
+                              .replace(/DO[GĞ]U/g, 'E').replace(/BATI/g, 'W');
+        if (cleanLat.includes('S') || cleanLat.includes('W') || cleanLat.includes('G') || cleanLat.includes('B')) lat = -Math.abs(lat);
         
         const lonPart = normalized.substring(normalized.indexOf(numbers[1]));
-        if (lonPart.includes('W') || lonPart.includes('BATI') || (lonPart.includes('B') && !lonPart.includes('KUZEY'))) lon = -Math.abs(lon);
+        let cleanLon = lonPart.replace(/SAAT|DAK[Iİ]KA|DAK|SAN[Iİ]YE|SAN|DERECE/g, '')
+                              .replace(/KUZEY/g, 'N').replace(/GÜNEY|GUNEY/g, 'S')
+                              .replace(/DO[GĞ]U/g, 'E').replace(/BATI/g, 'W');
+        if (cleanLon.includes('W') || cleanLon.includes('S') || cleanLon.includes('B') || cleanLon.includes('G')) lon = -Math.abs(lon);
 
         if (isValidLatLon(lat, lon)) {
             return {
@@ -85,8 +92,17 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
         
         let decimal = deg + (min / 60) + (sec / 3600);
         
+        // Clean up noise words that might contain S, G, W, B
+        let cleanStr = str.replace(/SAAT|DAK[Iİ]KA|DAK|SAN[Iİ]YE|SAN|DERECE/g, '');
+        // Normalize Turkish direction words
+        cleanStr = cleanStr.replace(/KUZEY/g, 'N')
+                           .replace(/GÜNEY|GUNEY/g, 'S')
+                           .replace(/DO[GĞ]U/g, 'E')
+                           .replace(/BATI/g, 'W');
+        
         // Check direction
-        if (str.includes('S') || str.includes('GÜNEY') || (str.includes('G') && !str.includes('DOGU') && !str.includes('DOĞU')) || str.includes('W') || str.includes('BATI') || (str.includes('B') && !str.includes('KUZEY') && !str.includes('BATI'))) {
+        if (cleanStr.includes('S') || cleanStr.includes('W') || cleanStr.includes('G') || cleanStr.includes('B')) {
+            // Be careful with 'G' and 'B' if they are left over from something else, but we replaced DOGU and BATI.
             decimal = -decimal;
         }
         
