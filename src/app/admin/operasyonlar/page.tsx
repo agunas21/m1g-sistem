@@ -136,7 +136,8 @@ export default function Operasyonlar() {
         type: "Deprem" as "Deprem" | "Yangın" | "Doğada Arama" | "Eğitim" | "Kamp",
         location: "",
         radioFrequency: "145.550",
-        personnelCount: 10
+        personnelCount: 10,
+        description: ""
     });
 
     // Unified command bar input
@@ -596,6 +597,7 @@ export default function Operasyonlar() {
             location: newOpData.location,
             temperature: "",
             radioFrequency: newOpData.radioFrequency,
+            description: newOpData.description,
             teams: [],
             baseCamp: { members: [], equipment: [] },
             supplies: calculateInitialSupplies(newOpData.type, newOpData.personnelCount),
@@ -607,7 +609,7 @@ export default function Operasyonlar() {
         };
 
         await saveOperation(newOp);
-        setNewOpData({ name: "", type: "Deprem", location: "", radioFrequency: "145.550", personnelCount: 10 });
+        setNewOpData({ name: "", type: "Deprem", location: "", radioFrequency: "145.550", personnelCount: 10, description: "" });
         setShowNewOp(false);
         setSelectedOp(newOp);
 
@@ -1458,36 +1460,30 @@ export default function Operasyonlar() {
                     </h2>
                     
                     <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
-                        {operations.filter(op => op.status === "Aktif").map(op => {
+                        {operations.filter(op => op.status === "Aktif" || op.status === "Hazırlık").map(op => {
                             const isPanic = op.id.includes("PANIC");
-                            const isActive = true;
+                            const isSelected = selectedOp?.id === op.id;
                             return (
                                 <div 
                                     key={op.id} 
                                     onClick={() => setSelectedOp(op)}
-                                    className={`p-3 rounded-xl border cursor-pointer transition-all ${selectedOp?.id === op.id ? 'bg-red-600/10 border-red-500/30' : 'bg-black/50 border-white/5 hover:border-white/20'}`}
+                                    className={`p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-red-600/10 border-red-500/30' : 'bg-black/50 border-white/5 hover:border-white/20'}`}
                                 >
                                     <div className="flex justify-between items-start mb-1">
                                         <div className="flex items-center gap-2">
-                                            <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded border ${
-                                                isPanic ? 'bg-red-500/20 text-red-500 border-red-500/20' : 'bg-white/5 text-white border-white/10'
-                                            }`}>
+                                            <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-widest rounded border ${isPanic ? 'bg-red-600 text-white border-red-500/20' : op.status === 'Hazırlık' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 text-white border-white/10'}`}>
                                                 {isPanic ? 'PANİK' : op.type}
                                             </span>
+                                            {op.status === 'Hazırlık' && (
+                                                <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5 rounded animate-pulse">HAZIRLIK</span>
+                                            )}
                                             <span className="text-[10px] text-neutral-500 font-mono">{op.id}</span>
                                         </div>
-                                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest border ${
-                                            isActive 
-                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 ' 
-                                            : 'bg-neutral-800 text-neutral-500 border-white/10'
-                                        }`}>
-                                            {op.status}
-                                        </span>
                                     </div>
-                                    <h3 className="text-white font-bold text-sm leading-snug mb-2">{op.name}</h3>
+                                    <h3 className={`text-sm font-black uppercase leading-snug mb-2 ${isSelected ? 'text-white' : 'text-neutral-300'}`}>{op.name}</h3>
                                     <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 border-t border-white/5 pt-2">
                                         <span className="flex items-center gap-1"><Users size={12} /> {op.teams?.length || 0} Tim</span>
-                                        <span className="flex items-center gap-1 text-red-400 font-bold">{op.status === "Aktif" ? "DEVAM" : "BİTTİ"}</span>
+                                        <span className={`font-bold ${op.status === "Hazırlık" ? "text-amber-500" : "text-red-400"}`}>{op.status === "Aktif" ? "DEVAM" : op.status === "Hazırlık" ? "HAZIR" : "BİTTİ"}</span>
                                     </div>
                                 </div>
                             );
@@ -1529,12 +1525,16 @@ export default function Operasyonlar() {
                             {/* Selected Operation Header HUD */}
                             <div className="bg-[#050B14] border border-white/5 rounded-3xl p-6 relative overflow-hidden shadow-2xl space-y-4">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[10px] text-red-500 font-extrabold uppercase tracking-widest bg-red-500/10 px-2.5 py-0.5 rounded border border-red-500/20">{selectedOp.type}</span>
-                                            <span className="text-xs text-neutral-500 font-mono">{selectedOp.id} • {selectedOp.startTime}</span>
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">{selectedOp.type}</span>
+                                            <span className="text-neutral-500 font-mono text-xs">{selectedOp.id}</span>
+                                            <span className="text-neutral-600 text-xs">• {new Date(selectedOp.startTime || Date.now()).toISOString().substring(0, 16).replace('T', ' ')}</span>
                                         </div>
-                                        <h2 className="text-2xl font-black text-white tracking-tight">{selectedOp.name}</h2>
+                                        <h2 className="text-3xl font-black text-white uppercase tracking-tight mt-1">{selectedOp.name}</h2>
+                                        {selectedOp.description && (
+                                            <p className="text-sm text-neutral-400 mt-2 italic border-l-2 border-red-500/50 pl-3">{selectedOp.description}</p>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {selectedOp.status === "Aktif" && (
@@ -1951,6 +1951,15 @@ export default function Operasyonlar() {
                                     <option value="Eğitim">Eğitim</option>
                                     <option value="Kamp">Kamp</option>
                                 </select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="block text-neutral-400 font-bold uppercase tracking-wider text-[9px]">Görev Tanımı / Açıklama</label>
+                                <textarea 
+                                    placeholder="Örn: Enkaz altında kalan 3 kişinin çıkarılması ve güvenli bölgeye tahliyesi..."
+                                    value={newOpData.description} onChange={(e) => setNewOpData({ ...newOpData, description: e.target.value })}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 h-24 resize-none"
+                                />
                             </div>
 
                             <div className="space-y-1">

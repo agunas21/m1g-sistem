@@ -69,6 +69,7 @@ export async function POST(req: Request) {
                 endTime: body.endTime || null,
                 location: body.location || '',
                 radioFrequency: body.radioFrequency || '',
+                description: body.description || null,
                 temperature: body.temperature || '',
                 teams: body.teams || [],
                 baseCamp: body.baseCamp || { members: [], equipment: [] },

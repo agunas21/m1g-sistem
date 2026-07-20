@@ -106,6 +106,7 @@ model Operation {
   location           String?
   temperature        String?
   radioFrequency     String?
+  description        String?
   isEvacuationActive Boolean   @default(false)
   supplies           Json      @default("{}")
   baseCampMembers    String[]  @default([])
