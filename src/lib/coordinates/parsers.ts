@@ -93,32 +93,24 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
         return decimal;
     };
 
-    // Split by common separators (space, comma, dash) if there are distinct parts
-    // This is a naive split, a robust one would look for N/S/E/W/K/G/D/B
-    const parts = normalized.split(/[,\- ]+/);
-    if (parts.length >= 2) {
-        // Try to guess which is lat and which is lon
-        // Usually Lat comes first, but let's check for letters
-        let latStr = "";
-        let lonStr = "";
-        
-        for (const p of parts) {
-            if (p.includes('N') || p.includes('S') || p.includes('K') || p.includes('G')) latStr += p + " ";
-            else if (p.includes('E') || p.includes('W') || p.includes('D') || p.includes('B')) lonStr += p + " ";
-        }
-        
-        if (!latStr) latStr = parts.slice(0, parts.length/2).join(" ");
-        if (!lonStr) lonStr = parts.slice(parts.length/2).join(" ");
-        
-        const lat = extractDMS(latStr);
-        const lon = extractDMS(lonStr);
-        
-        if (lat !== null && lon !== null && isValidLatLon(lat, lon)) {
-            return {
-                format: "DMS",
-                latLon: { lat, lon, datum },
-                originalStr: input
-            };
+    // 5. Try to split the string into Lat and Lon halves
+    const dmsNumbers = [...normalized.matchAll(/\d+(?:\.\d+)?/g)];
+    if (dmsNumbers.length === 4 || dmsNumbers.length === 6) {
+        const midIndex = dmsNumbers[dmsNumbers.length / 2].index;
+        if (midIndex !== undefined) {
+            const latStr = normalized.substring(0, midIndex);
+            const lonStr = normalized.substring(midIndex);
+
+            const lat = extractDMS(latStr);
+            const lon = extractDMS(lonStr);
+            
+            if (lat !== null && lon !== null && isValidLatLon(lat, lon)) {
+                return {
+                    format: "DMS",
+                    latLon: { lat, lon, datum },
+                    originalStr: input
+                };
+            }
         }
     }
 
