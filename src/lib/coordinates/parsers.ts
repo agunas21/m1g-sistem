@@ -28,9 +28,9 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
         }
     }
 
-    // 2. Try UTM (e.g. 35T 123456 1234567)
-    // Format: Zone[Letter] Easting Northing
-    const utmMatch = normalized.match(/^(\d{1,2})\s*([C-X]?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/);
+    // 2. Try UTM (e.g. 35T 123456 1234567 or Zon 35S, Doğu (X): 520600, Kuzey (Y): 4255548)
+    // Format: Zone[Letter] ... Easting ... Northing
+    const utmMatch = normalized.match(/(?:ZON\s*)?(\d{1,2})\s*([C-X]?)[^\d]+(\d{5,6}(?:\.\d+)?)[^\d]+(\d{6,7}(?:\.\d+)?)/);
     if (utmMatch) {
         const zoneNum = parseInt(utmMatch[1], 10);
         const zoneLetter = utmMatch[2] || 'T'; // Default to Turkey roughly
