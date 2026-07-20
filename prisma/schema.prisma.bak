@@ -62,7 +62,6 @@ model Member {
   assignedItems               InventoryItem[]
   operationVehicleAssignments OperationVehicleAssignment[]
   operationRoleAssignments    OperationRoleAssignment[]
-  events                      OperationEvent[]             @relation("EventActor")
 
   @@index([email])
   @@index([status])
@@ -98,35 +97,29 @@ model InventoryItem {
 // OPERASYONLAR
 // ─────────────────────────────────────────────
 model Operation {
-  id                  String     @id @default(cuid())
-  name                String
-  type                String // Deprem | Yangın | Doğada Arama | Eğitim | Kamp
-  status              String     @default("Aktif")
-  startTime           DateTime   @default(now())
-  endTime             DateTime?
-  location            String?
-  temperature         String?
-  radioFrequency      String?
-  description         String?
-  isEvacuationActive  Boolean    @default(false)
-  supplies            Json       @default("{}")
-  baseCampMembers     String[]   @default([])
-  baseCampEquipment   String[]   @default([])
-  logs                Json       @default("[]")
-  postMortemReport    Json       @default("{\"completed\":false,\"notes\":\"\",\"memberNotes\":{}}")
-  teamLevel           TeamLevel?
-  selfSufficiencyDays Int?
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
+  id                 String    @id @default(cuid())
+  name               String
+  type               String // Deprem | Yangın | Doğada Arama | Eğitim | Kamp
+  status             String    @default("Aktif")
+  startTime          DateTime  @default(now())
+  endTime            DateTime?
+  location           String?
+  temperature        String?
+  radioFrequency     String?
+  description        String?
+  isEvacuationActive Boolean   @default(false)
+  supplies           Json      @default("{}")
+  baseCampMembers    String[]  @default([])
+  baseCampEquipment  String[]  @default([])
+  logs               Json      @default("[]")
+  postMortemReport   Json      @default("{\"completed\":false,\"notes\":\"\",\"memberNotes\":{}}")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  teams            Team[]
-  auditLogs        AuditLog[]
-  vehicles         OperationVehicle[]
-  roleAssignments  OperationRoleAssignment[]
-  events           OperationEvent[]
-  snapshots        OperationSnapshot[]
-  reports          OperationReport[]
-  complianceChecks ComplianceCheck[]
+  teams           Team[]
+  auditLogs       AuditLog[]
+  vehicles        OperationVehicle[]
+  roleAssignments OperationRoleAssignment[]
 }
 
 // ─────────────────────────────────────────────
@@ -161,12 +154,10 @@ model OperationVehicleAssignment {
 }
 
 model OperationRoleAssignment {
-  id                  String               @id @default(cuid())
-  operationId         String
-  memberId            String
-  roleTitle           String // Ekip Lideri, Medikal Lider vb.
-  kavkasOfficialRole  KavkasOfficialRole?
-  kavkasFunctionGroup KavkasFunctionGroup?
+  id          String @id @default(cuid())
+  operationId String
+  memberId    String
+  roleTitle   String // Ekip Lideri, Medikal Lider vb.
 
   operation Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
   member    Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
@@ -291,150 +282,4 @@ model Video {
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
-
-// ─────────────────────────────────────────────
-// KAVKAS & C4ISR EVENT-DRIVEN MİMARİSİ
-// ─────────────────────────────────────────────
-enum TeamLevel {
-  HAFIF
-  ORTA
-  AGIR
-}
-
-enum KavkasFunctionGroup {
-  YONETIM
-  ARAMA
-  KURTARMA
-  LOJISTIK
-  MEDIKAL
-}
-
-enum KavkasOfficialRole {
-  EKIP_LIDERI
-  EKIP_LIDERI_YARDIMCISI
-  PLANLAMA_YETKILISI
-  IRTIBAT_YETKILISI
-  IRTIBAT_YETKILISI_YARDIMCISI
-  YAPI_UZMANI
-  GUVENLIK_YETKILISI
-  TEKNIK_ARAMA_GOREVLISI
-  KOPEKLI_ARAMA_EGITMENI
-  TEHLIKELI_MADDE_GOREVLISI
-  KURTARMA_EKIBI_YETKILISI
-  KURTARMA_GOREVLISI
-  AGIR_SAPANLA_BAGLAMA_GOREVLISI
-  LOJISTIK_EKIBI_YONETICISI
-  US_YONETICISI
-  LOJISTIK_GOREVLISI
-  ULASTIRMA_GOREVLISI
-  HABERLESME_GOREVLISI
-  MEDIKAL_EKIP_YONETICISI
-  SAGLIK_PERSONELI
-}
-
-enum ComplianceStatus {
-  YESIL
-  SARI
-  TURUNCU
-  KIRMIZI
-}
-
-enum ReportType {
-  OPERASYONLAR
-  PLANLAMA_SONUC
-  MUHENDISLIK
-  GUVENLIK
-  LOJISTIK
-  US_LOJISTIGI
-  ULASTIRMA_ARAC_LOJISTIGI
-}
-
-enum EntityType {
-  PERSONNEL
-  VEHICLE
-  TEAM
-  ROLE
-  INVENTORY
-  OPERATION
-}
-
-enum EventSourceType {
-  RADIO
-  PHONE
-  GPS
-  SYSTEM
-}
-
-model OperationEvent {
-  id          String    @id @default(cuid())
-  operationId String
-  operation   Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
-
-  isCorrection     Boolean @default(false)
-  correctedEventId String?
-
-  type      String
-  timestamp DateTime @default(now())
-
-  actorId String?
-  actor   Member? @relation("EventActor", fields: [actorId], references: [id], onDelete: SetNull)
-
-  entityType EntityType?
-  entityId   String?
-
-  role String?
-  lat  Float?
-  lng  Float?
-
-  payload Json @default("{}")
-
-  sourceType          EventSourceType @default(RADIO)
-  confidence          Float           @default(1.0)
-  isDecision          Boolean         @default(false)
-  decisionImpactScore Int?
-
-  createdAt DateTime @default(now())
-
-  @@index([operationId, timestamp])
-  @@index([operationId, entityId])
-}
-
-model OperationSnapshot {
-  id          String    @id @default(cuid())
-  operationId String
-  operation   Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
-  timestamp   DateTime  @default(now())
-  state       Json
-  createdAt   DateTime  @default(now())
-
-  @@index([operationId, timestamp])
-}
-
-model OperationReport {
-  id               String     @id @default(cuid())
-  operationId      String
-  operation        Operation  @relation(fields: [operationId], references: [id], onDelete: Cascade)
-  type             ReportType
-  content          Json
-  draftGeneratedAt DateTime?
-  approvedAt       DateTime?
-  approvedByUserId String?
-  version          Int        @default(1)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-
-  @@unique([operationId, type, version])
-}
-
-model ComplianceCheck {
-  id          String           @id @default(cuid())
-  operationId String
-  operation   Operation        @relation(fields: [operationId], references: [id], onDelete: Cascade)
-  checkKey    String
-  status      ComplianceStatus
-  note        String?
-  checkedAt   DateTime         @default(now())
-
-  @@index([operationId])
 }
