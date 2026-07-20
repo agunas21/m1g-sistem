@@ -13,6 +13,9 @@ import { supabase } from "@/lib/supabase";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import VehiclePlanPanel from "@/components/operations/VehiclePlanPanel";
 import RoleOrganizationPanel from "@/components/operations/RoleOrganizationPanel";
+import MissionLedgerPanel from "@/components/operations/MissionLedgerPanel";
+import SlashCommandConsole from "@/components/operations/SlashCommandConsole";
+import AfadComplianceWidget from "@/components/operations/AfadComplianceWidget";
 
 const OperasyonHaritasi = dynamic(() => import("@/components/admin/OperasyonHaritasi"), { 
     ssr: false,
@@ -309,45 +312,11 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                     </div>
                 </div>
 
-                {/* Sol Taraf: Canlı Log Akışı */}
+                {/* Sol Taraf: Canlı Log Akışı & KAVKAS & Komut Konsolu */}
                 <div className="lg:col-span-2 space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                        <MessageSquare className="text-blue-500" size={20} />
-                        <h2 className="text-lg font-bold text-white uppercase tracking-widest">Canlı Log Akışı</h2>
-                        <div className="ml-auto flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                            </span>
-                            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Senkronize</span>
-                        </div>
-                    </div>
-                    
-                    <div className="bg-[#050B14] border border-white/5 rounded-2xl p-5 h-[500px] overflow-y-auto custom-scrollbar flex flex-col-reverse gap-4">
-                        {operation.logs?.length > 0 ? (
-                            operation.logs.map((log: any, i: number) => (
-                                <motion.div 
-                                    key={i} 
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="bg-black/50 p-4 rounded-xl border border-white/5 relative pl-12"
-                                >
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-[#050B14] bg-blue-500 ring-2 ring-white/5" />
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <span className="text-[10px] font-mono text-neutral-500 bg-white/5 px-1.5 py-0.5 rounded">{log.time}</span>
-                                    </div>
-                                    <p className="text-sm text-neutral-300 leading-relaxed font-medium">
-                                        {log.message}
-                                    </p>
-                                </motion.div>
-                            ))
-                        ) : (
-                            <div className="text-center text-neutral-600 py-10 my-auto">
-                                <Activity size={32} className="mx-auto mb-3 opacity-20" />
-                                <p className="text-xs font-bold uppercase tracking-widest">Henüz log girilmedi</p>
-                            </div>
-                        )}
-                    </div>
+                    <AfadComplianceWidget operationId={operation.id} />
+                    <MissionLedgerPanel operationId={operation.id} />
+                    <SlashCommandConsole operationId={operation.id} onEventCreated={() => {}} />
                 </div>
 
                 {/* Sağ Taraf: Sahadaki Timler */}

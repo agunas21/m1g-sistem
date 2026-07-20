@@ -16,7 +16,8 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
     const [assignments, setAssignments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [newCustomRoleInput, setNewCustomRoleInput] = useState("");
-    const [localCustomRoles, setLocalCustomRoles] = useState<string[]>([]);
+    const [selectedKavkas, setSelectedKavkas] = useState("DIGER");
+    const [localCustomRoles, setLocalCustomRoles] = useState<any[]>([]);
 
     const fetchRoles = async () => {
         try {
@@ -34,12 +35,12 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
         fetchRoles();
     }, [operationId]);
 
-    const handleAssignRole = async (memberId: string, roleTitle: string) => {
+    const handleAssignRole = async (memberId: string, roleTitle: string, kavkas?: string) => {
         try {
             const res = await fetch(`/api/settings/operations/${operationId}/roles`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId, roleTitle })
+                body: JSON.stringify({ memberId, roleTitle, kavkasFunctionGroup: kavkas })
             });
             const data = await res.json();
             if (res.ok) {
@@ -79,7 +80,7 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
     // Get unique custom roles created beyond defaults
     const customRoles = Array.from(new Set([
         ...assignments.filter(a => !DEFAULT_ROLES.find(dr => dr.title === a.roleTitle)).map(a => a.roleTitle),
-        ...localCustomRoles
+        ...localCustomRoles.map(r => r.title)
     ]));
 
     const allRoles = [...DEFAULT_ROLES.map(r => r.title), ...customRoles];
@@ -88,7 +89,7 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
         const trimmed = newCustomRoleInput.trim();
         // Prevent duplicates
         if (trimmed && !allRoles.some(r => r.toLowerCase() === trimmed.toLowerCase())) {
-            setLocalCustomRoles(prev => [...prev, trimmed]);
+            setLocalCustomRoles(prev => [...prev, { title: trimmed, kavkas: selectedKavkas }]);
             setNewCustomRoleInput("");
         }
     };
@@ -103,13 +104,25 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
                 </h3>
                 {(isAdmin && isActive) && (
                     <div className="flex gap-2">
+                        <select 
+                            value={selectedKavkas}
+                            onChange={(e) => setSelectedKavkas(e.target.value)}
+                            className="bg-black/50 border border-white/10 rounded px-3 py-1.5 text-[11px] text-white outline-none focus:border-purple-500"
+                        >
+                            <option value="ARAMA_KURTARMA">Arama Kurtarma Grubu</option>
+                            <option value="SAGLIK">Sağlık Grubu</option>
+                            <option value="GUVENLIK_TRAFIK">Güvenlik Grubu</option>
+                            <option value="LOJISTIK_BAKIM">Lojistik Grubu</option>
+                            <option value="HABERLESME">Haberleşme Grubu</option>
+                            <option value="DIGER">Diğer (Tanımsız)</option>
+                        </select>
                         <input 
                             type="text" 
                             placeholder="Yeni Görev (Örn: Aşçı)"
                             value={newCustomRoleInput}
                             onChange={(e) => setNewCustomRoleInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddCustomRole()}
-                            className="bg-black/50 border border-white/10 rounded px-3 py-1.5 text-[11px] text-white w-48 outline-none focus:border-purple-500"
+                            className="bg-black/50 border border-white/10 rounded px-3 py-1.5 text-[11px] text-white w-32 outline-none focus:border-purple-500"
                         />
                         <button onClick={handleAddCustomRole} className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 rounded px-3 py-1.5 text-[11px] font-bold border border-purple-500/20 transition-colors flex items-center gap-1">
                             <Plus size={12} /> Ekle
