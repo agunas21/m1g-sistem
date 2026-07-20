@@ -15,6 +15,8 @@ const DEFAULT_ROLES = [
 export default function RoleOrganizationPanel({ operationId, membersData, isAdmin, isActive = true }: any) {
     const [assignments, setAssignments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [newCustomRoleInput, setNewCustomRoleInput] = useState("");
+    const [localCustomRoles, setLocalCustomRoles] = useState<string[]>([]);
 
     const fetchRoles = async () => {
         try {
@@ -75,11 +77,21 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
     };
 
     // Get unique custom roles created beyond defaults
-    const customRoles = Array.from(new Set(
-        assignments.filter(a => !DEFAULT_ROLES.find(dr => dr.title === a.roleTitle)).map(a => a.roleTitle)
-    ));
+    const customRoles = Array.from(new Set([
+        ...assignments.filter(a => !DEFAULT_ROLES.find(dr => dr.title === a.roleTitle)).map(a => a.roleTitle),
+        ...localCustomRoles
+    ]));
 
     const allRoles = [...DEFAULT_ROLES.map(r => r.title), ...customRoles];
+
+    const handleAddCustomRole = () => {
+        const trimmed = newCustomRoleInput.trim();
+        // Prevent duplicates
+        if (trimmed && !allRoles.some(r => r.toLowerCase() === trimmed.toLowerCase())) {
+            setLocalCustomRoles(prev => [...prev, trimmed]);
+            setNewCustomRoleInput("");
+        }
+    };
 
     if (loading) return <div className="text-neutral-500 text-xs animate-pulse">Görev şeması yükleniyor...</div>;
 
@@ -89,6 +101,21 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
                 <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
                     <Network size={16} className="text-purple-400" /> Operasyon Görev Şeması
                 </h3>
+                {(isAdmin && isActive) && (
+                    <div className="flex gap-2">
+                        <input 
+                            type="text" 
+                            placeholder="Yeni Görev (Örn: Aşçı)"
+                            value={newCustomRoleInput}
+                            onChange={(e) => setNewCustomRoleInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddCustomRole()}
+                            className="bg-black/50 border border-white/10 rounded px-3 py-1.5 text-[11px] text-white w-48 outline-none focus:border-purple-500"
+                        />
+                        <button onClick={handleAddCustomRole} className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 rounded px-3 py-1.5 text-[11px] font-bold border border-purple-500/20 transition-colors flex items-center gap-1">
+                            <Plus size={12} /> Ekle
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
