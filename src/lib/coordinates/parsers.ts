@@ -10,11 +10,11 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
 
     // 1. Try MGRS (Simple regex for basic MGRS format like 35TPF1234567890)
     // Format: 1-60 + C-X + 2 letters + even number of digits
-    const mgrsMatch = normalized.match(/^(\d{1,2})([C-X])\s*([A-Z]{2})\s*(\d{2,10})$/);
+    const mgrsStrRaw = normalized.replace(/\s+/g, '');
+    const mgrsMatch = mgrsStrRaw.match(/^(\d{1,2})([C-X])([A-Z]{2})(\d{2,10})$/);
     if (mgrsMatch) {
         try {
-            const mgrsStr = normalized.replace(/\s+/g, '');
-            const point = mgrs.toPoint(mgrsStr);
+            const point = mgrs.toPoint(mgrsStrRaw);
             if (isValidLatLon(point[1], point[0])) {
                 let latLon: LatLon = { lat: point[1], lon: point[0], datum: datum };
                 return {
