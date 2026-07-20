@@ -11,6 +11,8 @@ import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
+import VehiclePlanPanel from "@/components/operations/VehiclePlanPanel";
+import RoleOrganizationPanel from "@/components/operations/RoleOrganizationPanel";
 
 const OperasyonHaritasi = dynamic(() => import("@/components/admin/OperasyonHaritasi"), { 
     ssr: false,
@@ -287,6 +289,12 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
                 
+                {/* ARAÇ VE GÖREV ŞEMASI */}
+                <div className="lg:col-span-3 space-y-6 mb-2">
+                    <VehiclePlanPanel operationId={operation.id} membersData={[]} isAdmin={false} />
+                    <RoleOrganizationPanel operationId={operation.id} membersData={[]} isAdmin={false} />
+                </div>
+
                 {/* HARİTA BÖLÜMÜ (YENİ EKLENDİ) */}
                 <div className="lg:col-span-3 space-y-4">
                     <div className="flex items-center gap-2 mb-2">

@@ -16,6 +16,9 @@ import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
 import OperationSummaryModal from "@/components/modals/OperationSummaryModal";
 import TeamListPanel from "@/components/admin/operasyonlar/TeamListPanel";
+import VehiclePlanPanel from "@/components/operations/VehiclePlanPanel";
+import RoleOrganizationPanel from "@/components/operations/RoleOrganizationPanel";
+import LojistikZimmetPanel from "@/components/operations/LojistikZimmetPanel";
 
 const OperasyonHaritasi = dynamic(() => import("@/components/admin/OperasyonHaritasi"), { ssr: false });
 const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
@@ -119,6 +122,7 @@ export default function Operasyonlar() {
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [showNewOp, setShowNewOp] = useState(false);
+    const [isCreatingOp, setIsCreatingOp] = useState(false);
     const isOnline = useNetworkStatus();
     const [isOffline, setIsOffline] = useState(false);
     const [offlineQueueCount, setOfflineQueueCount] = useState(0);
@@ -576,15 +580,18 @@ export default function Operasyonlar() {
     // Create custom operations
     const handleCreateCustomOp = async (e: React.FormEvent) => {
         e.preventDefault();
-        const newId = `OP-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-        const timestampStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+        if (isCreatingOp) return;
+        setIsCreatingOp(true);
+        try {
+            const newId = `OP-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+            const timestampStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
 
         const newOp: ActiveOperation = {
             id: newId,
             name: newOpData.name || "Yeni Operasyon",
             type: newOpData.type,
-            status: "Aktif",
-            startTime: timestampStr,
+            status: "Hazırlık",
+            startTime: "",
             endTime: null,
             location: newOpData.location,
             temperature: "",
@@ -604,9 +611,27 @@ export default function Operasyonlar() {
         setShowNewOp(false);
         setSelectedOp(newOp);
 
-        if (newOp.type === "Eğitim" || newOp.type === "Kamp") {
-            fetchWeather(newOp.location);
+            if (newOp.type === "Eğitim" || newOp.type === "Kamp") {
+                fetchWeather(newOp.location);
+            }
+        } finally {
+            setIsCreatingOp(false);
         }
+    };
+
+    const handleStartOperation = async () => {
+        if (!selectedOp || selectedOp.status !== 'Hazırlık') return;
+        
+        const timestampStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+        const updated = { 
+            ...selectedOp, 
+            status: "Aktif",
+            startTime: timestampStr,
+            logs: [...(selectedOp.logs || []), { time: timestampStr, message: `Operasyon resmi olarak başlatıldı.` }]
+        };
+        
+        await saveOperation(updated);
+        toast.success("Operasyon başlatıldı, sayaç çalışıyor!");
     };
 
     const calculateInitialSupplies = (type: string, personnelCount: number = 10) => {
@@ -1641,7 +1666,9 @@ export default function Operasyonlar() {
                                     {/* TICKING clock for entire active duration */}
                                     <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 flex flex-col justify-center text-center">
                                         <span className="text-[9px] font-bold text-red-500 uppercase tracking-widest block mb-0.5">Operasyon Süresi (Tıklıyor)</span>
-                                        <span className="text-lg font-black font-mono tracking-wider text-red-400">{formatDuration(selectedOp.startTime, selectedOp.endTime)}</span>
+                                        <span className="text-lg font-black font-mono tracking-wider text-red-400">
+                                            {selectedOp.status === 'Hazırlık' ? "00:00:00" : formatDuration(selectedOp.startTime, selectedOp.endTime)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -1657,7 +1684,29 @@ export default function Operasyonlar() {
                                         }
                                     }}
                                 />
-                            </div>                            {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
+                            </div>
+
+                            {selectedOp.status === 'Hazırlık' && isAdmin && (
+                                <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center shadow-lg">
+                                    <h3 className="text-red-400 font-bold text-lg mb-2 tracking-wider">OPERASYON HAZIRLIK AŞAMASINDA</h3>
+                                    <p className="text-sm text-neutral-400 mb-5">Personel, araç ve lojistik atamalarınızı yapın. Sahaya intikal başladığında operasyonu başlatın (Sayaç o an başlayacaktır).</p>
+                                    <button 
+                                        onClick={handleStartOperation}
+                                        className="px-8 py-3 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-xl hover:scale-105 inline-flex items-center gap-2"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                        Operasyonu Başlat
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* ARAÇ VE GÖREV ŞEMASI (NEW MODULES) */}
+                            <div className="space-y-6 mb-6">
+                                <VehiclePlanPanel operationId={selectedOp.id} membersData={membersData} isAdmin={isAdmin} isActive={['Aktif', 'Hazırlık'].includes(selectedOp.status)} />
+                                <RoleOrganizationPanel operationId={selectedOp.id} membersData={membersData} isAdmin={isAdmin} isActive={['Aktif', 'Hazırlık'].includes(selectedOp.status)} />
+                            </div>
+
+                            {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                                 
                                 {/* Timler listesi (Active Teams & Deployments) - 2 Columns wide */}
@@ -1666,7 +1715,7 @@ export default function Operasyonlar() {
                                         <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
                                             <Users size={16} className="text-red-400" /> Arama Kurtarma Timleri ({selectedOp.teams.length})
                                         </h3>
-                                        {selectedOp.status === "Aktif" && (
+                                        {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
                                             <button 
                                                 onClick={() => setShowAddTeamModal(true)}
                                                 className="px-3 py-1 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-1.5"
@@ -1688,7 +1737,7 @@ export default function Operasyonlar() {
                                     <div className="bg-[#050B14] border border-white/5 rounded-3xl p-5 space-y-5">
                                         
                                         {/* Dynamic scanner input */}
-                                        {selectedOp.status === "Aktif" && (
+                                        {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
                                             <div className="space-y-2">
                                                 <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block">Barkod Okut / Arama</span>
                                                 <div className="flex gap-2">
@@ -1749,7 +1798,7 @@ export default function Operasyonlar() {
                                                     return (
                                                         <div key={mId} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-lg p-2 text-xs">
                                                             <span className="text-neutral-300 font-bold">{m?.fullName || mId}</span>
-                                                            {selectedOp.status === "Aktif" && (
+                                                            {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
                                                                 <button onClick={() => discardMemberFromOp(mId)} className="text-[10px] text-red-400">İade</button>
                                                             )}
                                                         </div>
@@ -1770,7 +1819,7 @@ export default function Operasyonlar() {
                                                     return (
                                                         <div key={eqId} className="flex justify-between items-center bg-white/5 border border-white/5 rounded-lg p-2 text-xs">
                                                             <span className="text-neutral-300 font-mono">{item?.name || eqId}</span>
-                                                            {selectedOp.status === "Aktif" && (
+                                                            {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
                                                                 <button onClick={() => discardEquipmentFromOp(eqId)} className="text-[10px] text-red-400">İade</button>
                                                             )}
                                                         </div>
@@ -1786,12 +1835,16 @@ export default function Operasyonlar() {
                             </div>
 
                             {/* LOJİSTİK VE LOGBOOK */}
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                                 
+                                <div className="xl:col-span-1 space-y-6">
+                                    <LojistikZimmetPanel operationId={selectedOp.id} membersData={membersData} isAdmin={isAdmin} isActive={['Aktif', 'Hazırlık'].includes(selectedOp.status)} mounted={mounted} />
+                                </div>
+
                                 {/* Supply tracking & dynamically updating slip */}
-                                <div className="bg-[#050B14] border border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
+                                <div className="xl:col-span-1 bg-[#050B14] border border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
                                     <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-3">
-                                        <Package className="text-amber-500" size={16} /> Lojistik Çıkış & Sarfiyat İkmal Yönetimi
+                                        <Package className="text-amber-500" size={16} /> Lojistik Çıkış & Sarfiyat
                                     </h3>
                                     
                                     {renderSupplySlipSuggestions()}
@@ -1807,7 +1860,7 @@ export default function Operasyonlar() {
                                                     <span className="text-neutral-400 text-[10px] uppercase font-bold block">{item.label}</span>
                                                     <span className="text-white text-sm font-black font-mono">{selectedOp.supplies[item.key] || 0}</span>
                                                 </div>
-                                                {selectedOp.status === "Aktif" && (
+                                                {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
                                                     <div className="flex gap-1.5">
                                                         <button onClick={() => handleQuickSupply(item.key, -5)} className="px-2 py-1 bg-black/40 text-neutral-400 border border-white/10 rounded font-bold hover:text-white">-5</button>
                                                         <button onClick={() => handleQuickSupply(item.key, 5)} className="px-2 py-1 bg-black/40 text-neutral-400 border border-white/10 rounded font-bold hover:text-white">+5</button>
@@ -1824,7 +1877,7 @@ export default function Operasyonlar() {
                                         <MessageSquare className="text-purple-400" size={16} /> Telsiz Logbook (Taktik Kayıtlar)
                                     </h3>
 
-                                    {selectedOp.status === "Aktif" && (
+                                    {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
                                         <div className="flex gap-2">
                                             <input 
                                                 type="text"
