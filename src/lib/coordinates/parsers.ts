@@ -50,11 +50,19 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
         }
     }
 
-    // 3. Try DD (Decimal Degrees) e.g. 40.4250, 29.9194
-    const ddMatch = normalized.match(/^(-?\d+(?:\.\d+)?)[^\d\.-]+(-?\d+(?:\.\d+)?)$/);
-    if (ddMatch) {
-        const lat = parseFloat(ddMatch[1]);
-        const lon = parseFloat(ddMatch[2]);
+    // 3. Try DD (Decimal Degrees) e.g. 40.4250, 29.9194 or 41.0082° Kuzey, 28.9784° Doğu
+    const numbers = normalized.match(/-?\d+(?:\.\d+)?/g);
+    if (numbers && numbers.length === 2) {
+        let lat = parseFloat(numbers[0]);
+        let lon = parseFloat(numbers[1]);
+
+        // Check for directions to apply negative signs
+        const latPart = normalized.substring(0, normalized.indexOf(numbers[1]));
+        if (latPart.includes('S') || latPart.includes('GÜNEY') || (latPart.includes('G') && !latPart.includes('DOĞU'))) lat = -Math.abs(lat);
+        
+        const lonPart = normalized.substring(normalized.indexOf(numbers[1]));
+        if (lonPart.includes('W') || lonPart.includes('BATI') || (lonPart.includes('B') && !lonPart.includes('KUZEY'))) lon = -Math.abs(lon);
+
         if (isValidLatLon(lat, lon)) {
             return {
                 format: "DD",
@@ -78,7 +86,7 @@ export function parseCoordinates(input: string, datum: "WGS84" | "ED50" = "WGS84
         let decimal = deg + (min / 60) + (sec / 3600);
         
         // Check direction
-        if (str.includes('S') || str.includes('G') || str.includes('W') || str.includes('B')) {
+        if (str.includes('S') || str.includes('GÜNEY') || (str.includes('G') && !str.includes('DOGU') && !str.includes('DOĞU')) || str.includes('W') || str.includes('BATI') || (str.includes('B') && !str.includes('KUZEY') && !str.includes('BATI'))) {
             decimal = -decimal;
         }
         
