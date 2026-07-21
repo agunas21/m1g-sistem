@@ -171,6 +171,37 @@ export default function DepoYonetimi() {
         }
     };
 
+    const exportToExcel = async () => {
+        setExporting(true);
+        try {
+            const XLSX = await import("xlsx");
+            const excelData = filteredInventory.map(item => ({
+                "Barkod / ID": item.id,
+                "Ekipman Adı": item.name,
+                "Kategori": item.category,
+                "Tür": item.type,
+                "Miktar": item.quantity || 1,
+                "Durum": item.status,
+                "Zimmet Durumu": item.assignedTo ? `Zimmetli` : "Depoda",
+                "Lokasyon": item.location || "-",
+                "Miad Tarihi": item.expirationDate ? new Date(item.expirationDate).toLocaleDateString("tr-TR") : "-",
+                "Son Bakım": item.lastMaintenanceDate ? new Date(item.lastMaintenanceDate).toLocaleDateString("tr-TR") : "-",
+                "Sonraki Bakım": item.nextMaintenanceDate ? new Date(item.nextMaintenanceDate).toLocaleDateString("tr-TR") : "-",
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Envanter");
+            
+            XLSX.writeFile(workbook, `M1G_Envanter_${new Date().toISOString().split('T')[0]}.xlsx`);
+        } catch (error) {
+            console.error(error);
+            alert("Excel dışa aktarma başarısız oldu.");
+        } finally {
+            setExporting(false);
+        }
+    };
+
     const exportToZip = async () => {
         if (selectedIds.length === 0) return;
         setExporting(true);
@@ -1422,6 +1453,13 @@ export default function DepoYonetimi() {
                                 className="w-full md:w-auto px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 transition-colors"
                             >
                                 <PackagePlus size={16} /> Yeni Ekipman Girişi
+                            </button>
+                            <button 
+                                onClick={exportToExcel}
+                                disabled={exporting}
+                                className="w-full md:w-auto px-6 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 border border-emerald-500/20 font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                            >
+                                <PackageCheck size={16} /> Excel İndir
                             </button>
                         </div>
                     </div>

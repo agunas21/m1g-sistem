@@ -231,6 +231,36 @@ export default function UyeYonetimi() {
         }
     };
 
+    const exportToExcel = async () => {
+        setMailLoading(true);
+        try {
+            const XLSX = await import("xlsx");
+            const excelData = filteredMembers.map(m => ({
+                "Kimlik Token": m.kimlikToken || m.id,
+                "Ad Soyad": m.name,
+                "E-Posta": m.email,
+                "Telefon": m.phone,
+                "Rol / Statü": m.role,
+                "Kayıt Durumu": m.status,
+                "Kan Grubu": m.bloodType,
+                "Meslek": m.profession,
+                "Eğitim": m.education,
+                "Katılım Tarihi": m.joinDate
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Personel");
+            
+            XLSX.writeFile(workbook, `M1G_Personel_${new Date().toISOString().split('T')[0]}.xlsx`);
+        } catch (error) {
+            console.error(error);
+            alert("Excel dışa aktarma başarısız oldu.");
+        } finally {
+            setMailLoading(false);
+        }
+    };
+
     const handleBirthdayMail = async () => {
         if(!confirm("Bugün doğan üyelere otomatik M1G doğum günü mesajı gönderilecek. Onaylıyor musunuz?")) return;
         setActionLoading(true);
@@ -1107,6 +1137,9 @@ export default function UyeYonetimi() {
                         </div>
                         <button onClick={() => setShowNewMember(true)} className="w-full md:w-auto px-6 py-2.5 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white transition-colors">
                             <UserPlus size={16} /> Yeni Personel
+                        </button>
+                        <button onClick={exportToExcel} disabled={mailLoading} className="w-full md:w-auto px-6 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 border border-emerald-500/20 font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
+                            <FileText size={16} /> Excel İndir
                         </button>
                     </div>
 
