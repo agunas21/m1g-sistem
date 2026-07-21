@@ -22,6 +22,7 @@ import LojistikZimmetPanel from "@/components/operations/LojistikZimmetPanel";
 import MissionLedgerPanel from "@/components/operations/MissionLedgerPanel";
 import SlashCommandConsole from "@/components/operations/SlashCommandConsole";
 import AfadComplianceWidget from "@/components/operations/AfadComplianceWidget";
+import ReportExportModal from "@/components/operations/reports/ReportExportModal";
 
 const OperasyonHaritasi = dynamic(() => import("@/components/admin/OperasyonHaritasi"), { ssr: false });
 const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
@@ -123,6 +124,7 @@ export default function Operasyonlar() {
     
     // UI states
     const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [showNewOp, setShowNewOp] = useState(false);
     const [isCreatingOp, setIsCreatingOp] = useState(false);
@@ -1581,8 +1583,8 @@ export default function Operasyonlar() {
                                                 Kalıcı Olarak Sil
                                             </button>
                                         )}
-                                        <button onClick={() => window.print()} className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 border border-white/10 transition-colors">
-                                            <Printer size={14} /> Yazdır (PDF)
+                                        <button onClick={() => setIsReportModalOpen(true)} className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 border border-white/10 transition-colors">
+                                            <FileText size={14} /> KAVKAS PDF Çıktı Merkezi
                                         </button>
                                     </div>
                                 </div>
@@ -2489,6 +2491,14 @@ export default function Operasyonlar() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {selectedOp && (
+                <ReportExportModal 
+                    isOpen={isReportModalOpen} 
+                    onClose={() => setIsReportModalOpen(false)} 
+                    operation={selectedOp} 
+                />
             )}
         </div>
     );

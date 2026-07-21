@@ -95,3 +95,36 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const token = (await cookies()).get('m1g_session')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: operationId } = params;
+
+    // Fetch the latest version of each report for the operation
+    const reports = await prisma.operationReport.findMany({
+      where: { operationId },
+      orderBy: { version: 'desc' }
+    });
+
+    // We only want the latest version per type
+    const latestReportsMap = new Map();
+    reports.forEach(r => {
+      if (!latestReportsMap.has(r.type)) {
+        latestReportsMap.set(r.type, r);
+      }
+    });
+
+    return NextResponse.json(Array.from(latestReportsMap.values()));
+  } catch (error: any) {
+    console.error('[GENERATE_REPORTS_GET]', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
