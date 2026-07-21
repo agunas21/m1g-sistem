@@ -22,7 +22,8 @@ import LojistikZimmetPanel from "@/components/operations/LojistikZimmetPanel";
 import MissionLedgerPanel from "@/components/operations/MissionLedgerPanel";
 import SlashCommandConsole from "@/components/operations/SlashCommandConsole";
 import AfadComplianceWidget from "@/components/operations/AfadComplianceWidget";
-import ReportExportModal from "@/components/operations/reports/ReportExportModal";
+
+const ReportExportModal = dynamic(() => import("@/components/operations/reports/ReportExportModal"), { ssr: false });
 
 const OperasyonHaritasi = dynamic(() => import("@/components/admin/OperasyonHaritasi"), { ssr: false });
 const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
