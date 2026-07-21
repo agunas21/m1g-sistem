@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { verifyJwt } from '@/lib/crypto';
+import { getCollectionDB } from '@/lib/settings';
 
 const KAVKAS_REPORTS = [
   'OPERASYONLAR',
@@ -30,7 +31,7 @@ export async function POST(
     const { id: operationId } = await params;
 
     // 1. Fetch operation details and all events
-    const operation = await prisma.operation.findUnique({
+    let operation = await prisma.operation.findUnique({
       where: { id: operationId },
       include: {
         events: {
@@ -40,7 +41,30 @@ export async function POST(
     });
 
     if (!operation) {
-      return NextResponse.json({ error: 'Operation not found' }, { status: 404 });
+      // Fallback: Check if it exists in the active JSON store but hasn't been synced to Prisma yet
+      const globalOps = await getCollectionDB('global_operations');
+      const activeOp = globalOps.find((o: any) => o.id === operationId);
+      
+      if (!activeOp) {
+        return NextResponse.json({ error: 'Operation not found' }, { status: 404 });
+      }
+
+      // Sync it to Prisma to satisfy foreign key constraints for reports
+      operation = await prisma.operation.create({
+        data: {
+          id: activeOp.id,
+          name: activeOp.name || 'Bilinmeyen Operasyon',
+          type: activeOp.type || 'Eğitim',
+          status: activeOp.status || 'Aktif',
+          startTime: activeOp.startTime ? new Date(activeOp.startTime) : new Date(),
+          location: activeOp.location || null,
+          description: activeOp.description || null,
+          temperature: activeOp.temperature || null,
+        },
+        include: {
+          events: true
+        }
+      });
     }
 
     // 2. Generate Draft Reports based on Events
