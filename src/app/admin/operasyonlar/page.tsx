@@ -19,6 +19,9 @@ import TeamListPanel from "@/components/admin/operasyonlar/TeamListPanel";
 import VehiclePlanPanel from "@/components/operations/VehiclePlanPanel";
 import RoleOrganizationPanel from "@/components/operations/RoleOrganizationPanel";
 import LojistikZimmetPanel from "@/components/operations/LojistikZimmetPanel";
+import MissionLedgerPanel from "@/components/operations/MissionLedgerPanel";
+import SlashCommandConsole from "@/components/operations/SlashCommandConsole";
+import AfadComplianceWidget from "@/components/operations/AfadComplianceWidget";
 
 const OperasyonHaritasi = dynamic(() => import("@/components/admin/OperasyonHaritasi"), { ssr: false });
 const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
@@ -1871,38 +1874,13 @@ export default function Operasyonlar() {
                                     </div>
                                 </div>
 
-                                {/* Simplified Radio Logbook */}
-                                <div className="bg-[#050B14] border border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
-                                    <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-3">
-                                        <MessageSquare className="text-purple-400" size={16} /> Telsiz Logbook (Taktik Kayıtlar)
-                                    </h3>
-
+                                {/* KAVKAS War Room UI */}
+                                <div className="space-y-4">
+                                    <AfadComplianceWidget operationId={selectedOp.id} />
+                                    <MissionLedgerPanel operationId={selectedOp.id} />
                                     {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
-                                        <div className="flex gap-2">
-                                            <input 
-                                                type="text"
-                                                placeholder="Telsiz anonsunu buraya not edin..."
-                                                value={manualLogText}
-                                                onChange={(e) => setManualLogText(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && addManualLog()}
-                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-red-500"
-                                            />
-                                            <button 
-                                                onClick={addManualLog}
-                                                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold uppercase transition-colors shrink-0"
-                                            >
-                                                Ekle
-                                            </button>
-                                        </div>
+                                        <SlashCommandConsole operationId={selectedOp.id} onEventCreated={() => {}} />
                                     )}
-
-                                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                                        {selectedOp.logs?.slice().reverse().map((log, i) => (
-                                            <div key={i} className="text-[11px] font-mono leading-relaxed bg-black/20 p-2.5 rounded-xl border border-white/5">
-                                                <span className="text-red-400 font-bold">{log.time}:</span> <span className="text-neutral-300">{log.message}</span>
-                                            </div>
-                                        ))}
-                                    </div>
                                 </div>
                             </div>
 
