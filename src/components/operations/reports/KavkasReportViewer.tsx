@@ -56,14 +56,13 @@ export default function KavkasReportViewer({ operation, reportType, reportConten
     // 1. ANA RAPOR (OPERASYON KRONOLOJİSİ)
     const renderOperationsChronology = () => {
         const events = [
-            { id: 1, time: "09:12:04", text: "Merkez üssünde toplanıldı.", type: "INFO" },
-            { id: 2, time: "10:05:22", text: "Tim 1 enkaz bölgesine ulaştı.", type: "MOVE" },
-            { id: 3, time: "10:45:11", text: "Bölge 4'te gaz sızıntısı uyarısı.", type: "ALERT" },
-            { id: 4, time: "11:10:00", text: "Sağlık ekibi intikal etti.", type: "DEPLOY" },
-            { id: 5, time: "12:00:30", text: "Görev durumu 'Aktif' olarak güncellendi.", type: "STATUS" },
-            { id: 6, time: "13:15:44", text: "Lojistik destek talebi alındı.", type: "REQUEST" },
-            { id: 7, time: "14:20:10", text: "Tüm ekiplerle iletişim doğrulandı.", type: "COMM" },
-            { id: 8, time: "15:00:00", text: "Rapor üretimi tetiklendi.", type: "SYSTEM" },
+            { id: 1, time: "09:12", coord: "35T VK 7200", text: "Merkez üssünde toplanıldı.", type: "INFO", unit: "ALL" },
+            { id: 2, time: "10:05", coord: "35T VK 7245", text: "Tim 1 enkaz bölgesine intikal etti.", type: "MOVE", unit: "TİM-1" },
+            { id: 3, time: "10:45", coord: "35T VK 7280", text: "Bölge 4'te gaz sızıntısı uyarısı.", type: "ALERT", unit: "SENSÖR" },
+            { id: 4, time: "11:10", coord: "35T VK 7290", text: "Sağlık ekibi konuşlandı.", type: "DEPLOY", unit: "SAĞLIK" },
+            { id: 5, time: "12:00", coord: "35T VK 7300", text: "Görev durumu 'Aktif' olarak güncellendi.", type: "STATUS", unit: "TİM-1" },
+            { id: 6, time: "13:15", coord: "35T VK 7100", text: "Lojistik destek (su/gıda) talebi.", type: "REQUEST", unit: "TİM-2" },
+            { id: 7, time: "14:20", coord: "35T VK 7255", text: "Kurtarma operasyonu başladı.", type: "ACTION", unit: "TİM-1" },
         ];
 
         return (
@@ -73,99 +72,202 @@ export default function KavkasReportViewer({ operation, reportType, reportConten
                         <div className="bg-[#0a1120] border border-white/10 rounded-lg p-3 w-32 relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
                             <div className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-1">
-                                <Activity size={10} /> Olay Sayısı
+                                <Activity size={10} /> Aktif Olay
                             </div>
                             <div className="text-3xl font-black mt-1 text-white">{events.length}</div>
                         </div>
                         <div className="bg-[#0a1120] border border-white/10 rounded-lg p-3 w-32 relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
                             <div className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-1">
-                                <AlertTriangle size={10} /> Kritik Uyarı
+                                <AlertTriangle size={10} /> Kritik Zayiat
                             </div>
-                            <div className="text-3xl font-black mt-1 text-amber-400">1</div>
+                            <div className="text-3xl font-black mt-1 text-amber-400">0</div>
                         </div>
                         <div className="bg-[#0a1120] border border-white/10 rounded-lg p-3 w-32 relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
                             <div className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest flex items-center gap-1">
-                                <Users size={10} /> Tim Sayısı
+                                <Users size={10} /> Aktif Tim
                             </div>
                             <div className="text-3xl font-black mt-1 text-green-400">{operation.teams?.length || 2}</div>
                         </div>
                     </>
                 ))}
                 
-                <div className="relative z-10 grid grid-cols-12 gap-6 flex-1 h-[600px]">
-                    {/* Left Panel: Event Timeline */}
-                    <div className="col-span-4 bg-[#0a1120] border border-white/10 rounded-xl p-4 flex flex-col h-full relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-2 h-full bg-gradient-to-b from-transparent via-red-500/20 to-transparent"></div>
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-neutral-400 border-b border-white/10 pb-3 mb-4 flex items-center gap-2">
-                            <Radio size={14} className="text-red-500 animate-pulse" />
-                            Operasyon Kronolojisi
-                        </h3>
-                        <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar space-y-4">
-                            {events.map((ev, i) => (
-                                <div key={ev.id} className="relative pl-4">
-                                    {i !== events.length - 1 && <div className="absolute left-[3px] top-4 w-px h-full bg-white/10"></div>}
-                                    <div className={`absolute left-0 top-1.5 w-2 h-2 rounded-full ${
-                                        ev.type === 'ALERT' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]' : 
-                                        ev.type === 'SYSTEM' ? 'bg-purple-500' : ev.type === 'MOVE' ? 'bg-blue-500' : 'bg-white/40'
-                                    }`}></div>
-                                    <div className="text-[10px] text-neutral-500 font-bold">{ev.time}</div>
-                                    <div className={`text-[11px] mt-0.5 ${ev.type === 'ALERT' ? 'text-amber-400 font-bold' : 'text-neutral-300'}`}>
-                                        {ev.text}
+                <div className="relative z-10 flex-1 flex flex-col gap-4 h-[600px]">
+                    
+                    {/* Top Row: Event List & Tactical Map */}
+                    <div className="flex-1 flex gap-4 h-[420px]">
+                        
+                        {/* Event List (Data-driven panel) */}
+                        <div className="w-80 bg-[#0a1120] border border-white/10 rounded-xl flex flex-col overflow-hidden">
+                            <div className="bg-white/5 p-3 border-b border-white/10 flex justify-between items-center">
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-300 flex items-center gap-2">
+                                    <Radio size={12} className="text-red-500 animate-pulse" />
+                                    Olay Akışı (Log)
+                                </h3>
+                                <span className="text-[9px] bg-red-500 text-white px-1.5 py-0.5 rounded font-bold">REC</span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                {events.map((ev, i) => (
+                                    <div key={ev.id} className="p-2 hover:bg-white/5 rounded border border-transparent hover:border-white/10 transition-colors cursor-default group">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <span className="text-[10px] font-bold text-blue-400">[{ev.time}]</span>
+                                            <span className="text-[8px] font-mono text-neutral-500 border border-neutral-700 px-1 rounded">{ev.unit}</span>
+                                        </div>
+                                        <div className={`text-[10px] leading-tight ${ev.type === 'ALERT' ? 'text-amber-400 font-bold' : 'text-neutral-300'}`}>
+                                            {ev.text}
+                                        </div>
+                                        <div className="text-[8px] font-mono text-neutral-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            GEO: {ev.coord}
+                                        </div>
                                     </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Tactical Map (Focus Area) */}
+                        <div className="flex-1 bg-[#111820] border border-white/10 rounded-xl relative overflow-hidden">
+                            {/* Terrain/Topo Texture */}
+                            <div className="absolute inset-0 opacity-30" style={{ 
+                                backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\' opacity=\'0.4\'/%3E%3C/svg%3E")',
+                                backgroundSize: '200px 200px'
+                            }}></div>
+                            {/* Grid Overlay */}
+                            <div className="absolute inset-0 opacity-15 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 49px, #60a5fa 49px, #60a5fa 50px), repeating-linear-gradient(90deg, transparent, transparent 49px, #60a5fa 49px, #60a5fa 50px)' }}></div>
+                            
+                            {/* HUD Overlays */}
+                            <div className="absolute top-4 left-4 flex gap-2">
+                                <div className="bg-black/80 backdrop-blur border border-blue-500/50 text-[9px] px-2 py-1 text-blue-400 flex items-center gap-1 font-bold">
+                                    <MapPin size={10} /> SECTOR 4 - GRID ALPHA
                                 </div>
-                            ))}
+                                <div className="bg-black/80 backdrop-blur border border-green-500/50 text-[9px] px-2 py-1 text-green-400 flex items-center gap-1 font-bold">
+                                    SECURE LINK
+                                </div>
+                            </div>
+                            
+                            <div className="absolute bottom-4 right-4 flex flex-col items-end gap-1 text-[8px] font-mono text-neutral-500">
+                                <div>SCALE 1:5000</div>
+                                <div>COORD: 39.9255° N, 32.8662° E</div>
+                            </div>
+
+                            {/* TACTICAL ELEMENTS */}
+                            
+                            {/* Base Camp */}
+                            <div className="absolute top-[20%] left-[15%] flex flex-col items-center z-20">
+                                <div className="w-8 h-6 border-2 border-blue-500 flex items-center justify-center bg-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                                    <span className="text-[10px] font-bold text-blue-400">HQ</span>
+                                </div>
+                                <span className="text-[8px] font-bold mt-1 bg-black/60 px-1 rounded text-blue-300">MERKEZ ÜS</span>
+                            </div>
+
+                            {/* Team 1 */}
+                            <div className="absolute top-[45%] left-[40%] flex flex-col items-center z-20">
+                                <div className="w-6 h-6 border-2 border-blue-400 flex items-center justify-center bg-blue-400/20 backdrop-blur-sm">
+                                    <Users size={12} className="text-blue-400" />
+                                </div>
+                                <span className="text-[8px] font-bold mt-1 bg-black/60 px-1 rounded text-blue-300">TİM-1</span>
+                            </div>
+
+                            {/* Medical Team */}
+                            <div className="absolute top-[35%] left-[45%] flex flex-col items-center z-20">
+                                <div className="w-6 h-6 border-2 border-blue-400 flex items-center justify-center bg-blue-400/20 rounded-full backdrop-blur-sm">
+                                    <span className="text-[12px] font-bold text-blue-400">+</span>
+                                </div>
+                                <span className="text-[8px] font-bold mt-1 bg-black/60 px-1 rounded text-blue-300">SAĞLIK</span>
+                            </div>
+
+                            {/* Alert/Hazard Area (Red polygon) */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                                <polygon points="500,250 550,220 620,260 600,320 520,300" fill="rgba(239, 68, 68, 0.15)" stroke="rgba(239, 68, 68, 0.5)" strokeWidth="2" strokeDasharray="4 2" />
+                            </svg>
+                            <div className="absolute top-[48%] left-[65%] flex flex-col items-center z-20 animate-pulse">
+                                <AlertTriangle size={16} className="text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,1)]" />
+                                <span className="text-[8px] font-bold mt-1 bg-black/60 px-1 rounded text-red-400 border border-red-500/30">GAZ SIZINTISI</span>
+                            </div>
+
+                            {/* Movement Arrows (Red Tactical Arrows) */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                                <defs>
+                                    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444" />
+                                    </marker>
+                                </defs>
+                                {/* HQ to Tim 1 */}
+                                <path d="M 160 130 Q 250 150 310 250" fill="none" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrow)" />
+                                {/* Tim 1 to Hazard */}
+                                <path d="M 330 270 Q 400 280 490 270" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="4 4" markerEnd="url(#arrow)" />
+                                {/* Medical to Tim 1 */}
+                                <path d="M 360 210 Q 350 230 335 250" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="2 2" markerEnd="url(#arrow)" />
+                            </svg>
                         </div>
                     </div>
 
-                    {/* Right Panel: Map & Analytics */}
-                    <div className="col-span-8 flex flex-col gap-4 h-full">
-                        <div className="flex-1 bg-black border border-white/10 rounded-xl relative overflow-hidden group">
-                            <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 49px, #fff 49px, #fff 50px), repeating-linear-gradient(90deg, transparent, transparent 49px, #fff 49px, #fff 50px)' }}></div>
-                            
-                            <div className="absolute top-4 left-4 z-10 flex gap-2">
-                                <div className="bg-black/60 backdrop-blur border border-white/20 text-[9px] px-2 py-1 rounded text-white flex items-center gap-1 font-bold">
-                                    <Crosshair size={10} className="text-red-500" /> LIVE TRACKING
-                                </div>
-                            </div>
-
-                            <div className="absolute top-[40%] left-[30%] w-32 h-32 bg-blue-500/10 rounded-full border border-blue-500/30 animate-pulse"></div>
-                            <div className="absolute top-[45%] left-[35%] w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_15px_rgba(96,165,250,1)]"></div>
-                            <div className="absolute top-[42%] left-[37%] text-[10px] text-blue-300 font-bold">TİM-1</div>
-
-                            <div className="absolute top-[60%] right-[20%] w-48 h-48 bg-red-500/10 rounded-full border border-red-500/30 animate-pulse" style={{ animationDelay: '1s' }}></div>
-                            <div className="absolute top-[65%] right-[25%] w-3 h-3 bg-red-500 rounded-full shadow-[0_0_15px_rgba(239,68,68,1)]"></div>
-                            <div className="absolute top-[62%] right-[27%] text-[10px] text-red-400 font-bold">KRİTİK BÖLGE</div>
-
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-50">
-                                <path d="M 400 300 Q 500 200 700 450" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="4 4" />
-                            </svg>
+                    {/* Bottom Row: Horizontal Gantt/Timeline (StackFrame style) */}
+                    <div className="bg-[#0a1120] border border-white/10 rounded-xl h-36 flex flex-col overflow-hidden relative">
+                        <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex justify-between items-center shrink-0">
+                            <span className="text-[9px] font-black uppercase text-neutral-400 tracking-widest">Operasyon Görev & Zaman Çizelgesi</span>
                         </div>
-                        <div className="h-40 grid grid-cols-2 gap-4">
-                            <div className="bg-[#0a1120] border border-white/10 rounded-xl p-4 relative overflow-hidden">
-                                <h4 className="text-[10px] font-bold text-neutral-500 uppercase mb-3">Müdahale Zinciri</h4>
-                                <div className="flex justify-between items-center h-16 relative">
-                                    <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-white/10 -translate-y-1/2"></div>
-                                    <div className="relative z-10 bg-green-500/20 border border-green-500 text-green-400 w-12 h-12 flex flex-col items-center justify-center rounded-full text-[8px] font-bold">
-                                        <Zap size={14} className="mb-0.5" /> TESPİT
+                        <div className="flex-1 relative overflow-hidden p-2 custom-scrollbar">
+                            
+                            {/* Time Axis Header */}
+                            <div className="absolute top-0 left-[150px] right-0 flex text-[8px] font-mono text-neutral-500 border-b border-white/5 pb-1">
+                                <div className="flex-1">09:00</div>
+                                <div className="flex-1">10:00</div>
+                                <div className="flex-1">11:00</div>
+                                <div className="flex-1">12:00</div>
+                                <div className="flex-1">13:00</div>
+                                <div className="flex-1">14:00</div>
+                            </div>
+
+                            {/* Gantt Rows */}
+                            <div className="mt-5 space-y-2">
+                                {/* Row 1 */}
+                                <div className="flex items-center text-[9px] font-bold text-neutral-300">
+                                    <div className="w-[140px] truncate shrink-0 px-2 flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 bg-blue-500"></div> TİM-1 HAREKETİ
                                     </div>
-                                    <div className="relative z-10 bg-blue-500/20 border border-blue-500 text-blue-400 w-12 h-12 flex flex-col items-center justify-center rounded-full text-[8px] font-bold">
-                                        <Activity size={14} className="mb-0.5" /> ÇIKIŞ
+                                    <div className="flex-1 relative h-4 bg-white/5 rounded-sm">
+                                        <div className="absolute top-0 bottom-0 left-[10%] w-[35%] bg-blue-500/80 rounded-sm border border-blue-400 flex items-center px-1 text-[7px] text-white overflow-hidden shadow-[0_0_5px_rgba(59,130,246,0.5)]">
+                                            İNTİKAL & ARAMA
+                                        </div>
+                                        <div className="absolute top-0 bottom-0 left-[55%] w-[40%] bg-blue-500/80 rounded-sm border border-blue-400 flex items-center px-1 text-[7px] text-white overflow-hidden shadow-[0_0_5px_rgba(59,130,246,0.5)]">
+                                            KURTARMA OPERASYONU
+                                        </div>
                                     </div>
-                                    <div className="relative z-10 bg-amber-500/20 border border-amber-500 text-amber-400 w-12 h-12 flex flex-col items-center justify-center rounded-full text-[8px] font-bold">
-                                        <MapPin size={14} className="mb-0.5" /> VARIŞ
+                                </div>
+                                {/* Row 2 */}
+                                <div className="flex items-center text-[9px] font-bold text-neutral-300">
+                                    <div className="w-[140px] truncate shrink-0 px-2 flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div> SAĞLIK BİRİMİ
                                     </div>
-                                    <div className="relative z-10 bg-purple-500/20 border border-purple-500 text-purple-400 w-12 h-12 flex flex-col items-center justify-center rounded-full text-[8px] font-bold text-center leading-tight">
-                                        <ShieldCheck size={14} className="mb-0.5" /> MÜDAHALE
+                                    <div className="flex-1 relative h-4 bg-white/5 rounded-sm">
+                                        <div className="absolute top-0 bottom-0 left-[35%] w-[60%] bg-amber-500/80 rounded-sm border border-amber-400 flex items-center px-1 text-[7px] text-white overflow-hidden">
+                                            SAHADA HAZIR BEKLEME
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Row 3 */}
+                                <div className="flex items-center text-[9px] font-bold text-neutral-300">
+                                    <div className="w-[140px] truncate shrink-0 px-2 flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 bg-red-500"></div> KRİTİK OLAYLAR
+                                    </div>
+                                    <div className="flex-1 relative h-4 border-b border-white/10">
+                                        {/* Event Markers on Timeline */}
+                                        <div className="absolute top-1 left-[29%] flex flex-col items-center transform -translate-x-1/2">
+                                            <div className="w-2 h-2 bg-red-500 rounded-full shadow-[0_0_5px_rgba(239,68,68,1)]"></div>
+                                            <div className="text-[6px] text-red-400 mt-0.5 whitespace-nowrap">GAZ SIZINTISI</div>
+                                        </div>
+                                        <div className="absolute top-1 left-[70%] flex flex-col items-center transform -translate-x-1/2">
+                                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                            <div className="text-[6px] text-purple-400 mt-0.5 whitespace-nowrap">LOJİSTİK DESTEK</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-[#0a1120] border border-white/10 rounded-xl p-4 flex flex-col">
-                                <h4 className="text-[10px] font-bold text-neutral-500 uppercase mb-3">Durum Özeti</h4>
-                                <div className="text-[11px] text-neutral-300 leading-relaxed overflow-hidden">
-                                    {reportContent?.summary || "Saha unsurlarının intikali tamamlanmış olup, operasyon planlanan koordinatlarda aktif olarak sürmektedir."}
-                                </div>
+                            
+                            {/* Current Time Indicator Line */}
+                            <div className="absolute top-0 bottom-0 left-[85%] w-px bg-red-500 shadow-[0_0_5px_rgba(239,68,68,1)] z-10">
+                                <div className="absolute -top-1 -translate-x-1/2 text-[7px] bg-red-500 text-white px-1 rounded">ŞU AN</div>
                             </div>
                         </div>
                     </div>
