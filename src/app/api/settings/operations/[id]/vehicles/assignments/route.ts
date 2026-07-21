@@ -50,10 +50,10 @@ export async function POST(
         // Audit Log
         await prisma.auditLog.create({
             data: {
-                actorId: payload.user?.id || 'system',
-                actorName: payload.user?.name || 'System',
+                actorId: payload.id || 'system',
+                actorName: payload.fullName || 'System',
                 action: 'operation.vehicle.assign',
-                detail: `${payload.user?.name || 'System'}, ${assignment.member.name} isimli personeli ${assignment.vehicle.plate} plakalı araca "${role}" olarak atadı.`,
+                detail: `${payload.fullName || 'System'}, ${assignment.member.fullName} isimli personeli ${assignment.vehicle.plate} plakalı araca "${role}" olarak atadı.`,
                 entityType: 'OperationVehicleAssignment',
                 entityId: assignment.id,
                 operationId: resolvedParams.id

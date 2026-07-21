@@ -21,6 +21,7 @@ export interface KimlikCardProps {
         memberType?: string;
         honorary?: string;
         presidentPhone?: string;
+        kimlikToken?: string;
     };
     origin: string;
     isFront: boolean;

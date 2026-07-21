@@ -65,9 +65,9 @@ export default function CoordinateLocator() {
         
         // Try to listen for compass if on mobile
         const handleOrientation = (e: DeviceOrientationEvent) => {
-            if (e.webkitCompassHeading) {
+            if ((e as any).webkitCompassHeading) {
                 // iOS
-                setUserHeading(e.webkitCompassHeading);
+                setUserHeading((e as any).webkitCompassHeading);
             } else if (e.alpha !== null) {
                 // Android (needs conversion based on device orientation but roughly alpha)
                 // Note: accurate compass on web requires more math and HTTPS, this is basic.

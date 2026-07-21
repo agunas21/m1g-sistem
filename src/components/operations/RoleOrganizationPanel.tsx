@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Network, Plus, Trash2, ShieldCheck, Activity, Antenna, Package } from 'lucide-react';
+import { Network, Plus, Trash2, ShieldCheck, Activity, Antenna, Package, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 const DEFAULT_ROLES = [
     { title: "Ekip Lideri", icon: ShieldCheck, color: "text-red-400" },
@@ -18,6 +19,7 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
     const [newCustomRoleInput, setNewCustomRoleInput] = useState("");
     const [selectedKavkas, setSelectedKavkas] = useState("DIGER");
     const [localCustomRoles, setLocalCustomRoles] = useState<any[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const fetchRoles = async () => {
         try {
@@ -96,43 +98,57 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
 
     if (loading) return <div className="text-neutral-500 text-xs animate-pulse">Görev şeması yükleniyor...</div>;
 
+    const filteredRoles = allRoles.filter(r => r.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return (
         <div className="bg-[#050B14] border border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b border-white/5 pb-2">
                 <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
                     <Network size={16} className="text-purple-400" /> Operasyon Görev Şeması
                 </h3>
-                {(isAdmin && isActive) && (
-                    <div className="flex gap-2">
-                        <select 
-                            value={selectedKavkas}
-                            onChange={(e) => setSelectedKavkas(e.target.value)}
-                            className="bg-black/50 border border-white/10 rounded px-3 py-1.5 text-[11px] text-white outline-none focus:border-purple-500"
-                        >
-                            <option value="ARAMA_KURTARMA">Arama Kurtarma Grubu</option>
-                            <option value="SAGLIK">Sağlık Grubu</option>
-                            <option value="GUVENLIK_TRAFIK">Güvenlik Grubu</option>
-                            <option value="LOJISTIK_BAKIM">Lojistik Grubu</option>
-                            <option value="HABERLESME">Haberleşme Grubu</option>
-                            <option value="DIGER">Diğer (Tanımsız)</option>
-                        </select>
-                        <input 
-                            type="text" 
-                            placeholder="Yeni Görev (Örn: Aşçı)"
-                            value={newCustomRoleInput}
-                            onChange={(e) => setNewCustomRoleInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddCustomRole()}
-                            className="bg-black/50 border border-white/10 rounded px-3 py-1.5 text-[11px] text-white w-32 outline-none focus:border-purple-500"
+                <div className="flex gap-2 items-center">
+                    <div className="relative">
+                        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40" />
+                        <input
+                            type="text"
+                            placeholder="Görev Ara..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="bg-black/50 border border-white/10 rounded pl-8 pr-3 py-1.5 text-[11px] text-white w-32 outline-none focus:border-purple-500"
                         />
-                        <button onClick={handleAddCustomRole} className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 rounded px-3 py-1.5 text-[11px] font-bold border border-purple-500/20 transition-colors flex items-center gap-1">
-                            <Plus size={12} /> Ekle
-                        </button>
                     </div>
-                )}
+                    {(isAdmin && isActive) && (
+                        <>
+                            <select 
+                                value={selectedKavkas}
+                                onChange={(e) => setSelectedKavkas(e.target.value)}
+                                className="bg-black/50 border border-white/10 rounded px-3 py-1.5 text-[11px] text-white outline-none focus:border-purple-500"
+                            >
+                                <option value="ARAMA_KURTARMA">Arama Kurtarma Grubu</option>
+                                <option value="SAGLIK">Sağlık Grubu</option>
+                                <option value="GUVENLIK_TRAFIK">Güvenlik Grubu</option>
+                                <option value="LOJISTIK_BAKIM">Lojistik Grubu</option>
+                                <option value="HABERLESME">Haberleşme Grubu</option>
+                                <option value="DIGER">Diğer (Tanımsız)</option>
+                            </select>
+                            <input 
+                                type="text" 
+                                placeholder="Yeni Görev (Örn: Aşçı)"
+                                value={newCustomRoleInput}
+                                onChange={(e) => setNewCustomRoleInput(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddCustomRole()}
+                                className="bg-black/50 border border-white/10 rounded px-3 py-1.5 text-[11px] text-white w-32 outline-none focus:border-purple-500"
+                            />
+                            <button onClick={handleAddCustomRole} className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 rounded px-3 py-1.5 text-[11px] font-bold border border-purple-500/20 transition-colors flex items-center gap-1">
+                                <Plus size={12} /> Ekle
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {allRoles.map((roleTitle) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                {filteredRoles.map((roleTitle) => {
                     const assigned = getAssignedMembers(roleTitle);
                     const roleConfig = DEFAULT_ROLES.find(r => r.title === roleTitle);
                     const Icon = roleConfig ? roleConfig.icon : Network;
@@ -166,18 +182,11 @@ export default function RoleOrganizationPanel({ operationId, membersData, isAdmi
 
                             {(isAdmin && isActive) && (
                                 <div className="pt-2 border-t border-white/10">
-                                    <select 
-                                        className="bg-black border border-white/10 rounded p-1.5 text-[10px] text-white w-full outline-none"
-                                        onChange={(e) => {
-                                            if (e.target.value) {
-                                                handleAssignRole(e.target.value, roleTitle);
-                                                e.target.value = ""; // reset
-                                            }
-                                        }}
-                                    >
-                                        <option value="">+ Personel Ata</option>
-                                        {membersData.map((m: any) => <option key={m.id} value={m.id}>{m.fullName}</option>)}
-                                    </select>
+                                    <SearchableSelect 
+                                        options={membersData.map((m: any) => ({ value: m.id, label: m.fullName }))}
+                                        placeholder="+ Personel Ata"
+                                        onSelect={(val) => handleAssignRole(val, roleTitle)}
+                                    />
                                 </div>
                             )}
                         </div>

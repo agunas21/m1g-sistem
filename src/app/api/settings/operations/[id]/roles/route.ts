@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyJwt } from '@/lib/crypto';
 import { cookies } from 'next/headers';
+import { getCollectionDB } from '@/lib/settings';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -58,6 +59,26 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
              return NextResponse.json({ error: 'Bu personel zaten bu göreve atanmış.' }, { status: 400 });
         }
 
+        // Ensure operation exists in Prisma Postgres DB
+        let opExists = await prisma.operation.findUnique({ where: { id: resolvedParams.id } });
+        if (!opExists) {
+            const globalOps = await getCollectionDB('global_operations');
+            const activeOp = globalOps.find((o: any) => o.id === resolvedParams.id);
+            if (!activeOp) return NextResponse.json({ error: 'Operation not found in master DB' }, { status: 404 });
+            
+            await prisma.operation.create({
+                data: {
+                    id: activeOp.id,
+                    name: activeOp.name || 'Bilinmeyen Operasyon',
+                    type: activeOp.type || 'Eğitim',
+                    status: activeOp.status || 'Aktif',
+                    startTime: activeOp.startTime ? new Date(activeOp.startTime) : new Date(),
+                    location: activeOp.location || null,
+                    temperature: activeOp.temperature || null,
+                }
+            });
+        }
+
         const role = await prisma.operationRoleAssignment.create({
             data: {
                 operationId: resolvedParams.id,
@@ -72,10 +93,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         // Audit Log
         await prisma.auditLog.create({
             data: {
-                actorId: session.user.id || 'system',
-                actorName: session.user.name || 'System',
+                actorId: payload.id || 'system',
+                actorName: payload.fullName || 'System',
                 action: 'operation.role.assign',
-                detail: `${session.user.name}, ${role.member.name} isimli personele "${roleTitle}" görevini atadı.`,
+                detail: `${payload.fullName || 'System'}, ${role.member.fullName} isimli personeli "${roleTitle}" olarak atadı.`,
                 entityType: 'OperationRoleAssignment',
                 entityId: role.id,
                 operationId: resolvedParams.id
@@ -90,10 +111,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-         const session = await getServerSession(authOptions);
-         if (!session?.user) {
-             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-         }
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        const payload = token ? verifyJwt(token) : null;
+        if (!payload) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
  
          const body = await req.json();
          const { roleId } = body;
@@ -111,10 +134,10 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
          // Audit Log
          await prisma.auditLog.create({
              data: {
-                 actorId: session.user.id || 'system',
-                 actorName: session.user.name || 'System',
+                 actorId: payload.id || 'system',
+                 actorName: payload.fullName || 'System',
                  action: 'operation.role.remove',
-                 detail: `${session.user.name}, ${deletedRole.member.name} isimli personelin "${deletedRole.roleTitle}" görevini iptal etti.`,
+                 detail: `${payload.fullName || 'System'}, ${deletedRole.member.fullName} isimli personelin "${deletedRole.roleTitle}" görevini iptal etti.`,
                  entityType: 'OperationRoleAssignment',
                  entityId: deletedRole.id,
                  operationId: resolvedParams.id

@@ -56,7 +56,7 @@ export default function ReportExportModal({ isOpen, onClose, operation }: Report
                 scale: 2, // higher resolution
                 useCORS: true,
                 logging: false,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#050B14'
             });
 
             // Convert canvas to image
@@ -144,7 +144,7 @@ export default function ReportExportModal({ isOpen, onClose, operation }: Report
                     <div className="flex-1 bg-[#1a1f2c] flex flex-col relative overflow-hidden">
                         {/* Top Bar inside preview */}
                         <div className="h-14 border-b border-white/10 bg-black/40 flex items-center justify-between px-6 shrink-0">
-                            <span className="text-white text-sm font-bold">Önizleme Modu (A4)</span>
+                            <span className="text-white text-sm font-bold tracking-widest uppercase">Kavkas Kontrol Paneli (Live Dashboard)</span>
                             <button 
                                 onClick={handleDownloadPdf}
                                 disabled={isExporting || !selectedReport}
@@ -155,13 +155,10 @@ export default function ReportExportModal({ isOpen, onClose, operation }: Report
                             </button>
                         </div>
 
-                        {/* PDF Preview Area */}
-                        <div className="flex-1 overflow-auto p-8 flex justify-center bg-[#2a2f3c] custom-scrollbar">
+                        {/* Dashboard Preview Area */}
+                        <div className="flex-1 overflow-auto p-4 flex bg-[#050B14] custom-scrollbar">
                             {selectedReport ? (
-                                <div 
-                                    className="shadow-2xl transition-transform" 
-                                    style={{ transformOrigin: 'top center', transform: 'scale(0.8)' }}
-                                >
+                                <div className="w-full h-full transition-transform">
                                     {/* Bu Div html2canvas ile yakalanacak. Ekranda görünmesi gerekiyor. */}
                                     <div ref={printRef}>
                                         <KavkasReportViewer 

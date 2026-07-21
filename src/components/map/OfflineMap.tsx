@@ -141,6 +141,7 @@ interface OfflineMapProps {
   }>;
   userId?: string;
   onMapClick?: (lat: number, lng: number) => void;
+  baseCampLocation?: [number, number];
 }
 
 export default function OfflineMap({ 
@@ -150,7 +151,8 @@ export default function OfflineMap({
   members = [],
   pins = [],
   userId,
-  onMapClick
+  onMapClick,
+  baseCampLocation
 }: OfflineMapProps) {
   const [mounted, setMounted] = useState(false);
   const [myPos, setMyPos] = useState<[number, number] | null>(null);
@@ -269,7 +271,6 @@ export default function OfflineMap({
       style={{ height: "100%", width: "100%", borderRadius: "0.75rem", zIndex: 0 }}
       zoomControl={true}
       preferCanvas={false}
-      updateWhenZooming={false}
     >
       <LayersControl position="topright">
         <LayersControl.BaseLayer name="Çevrimdışı (Ege Bölgesi)">

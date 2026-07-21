@@ -6,6 +6,7 @@ import { getCollectionDB, writeCollectionDB } from '@/lib/settings';
 import { writeLog } from '@/lib/logger';
 import { cookies } from 'next/headers';
 import { verifyJwt } from '@/lib/crypto';
+import { prisma } from '@/lib/prisma';
 
 async function readOperations(): Promise<any[]> {
     return await getCollectionDB('global_operations');
@@ -58,6 +59,31 @@ export async function POST(req: Request) {
             operations[idx] = { ...oldOp, ...body };
             await writeOperations(operations);
             await writeLog("INFO", payload.fullName || "Admin", `Operasyon Güncellendi: ${body.name || oldOp.name}`, body.id);
+
+            // Sync to Prisma Postgres
+            try {
+                await prisma.operation.upsert({
+                    where: { id: body.id },
+                    update: {
+                        name: body.name || oldOp.name || 'Bilinmeyen',
+                        type: body.type || oldOp.type || 'Eğitim',
+                        status: body.status || oldOp.status || 'Aktif',
+                        location: body.location || oldOp.location || '',
+                        temperature: body.temperature || oldOp.temperature || '',
+                    },
+                    create: {
+                        id: body.id,
+                        name: body.name || oldOp.name || 'Bilinmeyen',
+                        type: body.type || oldOp.type || 'Eğitim',
+                        status: body.status || oldOp.status || 'Aktif',
+                        startTime: oldOp.startTime ? new Date(oldOp.startTime) : new Date(),
+                        location: body.location || oldOp.location || '',
+                        temperature: body.temperature || oldOp.temperature || '',
+                    }
+                });
+            } catch (e) {
+                console.error("Prisma sync failed for update", e);
+            }
         } else {
             // Yeni operasyon
             const newOp = {
@@ -91,6 +117,31 @@ export async function POST(req: Request) {
             operations.unshift(newOp);
             await writeOperations(operations);
             await writeLog("SUCCESS", payload.fullName || "Admin", `Yeni Operasyon Başlatıldı: ${newOp.name}`, newOp.id);
+
+            // Sync to Prisma Postgres
+            try {
+                await prisma.operation.upsert({
+                    where: { id: newOp.id },
+                    update: {
+                        name: newOp.name,
+                        type: newOp.type,
+                        status: newOp.status,
+                        location: newOp.location,
+                        temperature: newOp.temperature,
+                    },
+                    create: {
+                        id: newOp.id,
+                        name: newOp.name,
+                        type: newOp.type,
+                        status: newOp.status,
+                        startTime: newOp.startTime ? new Date(newOp.startTime) : new Date(),
+                        location: newOp.location,
+                        temperature: newOp.temperature,
+                    }
+                });
+            } catch (e) {
+                console.error("Prisma sync failed for create", e);
+            }
         }
 
         return NextResponse.json({ success: true });

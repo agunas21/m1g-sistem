@@ -51,7 +51,7 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'geolocation=*, camera=*, microphone=*' },
 ];
 
-const nextConfig: NextConfig = {
+const nextConfig: any = {
   allowedDevOrigins: ['*.trycloudflare.com', 'localhost:3000'],
   images: {
     // Cloudinary zaten CDN'den optimize ediyor.

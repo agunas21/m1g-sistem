@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, AlertTriangle, ShieldCheck, Mail, Edit3, Save, X, Phone, User, Activity, MapPin, Briefcase, Calendar, UploadCloud, GraduationCap, Lock, Unlock, Check } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ShieldCheck, Mail, Edit3, Save, X, Phone, User, Activity, MapPin, Briefcase, Calendar, UploadCloud, GraduationCap, Lock, Unlock, Check, Camera, BadgeInfo, Droplet, ShieldAlert, Loader2, CheckCircle, Award, Eye, FileText, Upload, KeyRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { uploadDirect } from "@/lib/uploadDirect";
@@ -127,7 +127,7 @@ export default function ProfilPage() {
                 if (data && data.url) {
                     setProfile({ ...profile, avatar: data.url });
                 } else {
-                    alert('Fotoğraf yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));
+                    alert('Fotoğraf yüklenemedi: ' + ((data as any).error || 'Bilinmeyen hata'));
                 }
             } catch (err) {
                 console.error(err);
@@ -245,7 +245,7 @@ export default function ProfilPage() {
                 if (data && data.url) {
                     setCertFile(data.url);
                 } else {
-                    alert('Sertifika dosyası yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));
+                    alert('Sertifika yüklenemedi: ' + ((data as any).error || 'Bilinmeyen hata'));
                     e.target.value = ''; // Reset input
                 }
             } catch (err) {

@@ -1,4 +1,5 @@
 import { Users, Plus, Clock, Trash, MapPin, Compass } from "lucide-react";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 export default function TeamListPanel({
     selectedOp,
@@ -73,7 +74,7 @@ export default function TeamListPanel({
                             </div>
 
                             {/* Team actions */}
-                            {selectedOp?.status === "Aktif" && (
+                            {selectedOp?.status !== "Tamamlandı" && (
                                 <div className="flex gap-2 flex-wrap items-center">
                                     {isDeployed ? (
                                         <button 
@@ -125,7 +126,7 @@ export default function TeamListPanel({
                                             <span className="text-[10px]">👑</span>
                                             <span>{membersData.find((m: any) => m.id === leader.id)?.fullName || leader.id} (Lider)</span>
                                         </div>
-                                        {selectedOp?.status === "Aktif" && (
+                                        {selectedOp?.status !== "Tamamlandı" && (
                                             <button onClick={() => removeMemberFromTeam(team.id, leader.id)} className="text-[10px] text-neutral-500 hover:text-red-400">Kaldır</button>
                                         )}
                                     </div>
@@ -135,7 +136,7 @@ export default function TeamListPanel({
                                 {members.map((m: any) => (
                                     <div key={m.id} className="flex items-center justify-between text-xs bg-white/5 p-2 rounded-lg border border-white/5">
                                         <span className="text-neutral-300">{membersData.find((mem: any) => mem.id === m.id)?.fullName || m.id}</span>
-                                        {selectedOp?.status === "Aktif" && (
+                                        {selectedOp?.status !== "Tamamlandı" && (
                                             <div className="flex items-center gap-2">
                                                 <button onClick={() => setTeamLeader(team.id, m.id)} className="text-[10px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded hover:bg-red-500/20 font-bold">Lider Yap</button>
                                                 <button onClick={() => removeMemberFromTeam(team.id, m.id)} className="text-[10px] text-neutral-500 hover:text-red-400">Kaldır</button>
@@ -149,22 +150,24 @@ export default function TeamListPanel({
                                 )}
 
                                 {/* Add member button trigger */}
-                                {selectedOp?.status === "Aktif" && (
-                                    <select
-                                        onChange={(e) => {
-                                            if (e.target.value) {
-                                                const role = teamMembers.length === 0 ? "Lider" : "Üye";
-                                                assignMemberToTeam(team.id, e.target.value, role);
-                                                e.target.value = "";
+                                {selectedOp?.status !== "Tamamlandı" && (
+                                    <div className="mt-2">
+                                        <SearchableSelect
+                                            options={membersData
+                                                .filter((m: any) => !teamMembers.some((tm: any) => tm.id === m.id))
+                                                .map((m: any) => ({
+                                                    value: m.id,
+                                                    label: m.fullName,
+                                                    group: baseCamp.members?.includes(m.id) ? 'Kampta Bekleyenler' : 'Tüm Personel'
+                                                }))
                                             }
-                                        }}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg text-xs text-neutral-400 p-1.5 mt-2 cursor-pointer outline-none"
-                                    >
-                                        <option value="">+ Personel Ekle (Base Havuzundan)</option>
-                                        {(baseCamp.members || []).map((mId: string) => (
-                                            <option key={mId} value={mId}>{membersData.find((m: any) => m.id === mId)?.fullName || mId}</option>
-                                        ))}
-                                    </select>
+                                            placeholder="+ Personel Ekle"
+                                            onSelect={(val) => {
+                                                const role = teamMembers.length === 0 ? "Lider" : "Üye";
+                                                assignMemberToTeam(team.id, val, role);
+                                            }}
+                                        />
+                                    </div>
                                 )}
                             </div>
 
@@ -177,7 +180,7 @@ export default function TeamListPanel({
                                         return (
                                             <div key={eqId} className="flex items-center justify-between text-xs bg-white/5 p-2 rounded-lg border border-white/5">
                                                 <span className="text-neutral-300 font-mono">{item?.name || eqId}</span>
-                                                {selectedOp?.status === "Aktif" && (
+                                                {selectedOp?.status !== "Tamamlandı" && (
                                                     <button onClick={() => removeEquipmentFromTeam(team.id, eqId)} className="text-[10px] text-neutral-500 hover:text-red-400">İade</button>
                                                 )}
                                             </div>
@@ -189,21 +192,17 @@ export default function TeamListPanel({
                                 </div>
 
                                 {/* Add equipment button trigger */}
-                                {selectedOp?.status === "Aktif" && (
-                                    <select
-                                        onChange={(e) => {
-                                            if (e.target.value) {
-                                                assignEquipmentToTeam(team.id, e.target.value);
-                                                e.target.value = "";
-                                            }
-                                        }}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg text-xs text-neutral-400 p-1.5 mt-2 cursor-pointer outline-none"
-                                    >
-                                        <option value="">+ Ekipman Ata (Base Havuzundan)</option>
-                                        {(baseCamp.equipment || []).map((eqId: string) => (
-                                            <option key={eqId} value={eqId}>{inventoryData.find((i: any) => i.id === eqId)?.name || eqId}</option>
-                                        ))}
-                                    </select>
+                                {selectedOp?.status !== "Tamamlandı" && (
+                                    <div className="mt-2">
+                                        <SearchableSelect
+                                            options={(baseCamp.equipment || []).map((eqId: string) => ({
+                                                value: eqId,
+                                                label: inventoryData.find((i: any) => i.id === eqId)?.name || eqId
+                                            }))}
+                                            placeholder="+ Ekipman Ata (Base Havuzundan)"
+                                            onSelect={(val) => assignEquipmentToTeam(team.id, val)}
+                                        />
+                                    </div>
                                 )}
                             </div>
                         </div>

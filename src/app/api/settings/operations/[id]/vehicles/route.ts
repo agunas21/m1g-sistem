@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyJwt } from '@/lib/crypto';
 import { cookies } from 'next/headers';
+import { getCollectionDB } from '@/lib/settings';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -48,6 +49,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
 
         const resolvedParams = await params;
+
+        // Ensure operation exists in Prisma Postgres DB
+        let opExists = await prisma.operation.findUnique({ where: { id: resolvedParams.id } });
+        if (!opExists) {
+            const globalOps = await getCollectionDB('global_operations');
+            const activeOp = globalOps.find((o: any) => o.id === resolvedParams.id);
+            if (!activeOp) return NextResponse.json({ error: 'Operation not found in master DB' }, { status: 404 });
+            
+            await prisma.operation.create({
+                data: {
+                    id: activeOp.id,
+                    name: activeOp.name || 'Bilinmeyen Operasyon',
+                    type: activeOp.type || 'Eğitim',
+                    status: activeOp.status || 'Aktif',
+                    startTime: activeOp.startTime ? new Date(activeOp.startTime) : new Date(),
+                    location: activeOp.location || null,
+                    temperature: activeOp.temperature || null,
+                }
+            });
+        }
+
         const vehicle = await prisma.operationVehicle.create({
             data: {
                 operationId: resolvedParams.id,
@@ -67,10 +89,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         // Audit Log
         await prisma.auditLog.create({
             data: {
-                actorId: payload.user?.id || 'system',
-                actorName: payload.user?.name || 'System',
+                actorId: payload.id || 'system',
+                actorName: payload.fullName || 'System',
                 action: 'operation.vehicle.create',
-                detail: `${payload.user?.name || 'System'}, operasyona ${plate} plakalı ${type} aracını ekledi.`,
+                detail: `${payload.fullName || 'System'}, operasyona ${plate} plakalı ${type} aracını ekledi.`,
                 entityType: 'OperationVehicle',
                 entityId: vehicle.id,
                 operationId: resolvedParams.id

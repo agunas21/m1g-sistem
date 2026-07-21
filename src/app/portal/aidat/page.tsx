@@ -76,7 +76,7 @@ export default function AidatBagisPage() {
                     changes: {
                         yil,
                         tutar: tutar + " ₺",
-                        dekont_url: uploadData.url
+                        dekont_url: uploadRes.url
                     }
                 })
             });

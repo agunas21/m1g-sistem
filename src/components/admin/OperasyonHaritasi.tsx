@@ -213,7 +213,7 @@ export default function OperasyonHaritasi({
 
         const resMem = await fetch('/api/members');
         const membersArr = await resMem.json();
-        const memberMap = new Map(membersArr.map((m: any) => [m.id, m]));
+        const memberMap = new Map<string, any>(membersArr.map((m: any) => [m.id, m]));
 
         const map: Record<string, PersonnelLocation> = {};
         const newTrails: Record<string, [number, number][]> = {};
@@ -376,6 +376,7 @@ export default function OperasyonHaritasi({
 
   // ── "Konuma git" — Google Maps ────────────────────────────────────────────
   const openNavigation = useCallback((loc: PersonnelLocation) => {
+    if (loc.lat === undefined || loc.lng === undefined) return;
     window.open(
       `https://maps.google.com/?q=${loc.lat},${loc.lng}&navigate=yes`,
       '_blank'
@@ -384,6 +385,7 @@ export default function OperasyonHaritasi({
 
   // ── Koordinat kopyala ────────────────────────────────────────────────────
   const copyCoords = useCallback((loc: PersonnelLocation) => {
+    if (loc.lat === undefined || loc.lng === undefined) return;
     const text = `${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`
     navigator.clipboard.writeText(text).then(() => alert(`Kopyalandı: ${text}`))
   }, [])
@@ -634,9 +636,9 @@ export default function OperasyonHaritasi({
                     {/* İstatistik kartları */}
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:12 }} className="overflow-x-auto pb-2 md:pb-0">
                       {[
-                        { label:'Batarya', value:`${Math.round(selPer.battery ?? 100)}%`, color: (selPer.battery ?? 100) < 20 ? '#f87171' : '#4ade80' },
-                        { label:'GPS ±m',  value:`±${Math.round(selPer.accuracy ?? 15)}m`, color:'#93c5fd' },
-                        { label:'Hız',     value:`${selPer.speed !== null ? Math.round(selPer.speed) : '—'} km/h`, color:'#e2e8f0' },
+                        { label:'Batarya', value:`${Math.round(Number(selPer.battery ?? 100))}%`, color: Number(selPer.battery ?? 100) < 20 ? '#f87171' : '#4ade80' },
+                        { label:'GPS ±m',  value:`±${Math.round(Number(selPer.accuracy ?? 15))}m`, color:'#93c5fd' },
+                        { label:'Hız',     value:`${selPer.speed != null ? Math.round(Number(selPer.speed)) : '—'} km/h`, color:'#e2e8f0' },
                         { label:'Sinyal',  value: selPer.recorded_at ? new Date(selPer.recorded_at).toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' }) : '—', color:'#e2e8f0' },
                       ].map(s => (
                         <div key={s.label} style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center', minWidth: '70px' }}>

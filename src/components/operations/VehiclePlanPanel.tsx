@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Truck, Plus, Trash2, UserPlus, ShieldAlert, Navigation } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 export default function VehiclePlanPanel({ operationId, membersData, isAdmin, isActive = true }: any) {
     const [vehicles, setVehicles] = useState<any[]>([]);
@@ -123,27 +124,19 @@ export default function VehiclePlanPanel({ operationId, membersData, isAdmin, is
 
                             {(isAdmin && isActive) && (
                                 <div className="pt-2 border-t border-white/10 flex gap-2">
-                                    <select 
-                                        className="bg-black border border-white/10 rounded p-1 text-[10px] text-white flex-1"
-                                        onChange={(e) => {
-                                            if (e.target.value) {
-                                                const [mId, r] = e.target.value.split('|');
-                                                handleAssignMember(v.id, mId, r);
-                                                e.target.value = ""; // reset
-                                            }
+                                    <SearchableSelect 
+                                        options={[
+                                            ...membersData.map((m: any) => ({ value: `${m.id}|Sürücü`, label: m.fullName, group: 'Sürücü Yap' })),
+                                            ...membersData.map((m: any) => ({ value: `${m.id}|Araç Amiri`, label: m.fullName, group: 'Araç Amiri Yap' })),
+                                            ...membersData.map((m: any) => ({ value: `${m.id}|Ekip Üyesi`, label: m.fullName, group: 'Ekip Üyesi Ekle' }))
+                                        ]}
+                                        placeholder="+ Personel Ata"
+                                        onSelect={(val) => {
+                                            const [mId, r] = val.split('|');
+                                            handleAssignMember(v.id, mId, r);
                                         }}
-                                    >
-                                        <option value="">+ Personel Ata</option>
-                                        <optgroup label="Sürücü Yap">
-                                            {membersData.map((m: any) => <option key={`drv-${m.id}`} value={`${m.id}|Sürücü`}>{m.fullName}</option>)}
-                                        </optgroup>
-                                        <optgroup label="Araç Amiri Yap">
-                                            {membersData.map((m: any) => <option key={`ldr-${m.id}`} value={`${m.id}|Araç Amiri`}>{m.fullName}</option>)}
-                                        </optgroup>
-                                        <optgroup label="Ekip Üyesi Ekle">
-                                            {membersData.map((m: any) => <option key={`mem-${m.id}`} value={`${m.id}|Ekip Üyesi`}>{m.fullName}</option>)}
-                                        </optgroup>
-                                    </select>
+                                        className="flex-1"
+                                    />
                                 </div>
                             )}
                         </div>

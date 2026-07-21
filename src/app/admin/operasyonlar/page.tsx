@@ -9,6 +9,7 @@ import {
     MessageSquare, UserCheck, Wrench, FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
 import { createPortal } from "react-dom";
 import { offlineDB } from "@/lib/offline-db";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
@@ -54,10 +55,11 @@ interface ActiveOperation {
     id: string;
     name: string;
     type: "Deprem" | "Yangın" | "Doğada Arama" | "Eğitim" | "Kamp";
-    status: "Aktif" | "Tamamlandı";
+    status: "Aktif" | "Tamamlandı" | "Hazırlık";
     startTime: string;
     endTime: string | null;
     location: string;
+    description?: string;
     temperature: string;
     radioFrequency: string;
     teams: Team[];
@@ -633,7 +635,7 @@ export default function Operasyonlar() {
         const timestampStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
         const updated = { 
             ...selectedOp, 
-            status: "Aktif",
+            status: "Aktif" as "Aktif" | "Tamamlandı" | "Hazırlık",
             startTime: timestampStr,
             logs: [...(selectedOp.logs || []), { time: timestampStr, message: `Operasyon resmi olarak başlatıldı.` }]
         };

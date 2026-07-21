@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyJwt, encryptField, decryptField, maskField } from '@/lib/crypto'
+import { verifyJwt, encryptField, decryptField, maskField, hashPassword } from '@/lib/crypto'
 import { cookies } from 'next/headers'
 import { logAudit, extractActor, extractRequestMeta } from '@/lib/db-audit'
 import { canAccessAdmin, isSuperAdmin } from '@/lib/rbac'
@@ -181,7 +181,7 @@ export async function PATCH(req: NextRequest) {
     
     // Şifre güncelleme kontrolü
     if (updateDataToUse.password) {
-        updateDataToUse.password = await encryptPassword(updateDataToUse.password)
+        updateDataToUse.password = hashPassword(updateDataToUse.password)
     }
 
     const updated = await prisma.member.update({

@@ -159,9 +159,9 @@ export default function KolaySiteDuzenleyici() {
         const fetchData = async () => {
             try {
                 const [resText, resImages, resActs] = await Promise.all([
-                    fetch("/api/settings).then(r => r.ok ? r.json() : {} as any"),
-                    fetch("/api/settings/images).then(r => r.ok ? r.json() : {} as any"),
-                    fetch("/api/settings/activities).then(r => r.ok ? r.json() : {} as any")
+                    fetch("/api/settings").then(r => r.ok ? r.json() : {} as any),
+                    fetch("/api/settings/images").then(r => r.ok ? r.json() : {} as any),
+                    fetch("/api/settings/activities").then(r => r.ok ? r.json() : {} as any)
                 ]);
 
                 if (!isMounted) return;

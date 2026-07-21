@@ -19,8 +19,8 @@ export async function POST(req: Request) {
         }
 
         // Envanteri bul
-        const inventory = await prisma.inventory.findFirst({
-            where: { qrCode: qrCode }
+        const inventory = await prisma.inventoryItem.findFirst({
+            where: { id: qrCode }
         });
 
         if (!inventory) {
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
             }
 
             // Ekipmanı zimmetle ve operasyon bilgisini güncelle
-            const updated = await prisma.inventory.update({
+            const updated = await prisma.inventoryItem.update({
                 where: { id: inventory.id },
                 data: {
                     status: 'Sahada', // Operasyonda kullanılıyor
@@ -46,11 +46,11 @@ export async function POST(req: Request) {
 
             await prisma.auditLog.create({
                 data: {
-                    actorId: payload?.uid || 'system',
-                    actorName: payload?.email || 'System',
+                    actorId: payload?.id || 'system',
+                    actorName: payload?.fullName || 'System',
                     action: 'inventory.operation_assign',
-                    detail: `${payload?.email || 'System'}, ${inventory.name} isimli ekipmanı ${updated.assignedTo?.name} personeline zimmetledi.`,
-                    entityType: 'Inventory',
+                    detail: `${payload?.fullName || 'System'}, ${inventory.name} isimli ekipmanı ${updated.assignedTo?.fullName} personeline zimmetledi.`,
+                    entityType: 'InventoryItem',
                     entityId: inventory.id,
                     operationId: operationId
                 }
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
 
         } else if (action === 'unassign') {
             // Zimmeti kaldır
-            const updated = await prisma.inventory.update({
+            const updated = await prisma.inventoryItem.update({
                 where: { id: inventory.id },
                 data: {
                     status: 'Depoda',
@@ -70,11 +70,11 @@ export async function POST(req: Request) {
 
             await prisma.auditLog.create({
                 data: {
-                    actorId: payload?.uid || 'system',
-                    actorName: payload?.email || 'System',
+                    actorId: payload?.id || 'system',
+                    actorName: payload?.fullName || 'System',
                     action: 'inventory.operation_unassign',
-                    detail: `${payload?.email || 'System'}, ${inventory.name} isimli ekipmanı zimmetten düşürerek depoya iade aldı.`,
-                    entityType: 'Inventory',
+                    detail: `${payload?.fullName || 'System'}, ${inventory.name} isimli ekipmanı zimmetten düşürerek depoya iade aldı.`,
+                    entityType: 'InventoryItem',
                     entityId: inventory.id,
                     operationId: operationId
                 }
