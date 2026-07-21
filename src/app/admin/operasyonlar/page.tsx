@@ -6,7 +6,7 @@ import {
     Activity, Users, Box, Play, Square, ScanBarcode, X, Check, CheckCircle,
     Clock, MapPin, Search, ArrowRightLeft, RefreshCw, Printer, ShieldCheck, Flame, 
     Compass, Battery, Package, AlertTriangle, Plus, Trash, Radio, Heart, ShieldAlert,
-    MessageSquare, UserCheck, Wrench
+    MessageSquare, UserCheck, Wrench, FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
