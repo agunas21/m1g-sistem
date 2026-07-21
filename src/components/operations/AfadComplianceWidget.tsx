@@ -30,7 +30,8 @@ export default function AfadComplianceWidget({ operationId }: { operationId: str
                 setSuccessMsg("Taslak Raporlar Başarıyla Üretildi!");
                 setTimeout(() => setSuccessMsg(""), 3000);
             } else {
-                alert("Rapor üretilirken bir hata oluştu.");
+                const errData = await res.json().catch(() => null);
+                alert(`Rapor üretilirken bir hata oluştu: ${errData?.error || res.statusText || 'Bilinmeyen Hata'}`);
             }
         } catch (error) {
             console.error(error);
