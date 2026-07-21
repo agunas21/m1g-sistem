@@ -65,6 +65,10 @@ export default function ProfilPage() {
             fetch('/api/members')
                 .then(res => res.json())
                 .then(data => {
+                    if (!Array.isArray(data)) {
+                        console.error("Profile fetch error:", data);
+                        return;
+                    }
                     const index = data.findIndex((m: any) => m.id === (user as any).uid || m.id === (user as any).username);
                     const memberRaw: any = index >= 0 ? data[index] : null;
                     

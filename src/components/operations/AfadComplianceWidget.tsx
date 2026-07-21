@@ -15,16 +15,28 @@ export default function AfadComplianceWidget({ operationId }: { operationId: str
         { id: 5, requirement: 'Risk Değerlendirme Formu', status: 'FAIL' },
     ]);
 
+    const [loading, setLoading] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
+
     const handleGenerateReports = async () => {
+        if (loading) return;
+        setLoading(true);
         try {
             // trigger the generate reports API
             const res = await fetch(`/api/operations/${operationId}/generate-reports`, { method: 'POST' });
             if (res.ok) {
                 setChecks(prev => prev.map(c => c.id === 4 ? { ...c, status: 'PASS' } : c));
                 setScore(80);
+                setSuccessMsg("Taslak Raporlar Başarıyla Üretildi!");
+                setTimeout(() => setSuccessMsg(""), 3000);
+            } else {
+                alert("Rapor üretilirken bir hata oluştu.");
             }
         } catch (error) {
             console.error(error);
+            alert("Rapor üretilirken bağlantı hatası oluştu.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -54,11 +66,13 @@ export default function AfadComplianceWidget({ operationId }: { operationId: str
             </div>
 
             <div className="mt-4 ml-2">
+                {successMsg && <div className="text-green-400 text-xs font-bold mb-2 text-center">{successMsg}</div>}
                 <button 
                     onClick={handleGenerateReports}
-                    className="w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-xl py-2 flex items-center justify-center gap-2 text-xs font-bold transition-colors"
+                    disabled={loading}
+                    className="w-full bg-blue-500/10 hover:bg-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-blue-400 border border-blue-500/20 rounded-xl py-2 flex items-center justify-center gap-2 text-xs font-bold transition-colors"
                 >
-                    <FileText size={14} /> Otomatik Taslak Rapor Üret
+                    <FileText size={14} /> {loading ? "Üretiliyor..." : "Otomatik Taslak Rapor Üret"}
                 </button>
             </div>
         </div>

@@ -47,14 +47,22 @@ export async function GET(req: NextRequest) {
 
         // TC No maskeleme
         if (enrichedMember.tcNo) {
-            if (actor && isSuperAdmin(actor)) {
-                enrichedMember.tcNo = decryptField(enrichedMember.tcNo)
-            } else if (isAdmin) {
-                const plain = decryptField(enrichedMember.tcNo)
-                enrichedMember.tcNo = maskField(plain, 5, 2)
-            } else {
-                const plain = decryptField(enrichedMember.tcNo)
-                enrichedMember.tcNo = maskField(plain, 3, 2)
+            try {
+                if (actor && isSuperAdmin(actor)) {
+                    enrichedMember.tcNo = decryptField(enrichedMember.tcNo)
+                } else if (isAdmin) {
+                    const plain = decryptField(enrichedMember.tcNo)
+                    enrichedMember.tcNo = maskField(plain, 5, 2)
+                } else {
+                    const plain = decryptField(enrichedMember.tcNo)
+                    enrichedMember.tcNo = maskField(plain, 3, 2)
+                }
+            } catch (e) {
+                // If decryption fails, it might be an old unencrypted record
+                const plain = enrichedMember.tcNo;
+                if (!actor || !isSuperAdmin(actor)) {
+                    enrichedMember.tcNo = maskField(plain, 3, 2);
+                }
             }
         }
 
