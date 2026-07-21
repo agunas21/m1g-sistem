@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { X, Download, FileText, Loader2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { X, Download, FileText, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import KavkasReportViewer from './KavkasReportViewer';
 
 interface ReportExportModalProps {
@@ -47,8 +45,14 @@ export default function ReportExportModal({ isOpen, onClose, operation }: Report
         try {
             setIsExporting(true);
             
+            // Dinamik import ile kütüphaneleri yükle
+            const html2canvas = (await import('html2canvas')).default;
+            const { jsPDF } = await import('jspdf');
+
+            const element = printRef.current;
+            
             // Render HTML to canvas
-            const canvas = await html2canvas(printRef.current, {
+            const canvas = await html2canvas(element, {
                 scale: 2, // higher resolution
                 useCORS: true,
                 logging: false,

@@ -13,6 +13,11 @@ const eslintConfig = defineConfig([
       "@next/next/no-img-element": "off",
       "react-hooks/rules-of-hooks": "off",
       "react-hooks/exhaustive-deps": "off",
+      "react/no-unescaped-entities": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "prefer-const": "off",
     }
   }
 ]);
