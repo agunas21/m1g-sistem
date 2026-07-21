@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { verifyJwt } from '@/lib/crypto';
 import { cookies } from 'next/headers';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const cookieStore = await cookies();
         const token = cookieStore.get('m1g_session')?.value;
@@ -12,8 +12,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const resolvedParams = await params;
         const roles = await prisma.operationRoleAssignment.findMany({
-            where: { operationId: params.id },
+            where: { operationId: resolvedParams.id },
             include: {
                 member: true
             }
@@ -25,7 +26,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const cookieStore = await cookies();
         const token = cookieStore.get('m1g_session')?.value;
@@ -41,11 +42,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             return NextResponse.json({ error: 'Personel ve Görev Unvanı zorunludur' }, { status: 400 });
         }
 
+        const resolvedParams = await params;
         // Aynı göreve aynı kişiyi tekrar atamamak için upsert veya delete yapabiliriz
         const existing = await prisma.operationRoleAssignment.findUnique({
             where: {
                 operationId_memberId_roleTitle: {
-                    operationId: params.id,
+                    operationId: resolvedParams.id,
                     memberId,
                     roleTitle
                 }
@@ -58,7 +60,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
         const role = await prisma.operationRoleAssignment.create({
             data: {
-                operationId: params.id,
+                operationId: resolvedParams.id,
                 memberId,
                 roleTitle
             },
@@ -76,7 +78,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
                 detail: `${session.user.name}, ${role.member.name} isimli personele "${roleTitle}" görevini atadı.`,
                 entityType: 'OperationRoleAssignment',
                 entityId: role.id,
-                operationId: params.id
+                operationId: resolvedParams.id
             }
         });
 
@@ -86,7 +88,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
          const session = await getServerSession(authOptions);
          if (!session?.user) {
@@ -100,7 +102,8 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
              return NextResponse.json({ error: 'Görev ID zorunludur' }, { status: 400 });
          }
  
-         const role = await prisma.operationRoleAssignment.delete({
+         const resolvedParams = await params;
+         const deletedRole = await prisma.operationRoleAssignment.delete({
              where: { id: roleId },
              include: { member: true }
          });
@@ -110,11 +113,11 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
              data: {
                  actorId: session.user.id || 'system',
                  actorName: session.user.name || 'System',
-                 action: 'operation.role.unassign',
-                 detail: `${session.user.name}, ${role.member.name} isimli personelin "${role.roleTitle}" görevini iptal etti.`,
+                 action: 'operation.role.remove',
+                 detail: `${session.user.name}, ${deletedRole.member.name} isimli personelin "${deletedRole.roleTitle}" görevini iptal etti.`,
                  entityType: 'OperationRoleAssignment',
-                 entityId: role.id,
-                 operationId: params.id
+                 entityId: deletedRole.id,
+                 operationId: resolvedParams.id
              }
          });
  

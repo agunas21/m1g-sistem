@@ -5,7 +5,7 @@ import { verifyJwt } from '@/lib/crypto';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = (await cookies()).get('m1g_session')?.value;
@@ -17,7 +17,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: operationId } = params;
+    const { id: operationId } = await params;
     const body = await request.json();
 
     // Mission Ledger: Append-only event
@@ -51,7 +51,7 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = (await cookies()).get('m1g_session')?.value;
@@ -63,7 +63,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: operationId } = params;
+    const { id: operationId } = await params;
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '100');
 

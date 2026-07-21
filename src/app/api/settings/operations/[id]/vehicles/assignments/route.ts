@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 
 export async function POST(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const cookieStore = await cookies();
@@ -23,12 +23,14 @@ export async function POST(
         // Önce aynı personelin bu araçta başka bir rolü varsa güncelleyebiliriz veya silebiliriz
         // Şimdilik basitleştirmek adına UPSERT veya sadece CREATE yapıyoruz
         
+        const resolvedParams = await params;
+        
         // Personelin operasyondaki başka araç atamalarını kaldıralım (bir personel aynı anda iki araca binemez)
         await prisma.operationVehicleAssignment.deleteMany({
             where: {
                 memberId: memberId,
                 vehicle: {
-                    operationId: params.id
+                    operationId: resolvedParams.id
                 }
             }
         });
@@ -48,13 +50,13 @@ export async function POST(
         // Audit Log
         await prisma.auditLog.create({
             data: {
-                actorId: session.user.id || 'system',
-                actorName: session.user.name || 'System',
+                actorId: payload.user?.id || 'system',
+                actorName: payload.user?.name || 'System',
                 action: 'operation.vehicle.assign',
-                detail: `${session.user.name}, ${assignment.member.name} isimli personeli ${assignment.vehicle.plate} plakalı araca "${role}" olarak atadı.`,
+                detail: `${payload.user?.name || 'System'}, ${assignment.member.name} isimli personeli ${assignment.vehicle.plate} plakalı araca "${role}" olarak atadı.`,
                 entityType: 'OperationVehicleAssignment',
                 entityId: assignment.id,
-                operationId: params.id
+                operationId: resolvedParams.id
             }
         });
 

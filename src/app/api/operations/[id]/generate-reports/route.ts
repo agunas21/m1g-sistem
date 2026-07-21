@@ -15,7 +15,7 @@ const KAVKAS_REPORTS = [
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // const token = (await cookies()).get('m1g_session')?.value;
@@ -27,7 +27,7 @@ export async function POST(
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     // }
 
-    const { id: operationId } = params;
+    const { id: operationId } = await params;
 
     // 1. Fetch operation details and all events
     const operation = await prisma.operation.findUnique({
@@ -98,7 +98,7 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = (await cookies()).get('m1g_session')?.value;
@@ -106,7 +106,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: operationId } = params;
+    const { id: operationId } = await params;
 
     // Fetch the latest version of each report for the operation
     const reports = await prisma.operationReport.findMany({
