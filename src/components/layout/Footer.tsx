@@ -124,7 +124,7 @@ export default function Footer() {
                                 <li><Link href="/hakkimizda" className="text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"><ArrowRight size={14} /> Hakkımızda</Link></li>
                                 <li><Link href="/operasyonlar" className="text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"><ArrowRight size={14} /> Operasyonlar</Link></li>
                                 <li><Link href="/etkinlikler" className="text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"><ArrowRight size={14} /> Etkinlikler</Link></li>
-                                <li><Link href="/vizyon" className="text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"><ArrowRight size={14} /> Vizyon & Misyon</Link></li>
+                                <li><Link href="/kurumsal" className="text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"><ArrowRight size={14} /> Kurumsal & Yönetmelikler</Link></li>
                                 <li><Link href="/gonullu-ol" className="text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"><ArrowRight size={14} /> Gönüllü Ol</Link></li>
                                 <li><Link href="/iletisim" className="text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"><ArrowRight size={14} /> İletişim</Link></li>
                             </ul>

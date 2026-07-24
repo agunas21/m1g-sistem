@@ -33,7 +33,7 @@ export default function Navbar() {
         { href: "/operasyonlar", label: "Operasyonlar" },
         { href: "/faaliyetler", label: "Faaliyetler" },
         { href: "/etkinlikler", label: "Etkinlikler" },
-        { href: "/vizyon", label: "Vizyon" },
+        { href: "/kurumsal", label: "Kurumsal" },
         { href: "/iletisim", label: "İletişim" },
         { href: "/koordinat", label: "Konum Tespiti" },
     ];
