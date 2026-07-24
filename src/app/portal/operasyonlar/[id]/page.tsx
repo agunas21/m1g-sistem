@@ -228,10 +228,28 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                     <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-1">Başlangıç</span>
                     <span className="text-sm font-bold text-white">{operation.startTime?.split(" ")[1] || "-"}</span>
                 </div>
-                <div className="bg-[#050B14] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                <div className="bg-[#050B14] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center relative group">
                     <Radio className="text-neutral-500 mb-2" size={24} />
-                    <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-1">Telsiz Frekansı</span>
-                    <span className="text-sm font-bold text-white font-mono">{operation.radioFrequency || "-"}</span>
+                    <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-1">Telsiz Frekansı / Kodu</span>
+                    <input 
+                        type="text" 
+                        value={operation.radioFrequency || ""} 
+                        placeholder="Örn: CH-1 / 446.00625"
+                        onChange={(e) => setOperation({ ...operation, radioFrequency: e.target.value })}
+                        onBlur={async (e) => {
+                            try {
+                                await fetch('/api/settings/operations', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ id: operation.id, radioFrequency: e.target.value })
+                                });
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        }}
+                        className="text-xs font-bold text-white font-mono text-center bg-black/40 border border-white/10 hover:border-red-500/50 focus:border-red-500 rounded px-2 py-1 w-full outline-none transition-colors"
+                        title="Telsiz Kodunu Değiştirmek İçin Tıklayın"
+                    />
                 </div>
                 <div className="bg-[#050B14] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
                     <Users className="text-neutral-500 mb-2" size={24} />
