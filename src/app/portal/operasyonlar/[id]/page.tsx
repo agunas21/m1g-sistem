@@ -229,26 +229,37 @@ export default function OperasyonDetayPage({ params }: { params: Promise<{ id: s
                     <span className="text-sm font-bold text-white">{operation.startTime?.split(" ")[1] || "-"}</span>
                 </div>
                 <div className="bg-[#050B14] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center relative group">
-                    <Radio className="text-neutral-500 mb-2" size={24} />
-                    <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-1">Telsiz Frekansı / Kodu</span>
+                    <Radio className="text-amber-400 mb-1" size={22} />
+                    <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        Telsiz Kodu / Frekansı ✏️
+                    </span>
                     <input 
                         type="text" 
                         value={operation.radioFrequency || ""} 
                         placeholder="Örn: CH-1 / 446.00625"
                         onChange={(e) => setOperation({ ...operation, radioFrequency: e.target.value })}
+                        onKeyDown={async (e) => {
+                            if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                            }
+                        }}
                         onBlur={async (e) => {
                             try {
-                                await fetch('/api/settings/operations', {
+                                const res = await fetch('/api/settings/operations', {
                                     method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ id: operation.id, radioFrequency: e.target.value })
                                 });
+                                if (res.ok) {
+                                    const toastModule = await import('react-hot-toast');
+                                    toastModule.default.success("Telsiz kodu güncellendi");
+                                }
                             } catch (err) {
                                 console.error(err);
                             }
                         }}
-                        className="text-xs font-bold text-white font-mono text-center bg-black/40 border border-white/10 hover:border-red-500/50 focus:border-red-500 rounded px-2 py-1 w-full outline-none transition-colors"
-                        title="Telsiz Kodunu Değiştirmek İçin Tıklayın"
+                        className="text-xs font-bold text-amber-400 font-mono text-center bg-black/60 border border-white/10 hover:border-amber-500/50 focus:border-amber-500 rounded-lg px-2 py-1.5 w-full outline-none transition-all shadow-inner"
+                        title="Telsiz Kodunu Değiştirmek İçin Tıklayın ve Yazın"
                     />
                 </div>
                 <div className="bg-[#050B14] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">

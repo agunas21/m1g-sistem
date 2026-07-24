@@ -1654,21 +1654,19 @@ export default function Operasyonlar() {
                                         </div>
                                     )}
 
-                                    {/* Radio Frequency (Only simple input box) */}
+                                    {/* Radio Frequency & Radio Code */}
                                     <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 flex flex-col justify-center">
-                                        <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block mb-1">Telsiz Frekansı (MHz)</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] text-neutral-500 font-mono">Frekans [</span>
-                                            <input 
-                                                type="text"
-                                                placeholder="145.550"
-                                                value={selectedOp.radioFrequency || ""}
-                                                disabled={selectedOp.status !== "Aktif"}
-                                                onChange={(e) => updateFrequency(e.target.value)}
-                                                className="bg-transparent border-b border-white/10 text-xs text-white font-bold outline-none text-center focus:border-red-500 w-20"
-                                            />
-                                            <span className="text-[10px] text-neutral-500 font-mono">]</span>
-                                        </div>
+                                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Telsiz Frekansı / Kodu (Operasyon Esnasında Değiştirilebilir)</span>
+                                        <input 
+                                            type="text"
+                                            placeholder="Örn: CH-1 / 446.00625 MHz"
+                                            value={selectedOp.radioFrequency || ""}
+                                            onChange={(e) => setSelectedOp({ ...selectedOp, radioFrequency: e.target.value })}
+                                            onBlur={(e) => updateFrequency(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && updateFrequency((e.target as HTMLInputElement).value)}
+                                            className="bg-black/40 border border-white/10 rounded px-2.5 py-1 text-xs text-amber-400 font-bold font-mono outline-none focus:border-red-500 w-full"
+                                            title="Telsiz Frekansını / Kodunu Değiştirin"
+                                        />
                                     </div>
 
                                     {/* TICKING clock for entire active duration */}
