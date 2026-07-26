@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Package, ScanBarcode, Check, UserCheck, RefreshCw, ShieldCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import dynamic from "next/dynamic";
+import { parseQRString } from '@/lib/qrResolver';
 
 const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
 
@@ -14,7 +14,6 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
     const [hasLogisticsPermission, setHasLogisticsPermission] = useState(isAdmin);
 
     useEffect(() => {
-        // Check if current logged-in user is assigned as Depocu or Lojistik Sorumlusu
         if (isAdmin) {
             setHasLogisticsPermission(true);
             return;
@@ -66,9 +65,8 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
             });
             const data = await res.json();
             if (res.ok) {
-                toast.success(action === 'assign' ? "Ekipman zimmetlendi" : "Ekipman iade alındı");
+                toast.success(action === 'assign' ? "Ekipman başarıyla zimmetlendi" : "Ekipman depoya iade alındı");
                 setQrCode("");
-                setSelectedMember("");
             } else {
                 toast.error(data.error || "İşlem sırasında hata oluştu");
             }
@@ -80,7 +78,28 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
     };
 
     const handleScannerResult = (result: string) => {
-        setQrCode(result);
+        const parsed = parseQRString(result);
+        
+        // Smart Resolver: Check if scanned QR is a Member Card QR
+        const matchedMember = membersData.find((m: any) => 
+            m.id === parsed.cleanCode || 
+            m.kimlikToken === parsed.cleanCode || 
+            m.email === parsed.cleanCode
+        );
+
+        if (matchedMember || parsed.type === "MEMBER") {
+            if (matchedMember) {
+                setSelectedMember(matchedMember.id);
+                toast.success(`Personel Algılandı: ${matchedMember.fullName}`);
+            } else {
+                setSelectedMember(parsed.cleanCode);
+            }
+        } else {
+            // Equipment QR detected
+            setQrCode(parsed.cleanCode);
+            toast.success(`Ekipman kütüphane kodu algılandı: ${parsed.cleanCode}`);
+        }
+
         setIsScannerOpen(false);
     };
 
@@ -103,17 +122,20 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
                 <div className="flex gap-2">
                     <input 
                         type="text"
-                        placeholder="Cihaz QR / Barkod Kodu..."
+                        placeholder="Cihaz/Personel QR veya Barkod Kodu..."
                         value={qrCode}
-                        onChange={(e) => setQrCode(e.target.value)}
+                        onChange={(e) => {
+                            const parsed = parseQRString(e.target.value);
+                            setQrCode(parsed.cleanCode);
+                        }}
                         className="flex-1 bg-black/50 border border-white/10 rounded-xl p-3 text-white text-xs font-mono outline-none focus:border-amber-500"
                     />
                     <button 
                         onClick={() => setIsScannerOpen(true)}
-                        className="p-3 bg-amber-600/10 text-amber-500 border border-amber-500/20 rounded-xl hover:bg-amber-600/20 transition-colors"
-                        title="QR Kod Tara"
+                        className="p-3 bg-amber-600/10 text-amber-500 border border-amber-500/20 rounded-xl hover:bg-amber-600/20 transition-colors flex items-center gap-2 text-xs font-bold"
+                        title="Kamera ile QR Tara"
                     >
-                        <ScanBarcode size={18} />
+                        <ScanBarcode size={18} /> QR TARA
                     </button>
                 </div>
 
@@ -122,9 +144,9 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
                     <select 
                         value={selectedMember}
                         onChange={(e) => setSelectedMember(e.target.value)}
-                        className="flex-1 bg-black/50 border border-white/10 rounded-xl p-3 text-white text-xs outline-none focus:border-amber-500"
+                        className="flex-1 bg-black/50 border border-white/10 rounded-xl p-3 text-white text-xs outline-none focus:border-amber-500 font-medium"
                     >
-                        <option value="">Zimmetlenecek Personeli Seç...</option>
+                        <option value="">Zimmetlenecek Personeli Seç (veya Kimlik QR tara)...</option>
                         {membersData.map((m: any) => (
                             <option key={m.id} value={m.id}>{m.fullName}</option>
                         ))}

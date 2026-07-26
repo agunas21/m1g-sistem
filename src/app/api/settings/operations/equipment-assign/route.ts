@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyJwt } from '@/lib/crypto';
 import { cookies } from 'next/headers';
+import { parseQRString } from '@/lib/qrResolver';
 
 export async function POST(req: Request) {
     try {
@@ -18,13 +19,25 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'QR Kodu ve Operasyon ID zorunludur' }, { status: 400 });
         }
 
-        // Envanteri bul
+        // Clean & parse QR code format (handles full URLs, JSON, raw tokens)
+        const parsed = parseQRString(qrCode);
+        const searchTerms = Array.from(new Set([qrCode, parsed.cleanCode, parsed.raw])).filter(Boolean);
+
+        // Envanteri çoklu alanla bul (id, barcode, serialNumber)
         const inventory = await prisma.inventoryItem.findFirst({
-            where: { id: qrCode }
+            where: {
+                OR: [
+                    { id: { in: searchTerms } },
+                    { barcode: { in: searchTerms } },
+                    { serialNumber: { in: searchTerms } }
+                ]
+            }
         });
 
         if (!inventory) {
-            return NextResponse.json({ error: 'Bu QR koda ait ekipman bulunamadı' }, { status: 404 });
+            return NextResponse.json({ 
+                error: `Bu QR koda/Barkoda ait ekipman bulunamadı. (Okunan Kod: ${parsed.cleanCode})` 
+            }, { status: 404 });
         }
 
         if (action === 'assign') {
@@ -32,12 +45,28 @@ export async function POST(req: Request) {
                  return NextResponse.json({ error: 'Zimmetlenecek personel seçilmelidir' }, { status: 400 });
             }
 
+            // Clean & normalize memberId if provided
+            const memberParsed = parseQRString(memberId);
+            const memberSearchTerms = Array.from(new Set([memberId, memberParsed.cleanCode])).filter(Boolean);
+
+            const targetMember = await prisma.member.findFirst({
+                where: {
+                    OR: [
+                        { id: { in: memberSearchTerms } },
+                        { kimlikToken: { in: memberSearchTerms } },
+                        { email: { in: memberSearchTerms } }
+                    ]
+                }
+            });
+
+            const targetMemberId = targetMember ? targetMember.id : memberId;
+
             // Ekipmanı zimmetle ve operasyon bilgisini güncelle
             const updated = await prisma.inventoryItem.update({
                 where: { id: inventory.id },
                 data: {
                     status: 'Sahada', // Operasyonda kullanılıyor
-                    assignedToId: memberId
+                    assignedToId: targetMemberId
                 },
                 include: {
                     assignedTo: true
@@ -49,7 +78,7 @@ export async function POST(req: Request) {
                     actorId: payload?.id || 'system',
                     actorName: payload?.fullName || 'System',
                     action: 'inventory.operation_assign',
-                    detail: `${payload?.fullName || 'System'}, ${inventory.name} isimli ekipmanı ${updated.assignedTo?.fullName} personeline zimmetledi.`,
+                    detail: `${payload?.fullName || 'System'}, ${inventory.name} (${inventory.id}) isimli ekipmanı ${updated.assignedTo?.fullName || targetMemberId} personeline zimmetledi.`,
                     entityType: 'InventoryItem',
                     entityId: inventory.id,
                     operationId: operationId
@@ -73,7 +102,7 @@ export async function POST(req: Request) {
                     actorId: payload?.id || 'system',
                     actorName: payload?.fullName || 'System',
                     action: 'inventory.operation_unassign',
-                    detail: `${payload?.fullName || 'System'}, ${inventory.name} isimli ekipmanı zimmetten düşürerek depoya iade aldı.`,
+                    detail: `${payload?.fullName || 'System'}, ${inventory.name} (${inventory.id}) isimli ekipmanı zimmetten düşürerek depoya iade aldı.`,
                     entityType: 'InventoryItem',
                     entityId: inventory.id,
                     operationId: operationId
