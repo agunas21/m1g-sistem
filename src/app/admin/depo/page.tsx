@@ -304,10 +304,10 @@ export default function DepoYonetimi() {
                 }
 
                 if (!html5QrCodeRef.current) {
-                    html5QrCodeRef.current = new Html5Qrcode("reader", {
-                        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-                        verbose: false
-                    });
+                    const formats = typeof Html5QrcodeSupportedFormats !== "undefined" && Html5QrcodeSupportedFormats?.QR_CODE !== undefined
+                        ? [Html5QrcodeSupportedFormats.QR_CODE] 
+                        : undefined;
+                    html5QrCodeRef.current = new Html5Qrcode("reader", formats ? { formatsToSupport: formats, verbose: false } : { verbose: false });
                 }
 
                 const qrScannerConfig = {
