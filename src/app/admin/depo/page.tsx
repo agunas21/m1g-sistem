@@ -311,14 +311,7 @@ export default function DepoYonetimi() {
                 }
 
                 const qrScannerConfig = {
-                    fps: 20,
-                    qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-                        const minDim = Math.min(viewfinderWidth, viewfinderHeight);
-                        return {
-                            width: Math.floor(minDim * 0.8),
-                            height: Math.floor(minDim * 0.8)
-                        };
-                    },
+                    fps: 25,
                     aspectRatio: 1.0,
                     experimentalFeatures: {
                         useBarCodeDetectorIfSupported: true
@@ -475,40 +468,45 @@ export default function DepoYonetimi() {
         const parsed = parseQRString(text);
         const searchCode = parsed.cleanCode.toLowerCase();
 
-        if (scanMode === "equipment") {
-            const item = inventory.find(i => 
-                i.id?.toLowerCase() === searchCode ||
-                i.barcode?.toLowerCase() === searchCode ||
-                i.serialNumber?.toLowerCase() === searchCode ||
-                i.id?.toLowerCase() === text.toLowerCase()
-            );
+        // 1. Önce Ekipman olarak ara
+        const item = inventory.find(i => 
+            i.id?.toLowerCase() === searchCode ||
+            i.barcode?.toLowerCase() === searchCode ||
+            i.serialNumber?.toLowerCase() === searchCode ||
+            i.id?.toLowerCase() === text.toLowerCase()
+        );
 
-            if (item) {
-                setSelectedItem(item);
-            } else {
-                alert(`Bu koda ait bir ekipman depoda bulunamadı! (Okunan Kod: ${parsed.cleanCode})`);
-            }
-        } else if (scanMode === "member" && selectedItem) {
-            let member = membersData.find(m => 
-                m.id?.toLowerCase() === searchCode ||
-                m.kimlikToken?.toLowerCase() === searchCode ||
-                m.email?.toLowerCase() === searchCode ||
-                m.id?.toLowerCase() === text.toLowerCase()
-            );
+        if (item) {
+            setSelectedItem(item);
+            return;
+        }
 
-            if (!member && !isNaN(parseInt(searchCode))) {
-                const index = parseInt(searchCode) - 1;
-                if (index >= 0 && index < membersData.length) {
-                    member = membersData[index];
-                }
-            }
-            
-            if (member) {
-                assignItemToMember(selectedItem.id, member.id, member.fullName);
-            } else {
-                alert(`Personel sistemde bulunamadı! (Okunan Kod: ${parsed.cleanCode})`);
+        // 2. Ekipman bulunamadıysa Üye / Personel Kartı olarak ara
+        let member = membersData.find(m => 
+            m.id?.toLowerCase() === searchCode ||
+            m.kimlikToken?.toLowerCase() === searchCode ||
+            m.email?.toLowerCase() === searchCode ||
+            m.id?.toLowerCase() === text.toLowerCase()
+        );
+
+        if (!member && !isNaN(parseInt(searchCode))) {
+            const index = parseInt(searchCode) - 1;
+            if (index >= 0 && index < membersData.length) {
+                member = membersData[index];
             }
         }
+
+        if (member) {
+            if (selectedItem) {
+                assignItemToMember(selectedItem.id, member.id, member.fullName);
+            } else {
+                setSearch(member.fullName);
+                alert(`✓ Personel Kimlik Kartı Okundu: ${member.fullName}\n\nPersonele ait zimmetli malzemeler listede filtrelendi.`);
+            }
+            return;
+        }
+
+        alert(`Okunan QR Kod Sistemde Bulunamadı!\n(Okunan Kod / Token: ${parsed.cleanCode})`);
     };
 
     const assignItemToMember = async (itemId: string, memberId: string, memberName: string) => {
