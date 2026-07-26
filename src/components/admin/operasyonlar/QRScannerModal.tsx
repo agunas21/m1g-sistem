@@ -36,7 +36,36 @@ export default function QRScannerModal({ isScannerOpen, setIsScannerOpen, onComm
         }
     }, [isScannerOpen]);
 
+    const detectorIntervalRef = useRef<any>(null);
+
+    const playBeep = () => {
+        try {
+            if (typeof window !== "undefined" && "vibrate" in navigator) {
+                navigator.vibrate([80, 40, 80]);
+            }
+            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioCtx) {
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.12);
+            }
+        } catch (e) {
+            // Ignore audio errors
+        }
+    };
+
     const stopCamera = async () => {
+        if (detectorIntervalRef.current) {
+            clearInterval(detectorIntervalRef.current);
+            detectorIntervalRef.current = null;
+        }
         try {
             if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
                 await html5QrCodeRef.current.stop();
@@ -51,9 +80,15 @@ export default function QRScannerModal({ isScannerOpen, setIsScannerOpen, onComm
         setCameraErrorMsg("");
 
         try {
-            // 1. Force native permission check first
+            // 1. Force native permission check with HD resolution request for maximum sharp focus
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: "environment" },
+                        width: { ideal: 1920, min: 1280 },
+                        height: { ideal: 1080, min: 720 }
+                    }
+                });
                 stream.getTracks().forEach(track => track.stop());
             } catch (nativeErr: any) {
                 try {
@@ -71,49 +106,82 @@ export default function QRScannerModal({ isScannerOpen, setIsScannerOpen, onComm
                 html5QrCodeRef.current = new Html5Qrcode("reader", formats ? { formatsToSupport: formats, verbose: false } : { verbose: false });
             }
 
-            // Enhanced scanner config for maximum QR detection sensitivity
             const qrScannerConfig = {
-                fps: 20, // 20 frames per sec for fast scanning on moving cameras
-                qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-                    const minDim = Math.min(viewfinderWidth, viewfinderHeight);
-                    return {
-                        width: Math.floor(minDim * 0.8),
-                        height: Math.floor(minDim * 0.8)
-                    };
-                },
+                fps: 30, // 30 FPS ultra-fast stream
                 aspectRatio: 1.0,
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true
                 }
             };
 
+            let isHandled = false;
             const onScanSuccess = async (decodedText: string) => {
+                if (isHandled) return;
+                isHandled = true;
+                playBeep();
                 const parsed = parseQRString(decodedText);
                 await stopCamera();
                 setIsScannerOpen(false);
                 onCommandSubmit(parsed.cleanCode || decodedText);
             };
 
+            // Start html5qrcode
             try {
                 await html5QrCodeRef.current.start(
-                    { facingMode: "environment" },
+                    {
+                        facingMode: "environment",
+                        width: { ideal: 1920, min: 1280 },
+                        height: { ideal: 1080, min: 720 }
+                    } as any,
                     qrScannerConfig,
                     onScanSuccess,
                     () => {}
                 );
             } catch (e: any) {
-                console.warn("Environment config failed, trying camera devices fallback", e);
-                const devices = await Html5Qrcode.getCameras();
-                if (devices && devices.length > 0) {
-                    const backCamera = devices.find(d => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("arka") || d.label.toLowerCase().includes("environment"));
+                console.warn("HD camera start failed, trying simple environment mode", e);
+                try {
                     await html5QrCodeRef.current.start(
-                        backCamera ? backCamera.id : devices[0].id,
+                        { facingMode: "environment" },
                         qrScannerConfig,
                         onScanSuccess,
                         () => {}
                     );
-                } else {
-                    throw new Error(`Kamera Bulunamadı: ${e.name || e.message || String(e)}`);
+                } catch (e2: any) {
+                    const devices = await Html5Qrcode.getCameras();
+                    if (devices && devices.length > 0) {
+                        const backCamera = devices.find(d => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("arka") || d.label.toLowerCase().includes("environment"));
+                        await html5QrCodeRef.current.start(
+                            backCamera ? backCamera.id : devices[0].id,
+                            qrScannerConfig,
+                            onScanSuccess,
+                            () => {}
+                        );
+                    } else {
+                        throw new Error(`Kamera Bulunamadı: ${e2.name || e2.message || String(e2)}`);
+                    }
+                }
+            }
+
+            // 2. High-speed Native BarcodeDetector Parallel Loop (50ms response for Chrome Android GPU acceleration)
+            if (typeof window !== "undefined" && "BarcodeDetector" in window) {
+                try {
+                    const barcodeDetector = new (window as any).BarcodeDetector({ formats: ["qr_code", "code_128", "code_39"] });
+                    detectorIntervalRef.current = setInterval(async () => {
+                        if (isHandled) return;
+                        const videoEl = document.querySelector("#reader video") as HTMLVideoElement;
+                        if (videoEl && videoEl.readyState >= 2) {
+                            try {
+                                const barcodes = await barcodeDetector.detect(videoEl);
+                                if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                                    onScanSuccess(barcodes[0].rawValue);
+                                }
+                            } catch (err) {
+                                // Ignore frame detection glitches
+                            }
+                        }
+                    }, 60);
+                } catch (err) {
+                    console.warn("Native BarcodeDetector init failed", err);
                 }
             }
 
