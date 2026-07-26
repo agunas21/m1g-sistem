@@ -299,52 +299,54 @@ export default function DepoYonetimi() {
             } catch (e) {}
         };
 
+        const isStartingRef = useRef(false);
+
         const stopCamera = async () => {
             if (detectorIntervalRef.current) {
                 clearInterval(detectorIntervalRef.current);
                 detectorIntervalRef.current = null;
             }
             try {
-                if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-                    await html5QrCodeRef.current.stop();
+                if (html5QrCodeRef.current) {
+                    if (html5QrCodeRef.current.isScanning) {
+                        await html5QrCodeRef.current.stop();
+                    }
+                    await html5QrCodeRef.current.clear();
+                    html5QrCodeRef.current = null;
                 }
             } catch (e) {
                 console.warn("Stop camera err", e);
+                html5QrCodeRef.current = null;
             }
         };
 
         const startCamera = async () => {
+            if (isStartingRef.current) return;
+            isStartingRef.current = true;
             setCameraError(false);
             setCameraErrorMsg("");
 
             try {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: { ideal: "environment" },
-                            width: { ideal: 1920, min: 1280 },
-                            height: { ideal: 1080, min: 720 }
-                        }
-                    });
-                    stream.getTracks().forEach(track => track.stop());
-                } catch (nativeErr: any) {
-                    try {
-                        const stream2 = await navigator.mediaDevices.getUserMedia({ video: true });
-                        stream2.getTracks().forEach(track => track.stop());
-                    } catch (nativeErr2: any) {
-                        throw new Error(`Kamera İzni Alınamadı: ${nativeErr2.name || nativeErr2.message || String(nativeErr2)}`);
-                    }
+                // Safely clear any previous scanner instance
+                await stopCamera();
+
+                // Wait a tiny bit for camera hardware lock release
+                await new Promise(r => setTimeout(r, 150));
+
+                const readerElement = document.getElementById("reader");
+                if (!readerElement) {
+                    isStartingRef.current = false;
+                    return;
                 }
 
-                if (!html5QrCodeRef.current) {
-                    const formats = typeof Html5QrcodeSupportedFormats !== "undefined" && Html5QrcodeSupportedFormats?.QR_CODE !== undefined
-                        ? [Html5QrcodeSupportedFormats.QR_CODE] 
-                        : undefined;
-                    html5QrCodeRef.current = new Html5Qrcode("reader", formats ? { formatsToSupport: formats, verbose: false } : { verbose: false });
-                }
+                const formats = typeof Html5QrcodeSupportedFormats !== "undefined" && Html5QrcodeSupportedFormats?.QR_CODE !== undefined
+                    ? [Html5QrcodeSupportedFormats.QR_CODE] 
+                    : undefined;
+                
+                html5QrCodeRef.current = new Html5Qrcode("reader", formats ? { formatsToSupport: formats, verbose: false } : { verbose: false });
 
                 const qrScannerConfig = {
-                    fps: 30,
+                    fps: 25,
                     aspectRatio: 1.0,
                     experimentalFeatures: {
                         useBarCodeDetectorIfSupported: true
@@ -361,39 +363,32 @@ export default function DepoYonetimi() {
                     handleScanSuccess(decodedText);
                 };
 
+                // Single direct camera start call (no double getUserMedia pre-flight!)
                 try {
                     await html5QrCodeRef.current.start(
-                        {
-                            facingMode: "environment",
-                            width: { ideal: 1920, min: 1280 },
-                            height: { ideal: 1080, min: 720 }
-                        } as any,
+                        { facingMode: "environment" },
                         qrScannerConfig,
                         onScanSuccess,
                         () => {}
                     );
                 } catch (e: any) {
-                    console.warn("HD camera start failed, trying environment fallback", e);
-                    try {
+                    console.warn("Environment camera start failed, trying camera devices list", e);
+                    const devices = await Html5Qrcode.getCameras();
+                    if (devices && devices.length > 0) {
+                        const backCamera = devices.find(d => 
+                            d.label.toLowerCase().includes("back") || 
+                            d.label.toLowerCase().includes("arka") || 
+                            d.label.toLowerCase().includes("environment") ||
+                            d.label.toLowerCase().includes("0")
+                        );
                         await html5QrCodeRef.current.start(
-                            { facingMode: "environment" },
+                            backCamera ? backCamera.id : devices[0].id,
                             qrScannerConfig,
                             onScanSuccess,
                             () => {}
                         );
-                    } catch (e2: any) {
-                        const devices = await Html5Qrcode.getCameras();
-                        if (devices && devices.length > 0) {
-                            const backCamera = devices.find(d => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("arka") || d.label.toLowerCase().includes("environment"));
-                            await html5QrCodeRef.current.start(
-                                backCamera ? backCamera.id : devices[0].id,
-                                qrScannerConfig,
-                                onScanSuccess,
-                                () => {}
-                            );
-                        } else {
-                            throw new Error(`Kamera Bulunamadı: ${e2.name || e2.message || String(e2)}`);
-                        }
+                    } else {
+                        throw new Error(`Kamera İzni veya Cihazı Bulunamadı: ${e.name || e.message || String(e)}`);
                     }
                 }
 
@@ -427,6 +422,8 @@ export default function DepoYonetimi() {
                 setCameraError(true);
                 setCameraErrorMsg(err.message || String(err));
                 setIsCameraStarted(false);
+            } finally {
+                isStartingRef.current = false;
             }
         };
 
