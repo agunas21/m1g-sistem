@@ -258,6 +258,7 @@ export default function DepoYonetimi() {
         const [isCameraStarted, setIsCameraStarted] = useState(false);
         const [cameraError, setCameraError] = useState(false);
         const [cameraErrorMsg, setCameraErrorMsg] = useState("");
+        const [manualCode, setManualCode] = useState("");
         const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
         useEffect(() => {
@@ -265,66 +266,91 @@ export default function DepoYonetimi() {
                 setIsCameraStarted(false);
                 setCameraError(false);
                 setCameraErrorMsg("");
-                if (html5QrCodeRef.current?.isScanning) {
-                    html5QrCodeRef.current.stop().catch(() => {});
-                }
+                setManualCode("");
+                stopCamera();
+            } else {
+                const timer = setTimeout(() => {
+                    startCamera();
+                }, 300);
+                return () => clearTimeout(timer);
             }
-            return () => {
-                if (html5QrCodeRef.current?.isScanning) {
-                    html5QrCodeRef.current.stop().catch(() => {});
-                }
-            };
         }, [isScannerOpen]);
 
-        const startCamera = async () => {
+        const stopCamera = async () => {
             try {
-                // 1. Force native permission prompt first to ensure the browser actually asks
+                if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+                    await html5QrCodeRef.current.stop();
+                }
+            } catch (e) {
+                console.warn("Stop camera err", e);
+            }
+        };
+
+        const startCamera = async () => {
+            setCameraError(false);
+            setCameraErrorMsg("");
+
+            try {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    // Permission granted! Stop the stream so html5-qrcode can use it without conflict
                     stream.getTracks().forEach(track => track.stop());
                 } catch (nativeErr: any) {
-                    console.warn("Native getUserMedia with environment failed:", nativeErr);
-                    // Try generic video if environment constraint failed
                     try {
                         const stream2 = await navigator.mediaDevices.getUserMedia({ video: true });
                         stream2.getTracks().forEach(track => track.stop());
                     } catch (nativeErr2: any) {
-                        throw new Error(`Native Cam Err: ${nativeErr2.name || nativeErr2.message || String(nativeErr2)}`);
+                        throw new Error(`Kamera İzni Alınamadı: ${nativeErr2.name || nativeErr2.message || String(nativeErr2)}`);
                     }
                 }
 
                 if (!html5QrCodeRef.current) {
-                    html5QrCodeRef.current = new Html5Qrcode("reader");
+                    html5QrCodeRef.current = new Html5Qrcode("reader", {
+                        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+                        verbose: false
+                    });
                 }
 
-                const startWithConfig = async (config: any) => {
-                    return html5QrCodeRef.current?.start(
-                        config,
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        (decodedText) => {
-                            html5QrCodeRef.current?.stop().then(() => {
-                                setIsScannerOpen(false);
-                                handleScanSuccess(decodedText);
-                            }).catch(() => {
-                                setIsScannerOpen(false);
-                                handleScanSuccess(decodedText);
-                            });
-                        },
-                        () => {}
-                    );
+                const qrScannerConfig = {
+                    fps: 20,
+                    qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+                        const minDim = Math.min(viewfinderWidth, viewfinderHeight);
+                        return {
+                            width: Math.floor(minDim * 0.8),
+                            height: Math.floor(minDim * 0.8)
+                        };
+                    },
+                    aspectRatio: 1.0,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
+                };
+
+                const onScanSuccess = async (decodedText: string) => {
+                    await stopCamera();
+                    setIsScannerOpen(false);
+                    handleScanSuccess(decodedText);
                 };
 
                 try {
-                    await startWithConfig({ facingMode: "environment" });
+                    await html5QrCodeRef.current.start(
+                        { facingMode: "environment" },
+                        qrScannerConfig,
+                        onScanSuccess,
+                        () => {}
+                    );
                 } catch (e: any) {
-                    console.warn("Environment config failed, trying getCameras fallback", e);
+                    console.warn("Environment config failed, trying fallback", e);
                     const devices = await Html5Qrcode.getCameras();
                     if (devices && devices.length > 0) {
-                        const backCamera = devices.find(d => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("arka"));
-                        await startWithConfig(backCamera ? backCamera.id : devices[0].id);
+                        const backCamera = devices.find(d => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("arka") || d.label.toLowerCase().includes("environment"));
+                        await html5QrCodeRef.current.start(
+                            backCamera ? backCamera.id : devices[0].id,
+                            qrScannerConfig,
+                            onScanSuccess,
+                            () => {}
+                        );
                     } else {
-                        throw new Error(`HTML5QR Err: ${e.name || e.message || String(e)}`);
+                        throw new Error(`Kamera Bulunamadı: ${e.name || e.message || String(e)}`);
                     }
                 }
 
@@ -346,68 +372,98 @@ export default function DepoYonetimi() {
                         html5QrCodeRef.current = new Html5Qrcode("reader");
                     }
                     const decodedText = await html5QrCodeRef.current.scanFile(file, true);
+                    await stopCamera();
                     setIsScannerOpen(false);
                     handleScanSuccess(decodedText);
                 } catch (err) {
                     console.error("File scan failed", err);
-                    alert("QR kod okunamadı. Lütfen daha net bir fotoğraf çekin.");
+                    alert("QR kod okunamadı. Lütfen daha net bir fotoğraf çekin veya elle kod yazın.");
                 }
             }
+        };
+
+        const handleManualSubmit = async () => {
+            if (!manualCode.trim()) return;
+            await stopCamera();
+            setIsScannerOpen(false);
+            handleScanSuccess(manualCode.trim());
         };
 
         if (!isScannerOpen) return null;
 
         const portalContent = (
-            <div className="fixed inset-0 bg-black/90 z-[99999] flex flex-col items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 bg-black/95 z-[99999] flex flex-col items-center justify-center p-4 backdrop-blur-md">
                 <button 
-                    onClick={() => setIsScannerOpen(false)}
-                    className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                    onClick={async () => {
+                        await stopCamera();
+                        setIsScannerOpen(false);
+                    }}
+                    className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-50"
                 >
                     <X size={24} />
                 </button>
                 
-                <div className="text-center mb-8">
-                    <ScanBarcode size={48} className="mx-auto text-red-500 mb-4 animate-pulse" />
-                    <h2 className="text-2xl font-bold text-white uppercase tracking-widest">
-                        {scanMode === "equipment" ? "Ekipman Barkodu Okutun" : "Personel Kimlik Kartını Okutun"}
+                <div className="text-center mb-6">
+                    <ScanBarcode size={44} className="mx-auto text-red-500 mb-2 animate-pulse" />
+                    <h2 className="text-xl font-black text-white uppercase tracking-widest">
+                        {scanMode === "equipment" ? "Ekipman QR / Barkodu Okutun" : "Personel Kimlik Kartını Okutun"}
                     </h2>
-                    <p className="text-neutral-400 mt-2 text-sm">Kameranızı karekoda doğru tutun veya fotoğraf çekin.</p>
+                    <p className="text-neutral-400 mt-1 text-xs font-light">Kameranızı karekoda doğru tutun veya galeriden fotoğraf yükleyin.</p>
                 </div>
 
-                <div className="w-full max-w-md bg-black rounded-3xl border-2 border-white/10 shadow-[0_0_50px_rgba(239,68,68,0.3)] p-4 flex flex-col gap-4">
-                    {!isCameraStarted && !cameraError && (
-                        <button 
-                            onClick={startCamera} 
-                            className="w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-2xl font-bold uppercase tracking-widest transition-colors"
-                        >
-                            Kamerayı Aç / QR Okut
-                        </button>
-                    )}
+                <div className="w-full max-w-sm bg-[#050b14] rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(239,68,68,0.3)] p-4 flex flex-col gap-4">
                     
-                    <div id="reader" className="w-full bg-black rounded-xl overflow-hidden"></div>
+                    <div className="relative w-full bg-black rounded-2xl overflow-hidden min-h-[260px] border border-white/10 flex items-center justify-center">
+                        <div id="reader" className="w-full h-full"></div>
+                        {!isCameraStarted && !cameraError && (
+                            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-4 text-center">
+                                <ScanBarcode size={36} className="text-red-500/50 mb-2 animate-bounce" />
+                                <span className="text-xs font-bold text-neutral-300 uppercase tracking-widest">Kamera Başlatılıyor...</span>
+                            </div>
+                        )}
+                    </div>
 
                     {cameraError && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex flex-col items-center">
-                            <p className="text-sm text-red-400 font-bold uppercase tracking-widest mb-2 text-center">Kamera Erişimi Sağlanamadı</p>
-                            <p className="text-xs text-neutral-400 text-center mb-1">
-                                Tarayıcınız kamerayı engelliyor olabilir. Lütfen tarayıcı ayarlarından (Site Ayarları) izin verin veya aşağıdaki alternatifi kullanın.
-                            </p>
-                            <div className="bg-black/30 px-3 py-2 rounded-lg text-[10px] text-red-300 font-mono mb-4 text-center break-all">
-                                HATA: {cameraErrorMsg || "Bilinmeyen Hata"}
-                            </div>
-                            <label className="w-full flex flex-col items-center justify-center py-4 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-xl cursor-pointer transition-colors text-center">
-                                <span className="font-bold uppercase tracking-widest text-xs mb-1">Kameradan Çek / Fotoğraf Yükle</span>
-                                <span className="text-[10px] text-blue-500/70">Alternatif Tarama Yöntemi</span>
-                                <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    capture="environment" 
-                                    className="hidden" 
-                                    onChange={handleFileUpload} 
-                                />
-                            </label>
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl flex flex-col items-center text-center">
+                            <p className="text-xs text-red-400 font-bold uppercase tracking-widest mb-1">Kamera Başlatılamadı</p>
+                            <p className="text-[10px] text-neutral-400 mb-2">{cameraErrorMsg}</p>
+                            <button 
+                                onClick={startCamera}
+                                className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest"
+                            >
+                                Yeniden Dene
+                            </button>
                         </div>
                     )}
+
+                    <div className="space-y-2 border-t border-white/10 pt-3">
+                        <div className="flex gap-2">
+                            <input 
+                                type="text" 
+                                placeholder="QR / Barkod Kodunu elle yazın..." 
+                                value={manualCode}
+                                onChange={(e) => setManualCode(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleManualSubmit()}
+                                className="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-red-500 font-mono"
+                            />
+                            <button 
+                                onClick={handleManualSubmit}
+                                className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                            >
+                                <Check size={14} /> Tamam
+                            </button>
+                        </div>
+
+                        <label className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 text-neutral-300 border border-white/10 rounded-xl cursor-pointer transition-colors text-xs font-bold uppercase tracking-wider">
+                            <QrCode size={14} className="text-red-400" /> Galeriden QR Fotoğrafı Seç
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={handleFileUpload} 
+                            />
+                        </label>
+                    </div>
                 </div>
             </div>
         );
@@ -416,30 +472,32 @@ export default function DepoYonetimi() {
     };
 
     const handleScanSuccess = (text: string) => {
+        const parsed = parseQRString(text);
+        const searchCode = parsed.cleanCode.toLowerCase();
+
         if (scanMode === "equipment") {
-            // Barkod genelde id içerir veya m1g.org.tr/eq/eq-001 formatındadır
-            let eqId = text.split('/').filter(Boolean).pop() || text;
-            eqId = eqId.split('?')[0]; // Query string'i at
-            eqId = eqId.split('#')[0]; // Hash'i at
-            
-            const item = inventory.find(i => i.id?.toLowerCase() === eqId.toLowerCase());
+            const item = inventory.find(i => 
+                i.id?.toLowerCase() === searchCode ||
+                i.barcode?.toLowerCase() === searchCode ||
+                i.serialNumber?.toLowerCase() === searchCode ||
+                i.id?.toLowerCase() === text.toLowerCase()
+            );
+
             if (item) {
                 setSelectedItem(item);
             } else {
-                alert("Bu koda ait bir ekipman depoda bulunamadı!");
+                alert(`Bu koda ait bir ekipman depoda bulunamadı! (Okunan Kod: ${parsed.cleanCode})`);
             }
         } else if (scanMode === "member" && selectedItem) {
-            // Zimmet için üye kartı okutuldu
-            // Kimlik URL'sinden ID'yi al (Query parametrelerini temizle)
-            let rawId = text.split('/').filter(Boolean).pop() || text;
-            rawId = rawId.split('?')[0]; // Query string'i at
-            rawId = rawId.split('#')[0]; // Hash'i at
-            
-            let member = membersData.find(m => m.id?.toLowerCase() === rawId.toLowerCase());
-            
-            // Eğer string id bulunamazsa, eski sistem olan indeks (sayı) tabanlı aramayı dene
-            if (!member && !isNaN(parseInt(rawId))) {
-                const index = parseInt(rawId) - 1;
+            let member = membersData.find(m => 
+                m.id?.toLowerCase() === searchCode ||
+                m.kimlikToken?.toLowerCase() === searchCode ||
+                m.email?.toLowerCase() === searchCode ||
+                m.id?.toLowerCase() === text.toLowerCase()
+            );
+
+            if (!member && !isNaN(parseInt(searchCode))) {
+                const index = parseInt(searchCode) - 1;
                 if (index >= 0 && index < membersData.length) {
                     member = membersData[index];
                 }
@@ -448,7 +506,7 @@ export default function DepoYonetimi() {
             if (member) {
                 assignItemToMember(selectedItem.id, member.id, member.fullName);
             } else {
-                alert(`Personel sistemde bulunamadı! (Okunan Kod: ${rawId})`);
+                alert(`Personel sistemde bulunamadı! (Okunan Kod: ${parsed.cleanCode})`);
             }
         }
     };
