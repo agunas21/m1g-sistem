@@ -82,6 +82,7 @@ model InventoryItem {
   assignedTo      Member?  @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   condition       String   @default("İyi")
   type            String   @default("Demirbaş")
+  equipmentCategory String @default("ARAMA_KURTARMA") // ARAMA_KURTARMA (🔴 Kırmızı) | KAMP (🟢 Yeşil)
   expirationDate  String?
   maintenanceDate String?
   lastMaintenance String?

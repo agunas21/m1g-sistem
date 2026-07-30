@@ -18,8 +18,27 @@ export async function GET() {
         const items = await prisma.inventoryItem.findMany({
             orderBy: { createdAt: 'desc' }
         })
-        const res = NextResponse.json(items)
-        // Admin verisi: private cache, 30 sn — sürekli origin'e gitmesin
+
+        const campKeywords = ['kamp', 'çadır', 'cadir', 'tente', 'uyku', 'mat', 'mutfak', 'jeneratör', 'jenerator', 'aydınlatma', 'aydinlatma', 'kazan', 'ocak', 'masa', 'sandalye', 'gıda', 'gida', 'erzak', 'tulum', 'soba', 'su deposu', 'wc', 'duş', 'dus', 'barınma', 'barinma', 'lojistik', 'jenerator', 'telsiz sarj', 'ışıldak', 'isildak'];
+
+        const processedItems = items.map(item => {
+            const currentCat = (item as any).equipmentCategory;
+            if (!currentCat) {
+                const text = `${item.name} ${item.category}`.toLowerCase();
+                const isCamp = campKeywords.some(k => text.includes(k));
+                const autoCategory = isCamp ? 'KAMP' : 'ARAMA_KURTARMA';
+                
+                prisma.inventoryItem.update({
+                    where: { id: item.id },
+                    data: { equipmentCategory: autoCategory }
+                }).catch(() => {});
+
+                return { ...item, equipmentCategory: autoCategory };
+            }
+            return item;
+        });
+
+        const res = NextResponse.json(processedItems)
         res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60')
         return res
     } catch {
@@ -43,6 +62,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const newId = body.id || `eq-${Math.floor(Math.random() * 1_000_000).toString().padStart(6, '0')}`
 
+    const campKeywords = ['kamp', 'çadır', 'cadir', 'tente', 'uyku', 'mat', 'mutfak', 'jeneratör', 'jenerator', 'aydınlatma', 'aydinlatma', 'kazan', 'ocak', 'masa', 'sandalye', 'gıda', 'gida', 'erzak', 'tulum', 'soba', 'su deposu', 'wc', 'duş', 'dus', 'barınma', 'barinma'];
+    const text = `${body.name || ''} ${body.category || ''}`.toLowerCase();
+    const defaultCat = campKeywords.some(k => text.includes(k)) ? 'KAMP' : 'ARAMA_KURTARMA';
+
     const item = await prisma.inventoryItem.create({
         data: {
             id: newId,
@@ -53,6 +76,7 @@ export async function POST(req: NextRequest) {
             containerItems: [],
             condition: body.condition ?? 'Yeni',
             type: body.type ?? 'Demirbaş',
+            equipmentCategory: body.equipmentCategory || defaultCat,
             expirationDate: body.expirationDate ?? null,
             maintenanceDate: body.maintenanceDate ?? null,
             lastMaintenance: '-',

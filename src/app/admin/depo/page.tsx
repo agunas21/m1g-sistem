@@ -59,6 +59,7 @@ export default function DepoYonetimi() {
     const [membersData, setMembersData] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState("Tümü");
+    const [filterEquipmentCategory, setFilterEquipmentCategory] = useState<string>("Tümü");
     
     // Drawers & Modals
     const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -69,6 +70,7 @@ export default function DepoYonetimi() {
     const [newItemName, setNewItemName] = useState("");
     const [newItemCategory, setNewItemCategory] = useState("Arama");
     const [newItemType, setNewItemType] = useState("Demirbaş");
+    const [newItemEquipmentCategory, setNewItemEquipmentCategory] = useState<"ARAMA_KURTARMA" | "KAMP">("ARAMA_KURTARMA");
     const [newItemIsContainer, setNewItemIsContainer] = useState(false);
     const [newItemExpiration, setNewItemExpiration] = useState("");
     const [newItemMaintenance, setNewItemMaintenance] = useState("");
@@ -672,6 +674,7 @@ export default function DepoYonetimi() {
             lastMaintenance: "-",
             condition: "Yeni",
             type: newItemType,
+            equipmentCategory: newItemEquipmentCategory,
             isContainer: newItemIsContainer,
             expirationDate: newItemExpiration ? newItemExpiration : null,
             maintenanceDate: newItemMaintenance ? newItemMaintenance : null
