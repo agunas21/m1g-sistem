@@ -271,12 +271,10 @@ export default function DepoYonetimi() {
             } else {
                 const timer = setTimeout(() => {
                     startCamera();
-                }, 300);
+                }, 250);
                 return () => clearTimeout(timer);
             }
         }, [isScannerOpen]);
-
-        const detectorIntervalRef = useRef<any>(null);
 
         const playBeep = () => {
             try {
@@ -302,10 +300,6 @@ export default function DepoYonetimi() {
         const isStartingRef = useRef(false);
 
         const stopCamera = async () => {
-            if (detectorIntervalRef.current) {
-                clearInterval(detectorIntervalRef.current);
-                detectorIntervalRef.current = null;
-            }
             try {
                 if (html5QrCodeRef.current) {
                     if (html5QrCodeRef.current.isScanning) {
@@ -327,11 +321,8 @@ export default function DepoYonetimi() {
             setCameraErrorMsg("");
 
             try {
-                // Safely clear any previous scanner instance
                 await stopCamera();
-
-                // Wait a tiny bit for camera hardware lock release
-                await new Promise(r => setTimeout(r, 150));
+                await new Promise(r => setTimeout(r, 100));
 
                 const readerElement = document.getElementById("reader");
                 if (!readerElement) {
@@ -339,23 +330,36 @@ export default function DepoYonetimi() {
                     return;
                 }
 
-                const formats = typeof Html5QrcodeSupportedFormats !== "undefined" && Html5QrcodeSupportedFormats?.QR_CODE !== undefined
-                    ? [Html5QrcodeSupportedFormats.QR_CODE] 
-                    : undefined;
+                const formatsToSupport = [
+                    Html5QrcodeSupportedFormats.QR_CODE,
+                    Html5QrcodeSupportedFormats.DATA_MATRIX,
+                    Html5QrcodeSupportedFormats.AZTEC,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.PDF_417,
+                ].filter(Boolean);
                 
-                html5QrCodeRef.current = new Html5Qrcode("reader", formats ? { formatsToSupport: formats, verbose: false } : { verbose: false });
+                html5QrCodeRef.current = new Html5Qrcode("reader", { formatsToSupport, verbose: false });
 
                 const qrScannerConfig = {
-                    fps: 25,
+                    fps: 30,
+                    qrbox: (w: number, h: number) => {
+                        const minDim = Math.min(w, h);
+                        return { width: Math.floor(minDim * 0.8), height: Math.floor(minDim * 0.8) };
+                    },
                     aspectRatio: 1.0,
-                    experimentalFeatures: {
-                        useBarCodeDetectorIfSupported: true
+                    videoConstraints: {
+                        facingMode: "environment",
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     }
                 };
 
                 let isHandled = false;
                 const onScanSuccess = async (decodedText: string) => {
-                    if (isHandled) return;
+                    if (isHandled || !decodedText) return;
                     isHandled = true;
                     playBeep();
                     await stopCamera();
@@ -363,7 +367,6 @@ export default function DepoYonetimi() {
                     handleScanSuccess(decodedText);
                 };
 
-                // Single direct camera start call (no double getUserMedia pre-flight!)
                 try {
                     await html5QrCodeRef.current.start(
                         { facingMode: "environment" },
@@ -389,29 +392,6 @@ export default function DepoYonetimi() {
                         );
                     } else {
                         throw new Error(`Kamera İzni veya Cihazı Bulunamadı: ${e.name || e.message || String(e)}`);
-                    }
-                }
-
-                // Native C++ BarcodeDetector loop for 50ms sub-second hardware decoding
-                if (typeof window !== "undefined" && "BarcodeDetector" in window) {
-                    try {
-                        const barcodeDetector = new (window as any).BarcodeDetector({ formats: ["qr_code", "code_128", "code_39"] });
-                        detectorIntervalRef.current = setInterval(async () => {
-                            if (isHandled) return;
-                            const videoEl = document.querySelector("#reader video") as HTMLVideoElement;
-                            if (videoEl && videoEl.readyState >= 2) {
-                                try {
-                                    const barcodes = await barcodeDetector.detect(videoEl);
-                                    if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-                                        onScanSuccess(barcodes[0].rawValue);
-                                    }
-                                } catch (err) {
-                                    // Ignore
-                                }
-                            }
-                        }, 60);
-                    } catch (err) {
-                        console.warn("Native BarcodeDetector init error", err);
                     }
                 }
 
@@ -536,14 +516,17 @@ export default function DepoYonetimi() {
 
     const handleScanSuccess = (text: string) => {
         const parsed = parseQRString(text);
-        const searchCode = parsed.cleanCode.toLowerCase();
+        const candidateTokens = Array.from(new Set([
+            text.trim(),
+            parsed.cleanCode.trim(),
+            parsed.raw.trim(),
+            ...(parsed.possibleTokens || []).map(t => t.trim())
+        ])).filter(Boolean).map(t => t.toLowerCase());
 
         // 1. Önce Ekipman olarak ara
         const item = inventory.find(i => 
-            i.id?.toLowerCase() === searchCode ||
-            i.barcode?.toLowerCase() === searchCode ||
-            i.serialNumber?.toLowerCase() === searchCode ||
-            i.id?.toLowerCase() === text.toLowerCase()
+            candidateTokens.includes(i.id?.toLowerCase()) ||
+            candidateTokens.includes(i.name?.toLowerCase())
         );
 
         if (item) {
@@ -553,14 +536,14 @@ export default function DepoYonetimi() {
 
         // 2. Ekipman bulunamadıysa Üye / Personel Kartı olarak ara
         let member = membersData.find(m => 
-            m.id?.toLowerCase() === searchCode ||
-            m.kimlikToken?.toLowerCase() === searchCode ||
-            m.email?.toLowerCase() === searchCode ||
-            m.id?.toLowerCase() === text.toLowerCase()
+            candidateTokens.includes(m.id?.toLowerCase()) ||
+            candidateTokens.includes(m.kimlikToken?.toLowerCase()) ||
+            candidateTokens.includes(m.email?.toLowerCase()) ||
+            candidateTokens.includes(m.fullName?.toLowerCase())
         );
 
-        if (!member && !isNaN(parseInt(searchCode))) {
-            const index = parseInt(searchCode) - 1;
+        if (!member && !isNaN(parseInt(parsed.cleanCode))) {
+            const index = parseInt(parsed.cleanCode) - 1;
             if (index >= 0 && index < membersData.length) {
                 member = membersData[index];
             }
@@ -580,19 +563,23 @@ export default function DepoYonetimi() {
     };
 
     const assignItemToMember = async (itemId: string, memberId: string, memberName: string) => {
-        if(confirm(`"${selectedItem.name}" adlı ekipman "${memberName}" isimli personele zimmetlenecektir. Onaylıyor musunuz?`)) {
-            const updated = { ...selectedItem, status: "Zimmetli", assignedToId: memberId };
+        const updated = { ...selectedItem, status: "Zimmetli", assignedToId: memberId };
+        try {
             const res = await fetch("/api/inventory", {
                 method: "PUT",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updated)
             });
-            if(res.ok) {
-                setInventory(inventory.map(i => i.id === itemId ? updated : i));
+            if (res.ok) {
+                setInventory(prev => prev.map(i => i.id === itemId ? updated : i));
                 setSelectedItem(updated);
-                alert("Zimmet işlemi başarıyla gerçekleşti.");
+                alert(`✅ "${selectedItem.name}" adlı ekipman "${memberName}" isimli personele başarıyla zimmetlendi!`);
             } else {
-                alert("Zimmet işlemi sunucuda başarısız oldu.");
+                const errData = await res.json().catch(() => ({}));
+                alert(`Zimmet işlemi başarısız: ${errData.error || "Sunucu hatası"}`);
             }
+        } catch (err: any) {
+            alert("Bağlantı hatası: " + (err?.message || String(err)));
         }
     };
 
