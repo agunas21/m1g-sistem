@@ -294,8 +294,8 @@ async function setSessionCookie(token: string) {
     (await cookies()).set('m1g_session', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',   // CSRF koruması
-        maxAge: 8 * 60 * 60,  // 8 saat
+        sameSite: 'lax',      // Mobil PWA ve çapraz gezinti için kesintisiz oturum
+        maxAge: 30 * 24 * 60 * 60, // 30 gün
         path: '/',
     });
 }

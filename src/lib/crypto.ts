@@ -14,7 +14,7 @@ const ENCRYPTION_KEY = crypto
 // ── JWT ─────────────────────────────────────────────────────────────────────
 
 // 🔐 Custom JWT Implementation (No external dependencies)
-export function signJwt(payload: any, expiresInSeconds = 86400) {
+export function signJwt(payload: any, expiresInSeconds = 2592000) {
     const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
     const exp = Math.floor(Date.now() / 1000) + expiresInSeconds;
     const body = Buffer.from(JSON.stringify({ ...payload, exp })).toString('base64url');

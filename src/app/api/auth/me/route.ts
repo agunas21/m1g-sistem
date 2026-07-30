@@ -22,6 +22,14 @@ export async function GET() {
 
         const res = NextResponse.json({ authenticated: true, user });
         res.headers.set('Cache-Control', 'private, no-store, must-revalidate');
+        // Oturumu yenile / uzat (30 gün)
+        (await cookies()).set('m1g_session', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 30 * 24 * 60 * 60,
+            path: '/',
+        });
         return res;
     } catch (e) {
         const res = NextResponse.json({ authenticated: false, error: 'Sunucu hatası' }, { status: 500 });

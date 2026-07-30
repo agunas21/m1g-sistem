@@ -32,6 +32,25 @@ export function useLocationTracker({
   const lastLocationRef = useRef<GeolocationPosition | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const pendingRef = useRef<any[]>([]); // Offline kuyruk
+  const wakeLockRef = useRef<any>(null);
+
+  // Ekranın uykuya geçmesini önle (Wake Lock API)
+  const requestWakeLock = useCallback(async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+      }
+    } catch { }
+  }, []);
+
+  const releaseWakeLock = useCallback(async () => {
+    try {
+      if (wakeLockRef.current) {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    } catch { }
+  }, []);
 
   // Batarya seviyesini al
   const getBattery = useCallback(async (): Promise<number | null> => {
@@ -44,7 +63,7 @@ export function useLocationTracker({
     }
   }, []);
 
-  // Konumu Supabase Realtime üzerinden yayınla (ve opsiyonel olarak DB'ye yaz)
+  // Konumu Supabase Realtime üzerinden yayınla + REST Fallback ile veritabanına kaydet
   const sendLocation = useCallback(async (position: GeolocationPosition) => {
     const battery = await getBattery();
     const { coords, timestamp } = position;
@@ -59,12 +78,19 @@ export function useLocationTracker({
     };
 
     try {
-      // Sadece Realtime üzerinden "broadcast" yapıyoruz, DB kaydı şimdilik Admin tarafında tutulacak veya PWA sadece yayın yapacak
+      // 1. Supabase Realtime Broadcast
       await supabase.channel('operations-channel').send({
         type: 'broadcast',
         event: 'location_update',
         payload
       });
+
+      // 2. HTTP REST Telemetry Fallback (Audit & Log Persistence)
+      fetch('/api/settings/operations/telemetry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => { });
 
       setState(s => ({
         ...s,
@@ -100,6 +126,7 @@ export function useLocationTracker({
       return;
     }
 
+    requestWakeLock();
     setState(s => ({ ...s, isTracking: true, error: null }));
 
     // Anlık konum izle (değişince tetiklenir)
@@ -124,10 +151,11 @@ export function useLocationTracker({
         sendLocation(lastLocationRef.current);
       }
     }, intervalMs);
-  }, [intervalMs, highAccuracy, sendLocation]);
+  }, [intervalMs, highAccuracy, sendLocation, requestWakeLock]);
 
   // Takibi durdur
   const stopTracking = useCallback(() => {
+    releaseWakeLock();
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -137,11 +165,12 @@ export function useLocationTracker({
       intervalRef.current = null;
     }
     setState(s => ({ ...s, isTracking: false }));
-  }, []);
+  }, [releaseWakeLock]);
 
   // Sayfa kapanırken durdur
   useEffect(() => {
     return () => {
+      releaseWakeLock();
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
@@ -149,7 +178,8 @@ export function useLocationTracker({
         clearInterval(intervalRef.current);
       }
     };
-  }, []);
+  }, [releaseWakeLock]);
 
   return { ...state, startTracking, stopTracking };
 }
+
