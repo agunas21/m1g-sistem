@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Package, ScanBarcode, Check, UserCheck, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Package, ScanBarcode, Check, UserCheck, RefreshCw, ShieldCheck, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import dynamic from "next/dynamic";
 import { parseQRString } from '@/lib/qrResolver';
 
 const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
 
-export default function LojistikZimmetPanel({ operationId, membersData, isAdmin, isActive = true, mounted, currentUser }: any) {
+export default function LojistikZimmetPanel({ operationId, membersData = [], isAdmin, isActive = true, mounted, currentUser }: any) {
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [qrCode, setQrCode] = useState("");
     const [selectedMember, setSelectedMember] = useState("");
@@ -40,38 +40,43 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
         }
     }, [operationId, isAdmin, currentUser]);
 
-    const handleAssign = async (action: 'assign' | 'unassign') => {
-        if (!qrCode) {
+    const executeAssign = async (action: 'assign' | 'unassign', targetQr?: string, targetMember?: string) => {
+        const activeQr = targetQr || qrCode;
+        const activeMember = targetMember || selectedMember;
+
+        if (!activeQr) {
             toast.error("Önce QR Kod okutun veya girin");
             return;
         }
 
-        if (action === 'assign' && !selectedMember) {
-            toast.error("Zimmet yapılacak personeli seçin");
+        if (action === 'assign' && !activeMember) {
+            toast.error("Lütfen zimmetlenecek personeli seçin");
             return;
         }
 
         setIsProcessing(true);
+        const toastId = toast.loading(action === 'assign' ? "Ekipman zimmetleniyor..." : "Ekipman iade alınıyor...");
+
         try {
             const res = await fetch('/api/settings/operations/equipment-assign', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    qrCode,
+                    qrCode: activeQr,
                     operationId,
-                    memberId: action === 'assign' ? selectedMember : undefined,
+                    memberId: action === 'assign' ? activeMember : undefined,
                     action
                 })
             });
             const data = await res.json();
             if (res.ok) {
-                toast.success(action === 'assign' ? "Ekipman başarıyla zimmetlendi" : "Ekipman depoya iade alındı");
+                toast.success(data.message || (action === 'assign' ? "Ekipman başarıyla zimmetlendi!" : "Ekipman depoya iade alındı!"), { id: toastId });
                 setQrCode("");
             } else {
-                toast.error(data.error || "İşlem sırasında hata oluştu");
+                toast.error(data.error || "İşlem sırasında hata oluştu", { id: toastId });
             }
-        } catch (error) {
-            toast.error("İşlem sırasında hata oluştu");
+        } catch (error: any) {
+            toast.error("Bağlantı hatası: " + (error?.message || String(error)), { id: toastId });
         } finally {
             setIsProcessing(false);
         }
@@ -89,16 +94,26 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
         );
 
         if (matchedMember || parsed.type === "MEMBER") {
-            if (matchedMember) {
-                setSelectedMember(matchedMember.id);
-                toast.success(`Personel Algılandı: ${matchedMember.fullName}`);
-            } else {
-                setSelectedMember(parsed.cleanCode);
+            const memberIdToSet = matchedMember ? matchedMember.id : parsed.cleanCode;
+            setSelectedMember(memberIdToSet);
+            const memberName = matchedMember ? matchedMember.fullName : parsed.cleanCode;
+            toast.success(`Personel Algılandı: ${memberName}`);
+
+            // If an equipment QR was already scanned in the input, auto-trigger assign!
+            if (qrCode) {
+                executeAssign('assign', qrCode, memberIdToSet);
             }
         } else {
             // Equipment QR detected
-            setQrCode(parsed.cleanCode);
-            toast.success(`Ekipman kodu algılandı: ${parsed.cleanCode}`);
+            const equipmentCode = parsed.cleanCode || result;
+            setQrCode(equipmentCode);
+
+            // If a member is ALREADY selected, AUTO-EXECUTE ZİMMET!
+            if (selectedMember) {
+                executeAssign('assign', equipmentCode, selectedMember);
+            } else {
+                toast.info(`📦 Ekipman Algılandı: ${equipmentCode}. Şimdi zimmetlenecek personeli seçin!`);
+            }
         }
 
         setIsScannerOpen(false);
@@ -158,17 +173,17 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
                     <div className="flex gap-2 pt-2 border-t border-white/5">
                         <button 
                             disabled={isProcessing}
-                            onClick={() => handleAssign('unassign')}
+                            onClick={() => executeAssign('unassign')}
                             className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                            <RefreshCw size={14} /> İade Al (Düş)
+                            {isProcessing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} İade Al (Düş)
                         </button>
                         <button 
                             disabled={isProcessing}
-                            onClick={() => handleAssign('assign')}
+                            onClick={() => executeAssign('assign')}
                             className="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-colors shadow-[0_0_20px_rgba(245,158,11,0.3)] disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                            <Check size={14} /> QR İle Zimmetle
+                            {isProcessing ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} QR İle Zimmetle
                         </button>
                     </div>
                 ) : (

@@ -9,10 +9,9 @@ export async function POST(req: Request) {
         const cookieStore = await cookies();
         const token = cookieStore.get('m1g_session')?.value;
         const payload = token ? verifyJwt(token) : null;
-        if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (!payload) return NextResponse.json({ error: 'Yetkisiz erişim. Lütfen giriş yapın.' }, { status: 401 });
 
         const body = await req.json();
-        // action: 'assign' veya 'unassign'
         const { qrCode, operationId, memberId, action } = body;
 
         if (!qrCode || !operationId) {
@@ -21,33 +20,53 @@ export async function POST(req: Request) {
 
         // Clean & parse QR code format (handles full URLs, JSON, raw tokens)
         const parsed = parseQRString(qrCode);
-        const searchTerms = Array.from(new Set([qrCode, parsed.cleanCode, parsed.raw])).filter(Boolean);
+        const searchTerms = Array.from(new Set([
+            qrCode.trim(),
+            parsed.cleanCode.trim(),
+            parsed.raw.trim(),
+            ...parsed.possibleTokens.map(t => t.trim())
+        ])).filter(Boolean);
 
-        // Envanteri çoklu alanla bul (id, barcode, serialNumber)
+        // Case-insensitive variants
+        const allTerms = Array.from(new Set([
+            ...searchTerms,
+            ...searchTerms.map(t => t.toLowerCase()),
+            ...searchTerms.map(t => t.toUpperCase())
+        ]));
+
+        // Envanteri sadece Prisma schema'da var olan 'id' alanı üzerinden ara
         const inventory = await prisma.inventoryItem.findFirst({
             where: {
-                OR: [
-                    { id: { in: searchTerms } },
-                    { barcode: { in: searchTerms } },
-                    { serialNumber: { in: searchTerms } }
-                ]
+                id: { in: allTerms }
             }
         });
 
         if (!inventory) {
-            return NextResponse.json({ 
-                error: `Bu QR koda/Barkoda ait ekipman bulunamadı. (Okunan Kod: ${parsed.cleanCode})` 
-            }, { status: 404 });
+            // Fallback: contains search for ID
+            const fallbackInventory = await prisma.inventoryItem.findFirst({
+                where: {
+                    OR: allTerms.map(term => ({ id: { contains: term, mode: 'insensitive' as const } }))
+                }
+            });
+
+            if (!fallbackInventory) {
+                return NextResponse.json({ 
+                    error: `Ekipman sistemde bulunamadı. (Okunan QR/Kod: ${parsed.cleanCode})` 
+                }, { status: 404 });
+            }
         }
+
+        const targetInventory = inventory || (await prisma.inventoryItem.findFirst({
+            where: { OR: allTerms.map(term => ({ id: { contains: term, mode: 'insensitive' as const } })) }
+        }))!;
 
         if (action === 'assign') {
             if (!memberId) {
-                 return NextResponse.json({ error: 'Zimmetlenecek personel seçilmelidir' }, { status: 400 });
+                return NextResponse.json({ error: 'Zimmetlenecek personel seçilmelidir' }, { status: 400 });
             }
 
-            // Clean & normalize memberId if provided
             const memberParsed = parseQRString(memberId);
-            const memberSearchTerms = Array.from(new Set([memberId, memberParsed.cleanCode])).filter(Boolean);
+            const memberSearchTerms = Array.from(new Set([memberId, memberParsed.cleanCode, ...memberParsed.possibleTokens])).filter(Boolean);
 
             const targetMember = await prisma.member.findFirst({
                 where: {
@@ -60,12 +79,13 @@ export async function POST(req: Request) {
             });
 
             const targetMemberId = targetMember ? targetMember.id : memberId;
+            const targetMemberName = targetMember ? targetMember.fullName : 'Personel';
 
-            // Ekipmanı zimmetle ve operasyon bilgisini güncelle
+            // Ekipmanı zimmetle ve operasyon durumunu güncelle
             const updated = await prisma.inventoryItem.update({
-                where: { id: inventory.id },
+                where: { id: targetInventory.id },
                 data: {
-                    status: 'Sahada', // Operasyonda kullanılıyor
+                    status: 'Sahada',
                     assignedToId: targetMemberId
                 },
                 include: {
@@ -73,48 +93,65 @@ export async function POST(req: Request) {
                 }
             });
 
-            await prisma.auditLog.create({
-                data: {
-                    actorId: payload?.id || 'system',
-                    actorName: payload?.fullName || 'System',
-                    action: 'inventory.operation_assign',
-                    detail: `${payload?.fullName || 'System'}, ${inventory.name} (${inventory.id}) isimli ekipmanı ${updated.assignedTo?.fullName || targetMemberId} personeline zimmetledi.`,
-                    entityType: 'InventoryItem',
-                    entityId: inventory.id,
-                    operationId: operationId
-                }
+            try {
+                await prisma.auditLog.create({
+                    data: {
+                        actorId: payload?.id || 'system',
+                        actorName: payload?.fullName || 'System',
+                        action: 'inventory.operation_assign',
+                        detail: `${payload?.fullName || 'System'}, ${targetInventory.name} (${targetInventory.id}) ekipmanını ${targetMemberName} personeline zimmetledi.`,
+                        entityType: 'InventoryItem',
+                        entityId: targetInventory.id,
+                        operationId: operationId
+                    }
+                });
+            } catch (e) {
+                console.warn('Audit log creation failed, continuing', e);
+            }
+
+            return NextResponse.json({ 
+                success: true, 
+                message: `${targetInventory.name} (${targetInventory.id}) -> ${targetMemberName} personeline zimmetlendi.`,
+                item: updated 
             });
 
-            return NextResponse.json({ success: true, item: updated });
-
         } else if (action === 'unassign') {
-            // Zimmeti kaldır
+            // Zimmeti kaldır ve depoya iade al
             const updated = await prisma.inventoryItem.update({
-                where: { id: inventory.id },
+                where: { id: targetInventory.id },
                 data: {
                     status: 'Depoda',
                     assignedToId: null
                 }
             });
 
-            await prisma.auditLog.create({
-                data: {
-                    actorId: payload?.id || 'system',
-                    actorName: payload?.fullName || 'System',
-                    action: 'inventory.operation_unassign',
-                    detail: `${payload?.fullName || 'System'}, ${inventory.name} (${inventory.id}) isimli ekipmanı zimmetten düşürerek depoya iade aldı.`,
-                    entityType: 'InventoryItem',
-                    entityId: inventory.id,
-                    operationId: operationId
-                }
-            });
+            try {
+                await prisma.auditLog.create({
+                    data: {
+                        actorId: payload?.id || 'system',
+                        actorName: payload?.fullName || 'System',
+                        action: 'inventory.operation_unassign',
+                        detail: `${payload?.fullName || 'System'}, ${targetInventory.name} (${targetInventory.id}) ekipmanını depoya iade aldı.`,
+                        entityType: 'InventoryItem',
+                        entityId: targetInventory.id,
+                        operationId: operationId
+                    }
+                });
+            } catch (e) {
+                console.warn('Audit log creation failed, continuing', e);
+            }
 
-            return NextResponse.json({ success: true, item: updated });
+            return NextResponse.json({ 
+                success: true, 
+                message: `${targetInventory.name} (${targetInventory.id}) depoya iade alındı.`,
+                item: updated 
+            });
         }
 
         return NextResponse.json({ error: 'Geçersiz işlem tipi' }, { status: 400 });
 
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Equipment assign error:', error);
+        return NextResponse.json({ error: error.message || 'Zimmetleme sırasında sunucu hatası oluştu' }, { status: 500 });
     }
 }
