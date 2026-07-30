@@ -12,6 +12,8 @@ import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { parseQRString } from "@/lib/qrResolver";
+import { scanQRFromFile } from "@/lib/qrImageScanner";
 
 const getExpirationWarning = (dateStr: string) => {
     if (!dateStr) return null;
@@ -342,13 +344,18 @@ export default function DepoYonetimi() {
                     supported.PDF_417,
                 ].filter(Boolean);
                 
-                html5QrCodeRef.current = new Html5Qrcode("reader", { formatsToSupport: formatsToSupport.length ? formatsToSupport : undefined, verbose: false });
+                html5QrCodeRef.current = new Html5Qrcode("reader", {
+                    verbose: false,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
+                });
 
                 const qrScannerConfig = {
                     fps: 30,
                     qrbox: (w: number, h: number) => {
                         const minDim = Math.min(w, h);
-                        return { width: Math.floor(minDim * 0.8), height: Math.floor(minDim * 0.8) };
+                        return { width: Math.floor(minDim * 0.95), height: Math.floor(minDim * 0.95) };
                     },
                     aspectRatio: 1.0,
                     videoConstraints: {
@@ -412,16 +419,14 @@ export default function DepoYonetimi() {
             if (e.target.files && e.target.files.length > 0) {
                 const file = e.target.files[0];
                 try {
-                    if (!html5QrCodeRef.current) {
-                        html5QrCodeRef.current = new Html5Qrcode("reader");
-                    }
-                    const decodedText = await html5QrCodeRef.current.scanFile(file, true);
                     await stopCamera();
+                    const decodedText = await scanQRFromFile(file);
+                    playBeep();
                     setIsScannerOpen(false);
                     handleScanSuccess(decodedText);
-                } catch (err) {
+                } catch (err: any) {
                     console.error("File scan failed", err);
-                    alert("QR kod okunamadı. Lütfen daha net bir fotoğraf çekin veya elle kod yazın.");
+                    alert(err?.message || "QR kod okunamadı. Lütfen daha net bir fotoğraf çekin veya elle kod yazın.");
                 }
             }
         };

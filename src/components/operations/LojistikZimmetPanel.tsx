@@ -3,6 +3,7 @@ import { Package, ScanBarcode, Check, UserCheck, RefreshCw, ShieldCheck, Loader2
 import { toast } from 'react-hot-toast';
 import dynamic from "next/dynamic";
 import { parseQRString } from '@/lib/qrResolver';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 const QRScannerModal = dynamic(() => import("@/components/admin/operasyonlar/QRScannerModal"), { ssr: false });
 
@@ -156,17 +157,18 @@ export default function LojistikZimmetPanel({ operationId, membersData = [], isA
                 </div>
 
                 <div className="flex gap-2 items-center">
-                    <UserCheck size={16} className="text-neutral-500" />
-                    <select 
-                        value={selectedMember}
-                        onChange={(e) => setSelectedMember(e.target.value)}
-                        className="flex-1 bg-black/50 border border-white/10 rounded-xl p-3 text-white text-xs outline-none focus:border-amber-500 font-medium"
-                    >
-                        <option value="">Zimmetlenecek Personeli Seç (veya Kimlik QR tara)...</option>
-                        {membersData.map((m: any) => (
-                            <option key={m.id} value={m.id}>{m.fullName}</option>
-                        ))}
-                    </select>
+                    <UserCheck size={16} className="text-neutral-500 shrink-0" />
+                    <div className="flex-1">
+                        <SearchableSelect 
+                            value={selectedMember}
+                            onChange={(val) => setSelectedMember(val)}
+                            options={membersData.map((m: any) => ({
+                                value: m.id,
+                                label: `${m.fullName} ${m.telsizKodu ? `(${m.telsizKodu})` : ''}`
+                            }))}
+                            placeholder="Zimmetlenecek Personel Ara/Seç (veya Kimlik QR tara)..."
+                        />
+                    </div>
                 </div>
 
                 {canOperate ? (
