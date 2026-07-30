@@ -80,11 +80,12 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
     const handleScannerResult = (result: string) => {
         const parsed = parseQRString(result);
         
-        // Smart Resolver: Check if scanned QR is a Member Card QR
+        // Smart Resolver: Check if scanned QR matches any member token or ID
         const matchedMember = membersData.find((m: any) => 
             m.id === parsed.cleanCode || 
             m.kimlikToken === parsed.cleanCode || 
-            m.email === parsed.cleanCode
+            m.email === parsed.cleanCode ||
+            parsed.possibleTokens.some(tok => tok === m.id || tok === m.kimlikToken || tok === m.email)
         );
 
         if (matchedMember || parsed.type === "MEMBER") {
@@ -97,7 +98,7 @@ export default function LojistikZimmetPanel({ operationId, membersData, isAdmin,
         } else {
             // Equipment QR detected
             setQrCode(parsed.cleanCode);
-            toast.success(`Ekipman kütüphane kodu algılandı: ${parsed.cleanCode}`);
+            toast.success(`Ekipman kodu algılandı: ${parsed.cleanCode}`);
         }
 
         setIsScannerOpen(false);
