@@ -878,23 +878,89 @@ export default function DepoYonetimi() {
                                 <h3 className="text-white font-bold text-sm mb-4 uppercase tracking-widest flex items-center justify-center gap-2">
                                     <QrCode size={16} className="text-red-500"/> Ekipman Karekodu
                                 </h3>
-                                {/* QR Etiket - İndirilebilir */}
-                                <div
-                                    id={`qr-label-${selectedItem.id}`}
-                                    className="bg-white p-4 rounded-xl inline-block shadow-lg mx-auto mb-2"
-                                    style={{ textAlign: "center" }}
-                                >
-                                    <QRCodeSVG value={`https://m1g.org.tr/eq/${selectedItem.id}`} size={120} level="H" />
-                                    <div style={{ marginTop: "8px", fontFamily: "sans-serif", fontSize: "11px", color: "#111", fontWeight: "800", letterSpacing: "0.03em", maxWidth: "128px", wordBreak: "break-word" }}>
-                                        {selectedItem.name}
-                                    </div>
-                                    <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#555", marginTop: "3px", letterSpacing: "0.1em" }}>
-                                        {selectedItem.id}
-                                    </div>
-                                    <div style={{ fontSize: "8px", color: "#888", marginTop: "2px", letterSpacing: "0.05em" }}>
-                                        M1G ARAMA KURTARMA DERNEĞİ
-                                    </div>
-                                </div>
+                                {/* QR Etiket - İndirilebilir (Kırmızı vs Yeşil Renkli Fiziksel Baskı Tasarımı) */}
+                                {(() => {
+                                    const isKamp = selectedItem.equipmentCategory === "KAMP";
+                                    const themeColor = isKamp ? "#16A34A" : "#DC2626";
+                                    const categoryTitle = isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA";
+
+                                    return (
+                                        <div
+                                            id={`qr-label-${selectedItem.id}`}
+                                            style={{
+                                                backgroundColor: "#ffffff",
+                                                border: `3.5px solid ${themeColor}`,
+                                                borderRadius: "14px",
+                                                overflow: "hidden",
+                                                width: "165px",
+                                                textAlign: "center",
+                                                boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
+                                                fontFamily: "sans-serif",
+                                                boxSizing: "border-box",
+                                                margin: "0 auto 8px auto",
+                                                padding: "0"
+                                            }}
+                                        >
+                                            {/* Üst Renkli Banner / Header */}
+                                            <div style={{
+                                                backgroundColor: themeColor,
+                                                color: "#ffffff",
+                                                padding: "6px 4px",
+                                                fontSize: "10px",
+                                                fontWeight: "900",
+                                                letterSpacing: "0.05em",
+                                                textTransform: "uppercase",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                gap: "4px"
+                                            }}>
+                                                {categoryTitle}
+                                            </div>
+
+                                            {/* İç İçerik */}
+                                            <div style={{ padding: "10px 8px 8px 8px", backgroundColor: "#ffffff" }}>
+                                                <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>
+                                                    <QRCodeSVG value={`https://m1g.org.tr/eq/${selectedItem.id}`} size={110} level="H" />
+                                                </div>
+
+                                                <div style={{
+                                                    fontSize: "11px",
+                                                    color: "#111111",
+                                                    fontWeight: "800",
+                                                    letterSpacing: "0.02em",
+                                                    wordBreak: "break-word",
+                                                    lineHeight: "1.2",
+                                                    marginBottom: "4px"
+                                                }}>
+                                                    {selectedItem.name}
+                                                </div>
+
+                                                <div style={{
+                                                    fontFamily: "monospace",
+                                                    fontSize: "9px",
+                                                    color: themeColor,
+                                                    fontWeight: "700",
+                                                    letterSpacing: "0.08em",
+                                                    marginBottom: "4px"
+                                                }}>
+                                                    {selectedItem.id}
+                                                </div>
+
+                                                <div style={{
+                                                    fontSize: "7.5px",
+                                                    color: "#666666",
+                                                    fontWeight: "700",
+                                                    letterSpacing: "0.05em",
+                                                    borderTop: `1px solid ${isKamp ? "#DCFCE7" : "#FEE2E2"}`,
+                                                    paddingTop: "4px"
+                                                }}>
+                                                    M1G ARAMA KURTARMA DERNEĞİ
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                                 <p className="text-neutral-500 text-[10px] uppercase tracking-widest mb-4">Etiket yazıcısından çıkartıp malzemenin üzerine yapıştırın.</p>
                                 <button
                                     onClick={async () => {
@@ -1176,9 +1242,9 @@ export default function DepoYonetimi() {
                                 )}
                             </div>
 
-                            {/* Ayarlanabilir Sınıflandırma ve Tarihler */}
+                            {/* Ayarlanabilir Sınıflandırma, Etiket Rengi ve Tarihler */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-[#020617] border border-white/5 p-4 rounded-xl relative group col-span-2">
+                                <div className="bg-[#020617] border border-white/5 p-4 rounded-xl relative group">
                                     <div className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold mb-1 flex items-center justify-between">
                                         <span>Sınıflandırma</span>
                                         <PenTool size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1190,6 +1256,22 @@ export default function DepoYonetimi() {
                                     >
                                         <option value="Demirbaş" className="bg-black">Demirbaş (Saha Ekipmanı)</option>
                                         <option value="KKE" className="bg-black">KKE (Kişisel Koruyucu)</option>
+                                    </select>
+                                </div>
+                                <div className="bg-[#020617] border border-white/5 p-4 rounded-xl relative group">
+                                    <div className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold mb-1 flex items-center justify-between">
+                                        <span>Etiket Kategori & Rengi</span>
+                                        <PenTool size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                    <select 
+                                        value={selectedItem.equipmentCategory || "ARAMA_KURTARMA"}
+                                        onChange={(e) => updateItemDetails('equipmentCategory', e.target.value)}
+                                        className={`w-full bg-transparent font-bold focus:outline-none appearance-none cursor-pointer ${
+                                            (selectedItem.equipmentCategory || "ARAMA_KURTARMA") === "KAMP" ? "text-emerald-400" : "text-red-400"
+                                        }`}
+                                    >
+                                        <option value="ARAMA_KURTARMA" className="bg-black text-red-400">🔴 Arama Kurtarma (Kırmızı Etiket)</option>
+                                        <option value="KAMP" className="bg-black text-emerald-400">🟢 Kamp & Barınma (Yeşil Etiket)</option>
                                     </select>
                                 </div>
                                 <div className="bg-white/5 border border-white/5 p-4 rounded-xl relative group">
@@ -1343,7 +1425,7 @@ export default function DepoYonetimi() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] uppercase font-bold tracking-widest text-neutral-400 mb-1">Kategori</label>
+                                <label className="block text-[10px] uppercase font-bold tracking-widest text-neutral-400 mb-1">Alt Kategori</label>
                                 <select 
                                     value={newItemCategory}
                                     onChange={(e) => setNewItemCategory(e.target.value)}
@@ -1354,6 +1436,17 @@ export default function DepoYonetimi() {
                                     <option value="Yönetim">Yönetim Donanımı</option>
                                     <option value="Lojistik">Lojistik & Kamp Malzemeleri</option>
                                     <option value="Diğer">Diğer Araç Gereç</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] uppercase font-bold tracking-widest text-neutral-400 mb-1">Fiziksel Etiket Rengi & Ekipman Sınıfı</label>
+                                <select 
+                                    value={newItemEquipmentCategory}
+                                    onChange={(e) => setNewItemEquipmentCategory(e.target.value as "ARAMA_KURTARMA" | "KAMP")}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors font-bold"
+                                >
+                                    <option value="ARAMA_KURTARMA" className="bg-black text-red-400">🔴 Arama Kurtarma (Kırmızı Karekod Etiketi)</option>
+                                    <option value="KAMP" className="bg-black text-emerald-400">🟢 Kamp & Barınma (Yeşil Karekod Etiketi)</option>
                                 </select>
                             </div>
                             <div className="flex items-center gap-3 py-1">
@@ -1483,25 +1576,88 @@ export default function DepoYonetimi() {
     return (
         <div className="space-y-8 pb-20 relative">
             <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
-                {inventory.map(item => (
-                    <div
-                        key={item.id}
-                        id={`hidden-qr-label-${item.id}`}
-                        className="bg-white p-4 rounded-xl inline-block shadow-lg mx-auto mb-2"
-                        style={{ textAlign: "center" }}
-                    >
-                        <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/eq/${item.id}`} size={120} level="H" />
-                        <div style={{ marginTop: "8px", fontFamily: "sans-serif", fontSize: "11px", color: "#111", fontWeight: "800", letterSpacing: "0.03em", maxWidth: "128px", wordBreak: "break-word" }}>
-                            {item.name}
+                {inventory.map(item => {
+                    const isKamp = item.equipmentCategory === "KAMP";
+                    const themeColor = isKamp ? "#16A34A" : "#DC2626";
+                    const categoryTitle = isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA";
+
+                    return (
+                        <div
+                            key={item.id}
+                            id={`hidden-qr-label-${item.id}`}
+                            style={{
+                                backgroundColor: "#ffffff",
+                                border: `3.5px solid ${themeColor}`,
+                                borderRadius: "14px",
+                                overflow: "hidden",
+                                width: "165px",
+                                textAlign: "center",
+                                boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
+                                fontFamily: "sans-serif",
+                                boxSizing: "border-box",
+                                marginBottom: "8px"
+                            }}
+                        >
+                            {/* Üst Renkli Banner / Header */}
+                            <div style={{
+                                backgroundColor: themeColor,
+                                color: "#ffffff",
+                                padding: "6px 4px",
+                                fontSize: "10px",
+                                fontWeight: "900",
+                                letterSpacing: "0.05em",
+                                textTransform: "uppercase",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px"
+                            }}>
+                                {categoryTitle}
+                            </div>
+
+                            {/* İç İçerik */}
+                            <div style={{ padding: "10px 8px 8px 8px", backgroundColor: "#ffffff" }}>
+                                <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>
+                                    <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/eq/${item.id}`} size={110} level="H" />
+                                </div>
+
+                                <div style={{
+                                    fontSize: "11px",
+                                    color: "#111111",
+                                    fontWeight: "800",
+                                    letterSpacing: "0.02em",
+                                    wordBreak: "break-word",
+                                    lineHeight: "1.2",
+                                    marginBottom: "4px"
+                                }}>
+                                    {item.name}
+                                </div>
+
+                                <div style={{
+                                    fontFamily: "monospace",
+                                    fontSize: "9px",
+                                    color: themeColor,
+                                    fontWeight: "700",
+                                    letterSpacing: "0.08em",
+                                    marginBottom: "4px"
+                                }}>
+                                    {item.id}
+                                </div>
+
+                                <div style={{
+                                    fontSize: "7.5px",
+                                    color: "#666666",
+                                    fontWeight: "700",
+                                    letterSpacing: "0.05em",
+                                    borderTop: `1px solid ${isKamp ? "#DCFCE7" : "#FEE2E2"}`,
+                                    paddingTop: "4px"
+                                }}>
+                                    M1G ARAMA KURTARMA DERNEĞİ
+                                </div>
+                            </div>
                         </div>
-                        <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#555", marginTop: "3px", letterSpacing: "0.1em" }}>
-                            {item.id}
-                        </div>
-                        <div style={{ fontSize: "8px", color: "#888", marginTop: "2px", letterSpacing: "0.05em" }}>
-                            M1G ARAMA KURTARMA DERNEĞİ
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
             <QRScanner />
             {renderGroupDrawer()}
