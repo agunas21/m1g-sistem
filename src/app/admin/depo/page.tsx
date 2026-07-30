@@ -6,7 +6,7 @@ import {
     Box, Wrench, PackageCheck, AlertTriangle, X, User, CheckCircle, QrCode, PenTool, Trash2, Edit2, Check, ChevronRight, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
@@ -330,18 +330,19 @@ export default function DepoYonetimi() {
                     return;
                 }
 
+                const supported = typeof Html5QrcodeSupportedFormats !== "undefined" ? Html5QrcodeSupportedFormats : {};
                 const formatsToSupport = [
-                    Html5QrcodeSupportedFormats.QR_CODE,
-                    Html5QrcodeSupportedFormats.DATA_MATRIX,
-                    Html5QrcodeSupportedFormats.AZTEC,
-                    Html5QrcodeSupportedFormats.CODE_128,
-                    Html5QrcodeSupportedFormats.CODE_39,
-                    Html5QrcodeSupportedFormats.EAN_13,
-                    Html5QrcodeSupportedFormats.UPC_A,
-                    Html5QrcodeSupportedFormats.PDF_417,
+                    supported.QR_CODE,
+                    supported.DATA_MATRIX,
+                    supported.AZTEC,
+                    supported.CODE_128,
+                    supported.CODE_39,
+                    supported.EAN_13,
+                    supported.UPC_A,
+                    supported.PDF_417,
                 ].filter(Boolean);
                 
-                html5QrCodeRef.current = new Html5Qrcode("reader", { formatsToSupport, verbose: false });
+                html5QrCodeRef.current = new Html5Qrcode("reader", { formatsToSupport: formatsToSupport.length ? formatsToSupport : undefined, verbose: false });
 
                 const qrScannerConfig = {
                     fps: 30,

@@ -91,19 +91,20 @@ export default function QRScannerModal({ isScannerOpen, setIsScannerOpen, onComm
             }
 
             // Universal format support for all QR/Barcode standards in the system
+            const supported = typeof Html5QrcodeSupportedFormats !== "undefined" ? Html5QrcodeSupportedFormats : {};
             const formatsToSupport = [
-                Html5QrcodeSupportedFormats.QR_CODE,
-                Html5QrcodeSupportedFormats.DATA_MATRIX,
-                Html5QrcodeSupportedFormats.AZTEC,
-                Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.CODE_39,
-                Html5QrcodeSupportedFormats.EAN_13,
-                Html5QrcodeSupportedFormats.UPC_A,
-                Html5QrcodeSupportedFormats.PDF_417,
+                supported.QR_CODE,
+                supported.DATA_MATRIX,
+                supported.AZTEC,
+                supported.CODE_128,
+                supported.CODE_39,
+                supported.EAN_13,
+                supported.UPC_A,
+                supported.PDF_417,
             ].filter(Boolean);
 
             html5QrCodeRef.current = new Html5Qrcode("reader", { 
-                formatsToSupport, 
+                formatsToSupport: formatsToSupport.length ? formatsToSupport : undefined, 
                 verbose: false 
             });
 
