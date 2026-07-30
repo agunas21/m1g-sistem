@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Menu, X, ShieldAlert, User, LogOut, Heart } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
@@ -15,14 +15,16 @@ export default function Navbar() {
     const pathname = usePathname();
 
     useEffect(() => {
-        fetch('')
+        let isMounted = true;
+        fetch('/api/settings/public')
             .then(res => res.ok ? res.json() : null)
             .then(data => {
-                if (data && data.siteLogo) {
+                if (isMounted && data && data.siteLogo) {
                     setLogo(data.siteLogo);
                 }
             })
             .catch(() => {});
+        return () => { isMounted = false; };
     }, []);
 
     if (pathname?.startsWith("/admin")) return null;
@@ -40,8 +42,6 @@ export default function Navbar() {
 
     return (
         <nav className="fixed w-full z-50 transition-all flex flex-col">
-
-
             {/* MAIN NAVBAR */}
             <div className="bg-background/80 backdrop-blur-md border-b border-white/10 shadow-sm w-full">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,6 +105,7 @@ export default function Navbar() {
                             <button
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                                 className="text-neutral-400 hover:text-white p-2"
+                                aria-label="Menü"
                             >
                                 {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
                             </button>
