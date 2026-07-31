@@ -54,12 +54,12 @@ export async function GET(
       runBackgroundKavkasCheck(operationId),
     ]);
 
-    const gaps = [
+    const gaps = Array.from(new Set([
       ...(chronology.gaps ?? []),
       ...(coverage.gaps ?? []),
       ...(personnel.gaps ?? []),
       ...(logistics.gaps ?? []),
-    ];
+    ]));
 
     const durationHours = operation.endTime 
       ? Number(((operation.endTime.getTime() - operation.startTime.getTime()) / (3600 * 1000)).toFixed(1))
@@ -89,7 +89,7 @@ export async function GET(
   }
 }
 
-// 1.1 Kronoloji (§1)
+// 1.1 Kronoloji (§1) - ADIM 2A Esnek Filtreleme
 async function buildChronologyData(operationId: string) {
   const events = await prisma.operationEvent.findMany({
     where: { operationId },
@@ -104,6 +104,12 @@ async function buildChronologyData(operationId: string) {
       criticalMoments: [], 
       gaps: ["Operasyon için hiç olay kaydı bulunamadı."] 
     };
+  }
+
+  const hasLegacySource = events.some(e => e.sourceType === "RADIO" || e.sourceType === "SYSTEM");
+  const gaps: string[] = [];
+  if (hasLegacySource) {
+    gaps.push("Bazı olay kayıtları eski formatta olduğundan kaynak tipi (GPS/Telefon/Telsiz) varsayılan değerle işlendi.");
   }
 
   return {
@@ -127,37 +133,46 @@ async function buildChronologyData(operationId: string) {
         type: e.type, 
         actorName: e.actor?.fullName ?? "Sistem" 
       })),
-    gaps: [],
+    gaps,
   };
 }
 
-// 1.2 Mekânsal Analiz / Alan Kapsama (§2)
+// 1.2 Mekânsal Analiz / Alan Kapsama (§2) - ADIM 2A Esnek Filtreleme
 async function buildCoverageData(operationId: string) {
+  // ADIM 2A: sourceType zorunlu filtre olmaktan çıkarıldı, lat/lng varlığı esas alındı
   const gpsEvents = await prisma.operationEvent.findMany({
     where: {
       operationId,
-      type: "LOCATION_UPDATE",
-      sourceType: { in: ["GPS", "PHONE"] },
-      confidence: { gte: 0.5 },
       lat: { not: null },
       lng: { not: null },
+      confidence: { gte: 0.3 }, // Eski kayıtlar için toleranslı eşik
     },
   });
 
+  const gaps: string[] = [];
+
   if (gpsEvents.length < 5) {
+    gaps.push("Alan kapsama hesaplaması için yetersiz GPS/Konum verisi (min. 5 nokta gerekli).");
     return { 
       status: "insufficient" as const, 
       heatmapGrid: [],
-      gaps: ["Alan kapsama hesaplaması için yetersiz GPS verisi (min. 5 nokta gerekli)."] 
+      gaps 
     };
+  }
+
+  const hasLegacySource = gpsEvents.some(e => e.sourceType === "RADIO" || e.sourceType === "SYSTEM");
+  if (hasLegacySource) {
+    gaps.push("Bazı konum verileri eski kayıt formatından geldiği için kaynak tipi (GPS/Telefon) kesin olarak ayırt edilemiyor.");
   }
 
   const heatmapGrid = aggregateHeatmapGrid(gpsEvents);
 
+  gaps.push("Operasyon sektör sınırı tanımlanmadığı için taranan alan yüzdesi hesaplanamıyor — sadece yoğunluk haritası gösteriliyor.");
+
   return {
     status: "no_boundary" as const,
     heatmapGrid,
-    gaps: ["Operasyon sektör sınırı tanımlanmadığı için taranan alan yüzdesi hesaplanamıyor — sadece yoğunluk haritası gösteriliyor."],
+    gaps,
   };
 }
 
@@ -173,19 +188,45 @@ function aggregateHeatmapGrid(events: { lat: number | null; lng: number | null }
   return Array.from(grid.values());
 }
 
-// 1.3 Personel Faaliyet (§3a)
+// 1.3 Personel Faaliyet (§3a) - ADIM 2B Çift Yönlü Birlestirme (RoleAssignment + Event Actors Fallback)
 async function buildPersonnelData(operationId: string) {
-  const members = await prisma.member.findMany({
+  // 1. Resmi rol ataması yapılmış personeller
+  const roleAssignedMembers = await prisma.member.findMany({
     where: { operationRoleAssignments: { some: { operationId } } },
-    select: { 
-      id: true, 
-      fullName: true, 
-      events: { where: { operationId }, orderBy: { timestamp: "asc" } } 
-    },
+    select: { id: true, fullName: true }
   });
 
-  if (members.length === 0) {
-    return { status: "empty" as const, personnel: [], gaps: ["Operasyona atanmış personel bulunamadı."] };
+  // 2. Rol ataması olmasa bile event kaydı olan aktörler (Eski operasyonlar için fallback)
+  const eventActors = await prisma.operationEvent.findMany({
+    where: { operationId, actorId: { not: null } },
+    distinct: ["actorId"],
+    select: { actorId: true, actor: { select: { id: true, fullName: true } } }
+  });
+
+  const mergedMemberIds = new Set<string>([
+    ...roleAssignedMembers.map(m => m.id),
+    ...eventActors.map(e => e.actorId!).filter(Boolean)
+  ]);
+
+  if (mergedMemberIds.size === 0) {
+    return { status: "empty" as const, personnel: [], gaps: ["Operasyona atanmış personel veya olay kaydı bulunamadı."] };
+  }
+
+  const members = await prisma.member.findMany({
+    where: { id: { in: Array.from(mergedMemberIds) } },
+    select: {
+      id: true,
+      fullName: true,
+      events: {
+        where: { operationId },
+        orderBy: { timestamp: "asc" }
+      }
+    }
+  });
+
+  const gaps: string[] = [];
+  if (roleAssignedMembers.length < members.length) {
+    gaps.push("Bazı personel, resmi rol ataması olmadan sadece olay kaydı üzerinden tespit edildi (eski operasyon verisi).");
   }
 
   return {
@@ -219,7 +260,7 @@ async function buildPersonnelData(operationId: string) {
         segments: buildActivitySegments(m.events),
       };
     }),
-    gaps: [],
+    gaps,
   };
 }
 
@@ -245,21 +286,39 @@ function buildActivitySegments(events: { timestamp: Date }[]) {
   return segments;
 }
 
-// 1.4 Lojistik & Araç (§3b)
+// 1.4 Lojistik & Araç (§3b) - ADIM 2A Esnek Araç Telemetri Filtreleme
 async function buildLogisticsData(operationId: string) {
-  const vehicleEvents = await prisma.operationEvent.findMany({
+  // Önce entityType = "VEHICLE" olan konum kayıtlarını ara
+  let vehicleEvents = await prisma.operationEvent.findMany({
     where: { 
       operationId, 
       entityType: "VEHICLE", 
-      type: "LOCATION_UPDATE", 
-      lat: { not: null }, 
-      confidence: { gte: 0.5 } 
+      lat: { not: null },
+      lng: { not: null },
+      confidence: { gte: 0.3 } 
     },
     orderBy: [{ entityId: "asc" }, { timestamp: "asc" }],
   });
 
+  // Fallback: entityType null ama entityId (araç ID) dolu olan konum güncellemeleri
   if (vehicleEvents.length === 0) {
-    return { status: "empty" as const, vehicles: [], gaps: ["Araç GPS verisi bulunamadı."] };
+    vehicleEvents = await prisma.operationEvent.findMany({
+      where: {
+        operationId,
+        entityId: { not: null },
+        lat: { not: null },
+        lng: { not: null },
+        type: { in: ["LOCATION_UPDATE", "VEHICLE_UPDATE", "TELEMETRY"] },
+        confidence: { gte: 0.3 }
+      },
+      orderBy: [{ entityId: "asc" }, { timestamp: "asc" }],
+    });
+  }
+
+  const gaps: string[] = [];
+
+  if (vehicleEvents.length === 0) {
+    return { status: "empty" as const, vehicles: [], gaps: ["Araç telemetri kaydı bulunamadı."] };
   }
 
   const grouped = new Map<string, typeof vehicleEvents>();
@@ -273,11 +332,13 @@ async function buildLogisticsData(operationId: string) {
     return { vehicleId, totalKm, discardedAnomalies, pointCount: events.length };
   });
 
+  gaps.push("Yakıt tüketimi kaydı sistemde tutulmuyor — bu metrik gösterilmiyor.");
+
   return { 
     status: "ready" as const, 
     vehicles, 
     fuelDataAvailable: false, 
-    gaps: ["Yakıt tüketimi kaydı sistemde tutulmuyor — bu metrik gösterilmiyor."] 
+    gaps 
   };
 }
 
