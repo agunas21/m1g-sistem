@@ -65,7 +65,9 @@ export default async function EquipmentDetailPage({ params }: PageProps) {
   }
 
   const isKamp = item.equipmentCategory === "KAMP";
-  const themeColor = item.isContainer ? "purple" : isKamp ? "emerald" : "red";
+  const themeBorder = isKamp ? "border-emerald-500/30 shadow-[0_0_40px_rgba(16,185,129,0.15)]" : "border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.15)]";
+  const themeBadge = isKamp ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-red-500/20 text-red-300 border-red-500/30";
+  const themeIcon = isKamp ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-red-500/20 text-red-400 border-red-500/30";
 
   const statusBadgeColor = 
     item.status === "Depoda" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
@@ -84,20 +86,12 @@ export default async function EquipmentDetailPage({ params }: PageProps) {
         </div>
 
         {/* MAIN CARD */}
-        <div className={`bg-[#050B14] border rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden ${
-          item.isContainer ? "border-purple-500/30 shadow-[0_0_40px_rgba(139,92,246,0.15)]" : "border-white/10"
-        }`}>
+        <div className={`bg-[#050B14] border rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden ${themeBorder}`}>
           
           {/* Header Banner */}
           <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
             <div className="flex items-center gap-4">
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg border ${
-                item.isContainer 
-                  ? "bg-purple-500/20 text-purple-400 border-purple-500/30" 
-                  : isKamp 
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
-                    : "bg-red-500/20 text-red-400 border-red-500/30"
-              }`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg border ${themeIcon}`}>
                 <Box size={28} />
               </div>
               <div>
@@ -107,8 +101,8 @@ export default async function EquipmentDetailPage({ params }: PageProps) {
                 <p className="text-xs font-mono text-neutral-400 mt-0.5">{item.id} • {item.category}</p>
                 <div className="flex items-center gap-2 mt-2">
                   {item.isContainer && (
-                    <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1">
-                      📦 KİT / KONTEYNER ({containerItemsData.length} Malzeme)
+                    <span className={`px-2.5 py-0.5 border text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1 ${themeBadge}`}>
+                      {isKamp ? "⛺ KAMP KİTİ" : "🚨 ARAMA KURTARMA KİTİ"} ({containerItemsData.length} Malzeme)
                     </span>
                   )}
                   <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest rounded-full border ${statusBadgeColor}`}>
@@ -139,12 +133,13 @@ export default async function EquipmentDetailPage({ params }: PageProps) {
 
           {/* KİT İÇERİĞİ — EĞER BU BİR KİT / KONTEYNER İSE */}
           {item.isContainer && (
-            <div className="bg-[#020617] border border-purple-500/20 rounded-2xl p-5 space-y-4">
+            <div className={`bg-[#020617] border ${isKamp ? "border-emerald-500/20" : "border-red-500/20"} rounded-2xl p-5 space-y-4`}>
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <h3 className="text-white font-extrabold text-sm uppercase tracking-widest flex items-center gap-2">
-                  <Box size={18} className="text-purple-400" /> Kit İçerisindeki Malzemeler
+                  <Box size={18} className={isKamp ? "text-emerald-400" : "text-red-400"} /> 
+                  {isKamp ? "⛺ Kamp Kiti İçerisindeki Malzemeler" : "🚨 Arama Kurtarma Kiti İçerisindeki Malzemeler"}
                 </h3>
-                <span className="bg-purple-500/20 text-purple-300 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-purple-500/30">
+                <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${themeBadge}`}>
                   {containerItemsData.length} ADET
                 </span>
               </div>

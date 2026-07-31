@@ -117,6 +117,22 @@ export async function PUT(req: NextRequest) {
     const existing = await prisma.inventoryItem.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'Malzeme bulunamadı.' }, { status: 404 })
 
+    // Kit Kategori Kısıtlaması: Arama Kurtarma Kitine SADECE Arama Kurtarma, Kamp Kitine SADECE Kamp malzemesi eklenebilir.
+    const kitCategory = updateData.equipmentCategory || existing.equipmentCategory || 'ARAMA_KURTARMA';
+    if (updateData.containerItems && Array.isArray(updateData.containerItems) && updateData.containerItems.length > 0) {
+        const subItems = await prisma.inventoryItem.findMany({
+            where: { id: { in: updateData.containerItems } },
+            select: { id: true, equipmentCategory: true, name: true }
+        });
+        const invalidSubItems = subItems.filter(item => (item.equipmentCategory || 'ARAMA_KURTARMA') !== kitCategory);
+        if (invalidSubItems.length > 0) {
+            const catLabel = kitCategory === 'KAMP' ? 'Kamp & Barınma' : 'Arama Kurtarma';
+            return NextResponse.json({ 
+                error: `Kategori Çakışması: Bu kit (${catLabel}) içerisine farklı kategorideki malzemeler (${invalidSubItems.map(i => i.name).join(', ')}) eklenemez.` 
+            }, { status: 400 });
+        }
+    }
+
     const updated = await prisma.inventoryItem.update({
         where: { id },
         data: updateData

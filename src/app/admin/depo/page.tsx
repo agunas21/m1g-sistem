@@ -1071,164 +1071,190 @@ export default function DepoYonetimi() {
                             </div>
 
                             {/* Kit İçeriği Yönetimi — Dinamik */}
-                            {selectedItem.isContainer ? (
-                                <div className="bg-[#020617] border border-purple-500/20 rounded-2xl p-5 space-y-4">
-                                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                                        <h3 className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                                            <Box size={16} className="text-purple-400"/> Kit İçeriği
-                                            <span className="bg-purple-500/20 text-purple-300 text-[9px] font-bold px-2 py-0.5 rounded-full border border-purple-500/20">
-                                                {(selectedItem.containerItems || []).length} malzeme
-                                            </span>
-                                        </h3>
-                                        <button
-                                            onClick={convertFromKit}
-                                            className="text-[9px] text-neutral-500 hover:text-red-400 font-bold uppercase tracking-wider transition-colors"
-                                            title="Bu kiti normal malzemeye dönüştür"
-                                        >
-                                            Kiti Dağıt
-                                        </button>
-                                    </div>
+                            {selectedItem.isContainer ? (() => {
+                                const isKitKamp = selectedItem.equipmentCategory === "KAMP";
+                                const kitThemeBorder = isKitKamp ? "border-emerald-500/30" : "border-red-500/30";
+                                const kitThemeText = isKitKamp ? "text-emerald-400" : "text-red-400";
+                                const kitThemeBadge = isKitKamp ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-red-500/20 text-red-300 border-red-500/30";
+                                const targetCategory = selectedItem.equipmentCategory || "ARAMA_KURTARMA";
 
-                                    {/* Mevcut Kit İçeriği */}
-                                    <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-                                        {(selectedItem.containerItems || []).map((rawId: any, idx: number) => {
-                                            const cId = normalizeId(rawId);
-                                            const subItem = inventory.find((i: any) => i.id === cId);
-                                            if (!subItem) return (
-                                                <div key={`missing-${cId}-${idx}`} className="flex justify-between items-center bg-red-500/5 p-2 rounded-lg border border-red-500/10 text-xs">
-                                                    <span className="text-red-400 font-mono">{cId} — Malzeme bulunamadı (silinmiş olabilir)</span>
-                                                    <button onClick={async () => {
-                                                        const updatedList = (selectedItem.containerItems || []).filter((id: string) => id !== cId);
-                                                        const updated = { ...selectedItem, containerItems: updatedList };
-                                                        await fetch("/api/inventory", { method: "PUT", body: JSON.stringify(updated) });
-                                                        setSelectedItem(updated);
-                                                        setInventory(inventory.map((i: any) => i.id === updated.id ? updated : i));
-                                                    }} className="text-red-400 hover:text-red-300 text-[9px] font-bold uppercase">Temizle</button>
-                                                </div>
-                                            );
-                                            return (
-                                                <div key={`item-${cId}-${idx}`} className="flex justify-between items-center bg-white/5 p-2.5 rounded-xl border border-white/5 text-xs group hover:border-purple-500/20 transition-colors">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                                            subItem.status === 'Depoda' ? 'bg-emerald-400' :
-                                                            subItem.status === 'Zimmetli' ? 'bg-blue-400' :
-                                                            subItem.status === 'Bakımda' ? 'bg-amber-400' : 'bg-red-400'
-                                                        }`} />
-                                                        <div>
-                                                            <span className="text-white font-semibold">{subItem.name}</span>
-                                                            <span className="text-[10px] text-neutral-500 font-mono block">{subItem.category} • <span className={`${
-                                                                subItem.status === 'Depoda' ? 'text-emerald-400' :
-                                                                subItem.status === 'Zimmetli' ? 'text-blue-400' : 'text-amber-400'
-                                                            } font-bold`}>{subItem.status}</span></span>
-                                                        </div>
+                                return (
+                                    <div className={`bg-[#020617] border ${kitThemeBorder} rounded-2xl p-5 space-y-4`}>
+                                        <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                                            <h3 className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+                                                <Box size={16} className={kitThemeText}/> {isKitKamp ? "⛺ Kamp Kiti İçeriği" : "🚨 Arama Kurtarma Kiti İçeriği"}
+                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${kitThemeBadge}`}>
+                                                    {(selectedItem.containerItems || []).length} malzeme
+                                                </span>
+                                            </h3>
+                                            <button
+                                                onClick={convertFromKit}
+                                                className="text-[9px] text-neutral-500 hover:text-red-400 font-bold uppercase tracking-wider transition-colors"
+                                                title="Bu kiti normal malzemeye dönüştür"
+                                            >
+                                                Kiti Dağıt
+                                            </button>
+                                        </div>
+
+                                        {/* Mevcut Kit İçeriği */}
+                                        <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                                            {(selectedItem.containerItems || []).map((rawId: any, idx: number) => {
+                                                const cId = normalizeId(rawId);
+                                                const subItem = inventory.find((i: any) => i.id === cId);
+                                                if (!subItem) return (
+                                                    <div key={`missing-${cId}-${idx}`} className="flex justify-between items-center bg-red-500/5 p-2 rounded-lg border border-red-500/10 text-xs">
+                                                        <span className="text-red-400 font-mono">{cId} — Malzeme bulunamadı (silinmiş olabilir)</span>
+                                                        <button onClick={async () => {
+                                                            const updatedList = (selectedItem.containerItems || []).filter((id: string) => id !== cId);
+                                                            const updated = { ...selectedItem, containerItems: updatedList };
+                                                            await fetch("/api/inventory", { method: "PUT", body: JSON.stringify(updated) });
+                                                            setSelectedItem(updated);
+                                                            setInventory(inventory.map((i: any) => i.id === updated.id ? updated : i));
+                                                        }} className="text-red-400 hover:text-red-300 text-[9px] font-bold uppercase">Temizle</button>
                                                     </div>
-                                                    <button
-                                                        onClick={async () => {
-                                                            const updatedList = (selectedItem.containerItems || [])
-                                                                .map(normalizeId)
-                                                                .filter((id: string) => id !== cId);
-                                                            const updatedItem = { ...selectedItem, containerItems: updatedList };
-                                                            const res = await fetch("/api/inventory", {
-                                                                method: "PUT",
-                                                                body: JSON.stringify(updatedItem)
-                                                            });
-                                                            if (res.ok) {
-                                                                setSelectedItem(updatedItem);
-                                                                setInventory(inventory.map((i: any) => i.id === updatedItem.id ? updatedItem : i));
-                                                            }
-                                                        }}
-                                                        className="text-[10px] text-neutral-600 hover:text-red-400 font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all px-2 py-1 hover:bg-red-500/10 rounded"
-                                                    >
-                                                        ✕ Çıkar
-                                                    </button>
-                                                </div>
-                                            );
-                                        })}
-                                        {(selectedItem.containerItems || []).length === 0 && (
-                                            <div className="text-center py-6">
-                                                <Box size={28} className="text-neutral-700 mx-auto mb-2" />
-                                                <p className="text-xs text-neutral-500 italic">Bu kit henüz boş. Aşağıdan malzeme ekleyin.</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Kite Malzeme / Kit Ekleme — Arama Filtreli */}
-                                    <div className="pt-3 border-t border-white/5 space-y-2">
-                                        <span className="text-[10px] text-purple-400 uppercase tracking-widest font-extrabold block flex items-center gap-1">
-                                            ＋ Kite Malzeme Ekle
-                                        </span>
-                                        {/* Arama Kutusu */}
-                                        <input
-                                            type="text"
-                                            placeholder="Malzeme adı veya barkod ara..."
-                                            value={kitItemSearch}
-                                            onChange={e => setKitItemSearch(e.target.value)}
-                                            className="w-full bg-black/50 border border-white/10 focus:border-purple-500/50 rounded-xl px-3 py-2 text-xs text-white outline-none transition-colors placeholder:text-neutral-600"
-                                        />
-                                        {/* Filtrelenmiş Malzeme Listesi */}
-                                        <div className="space-y-1 max-h-40 overflow-y-auto pr-1">
-                                            {inventory
-                                                .filter((i: any) =>
-                                                    i.id !== selectedItem.id &&
-                                                    !(selectedItem.containerItems || []).includes(i.id) &&
-                                                    (kitItemSearch === "" ||
-                                                        i.name.toLowerCase().includes(kitItemSearch.toLowerCase()) ||
-                                                        i.id.toLowerCase().includes(kitItemSearch.toLowerCase()) ||
-                                                        (i.category || "").toLowerCase().includes(kitItemSearch.toLowerCase())
-                                                    )
-                                                )
-                                                .slice(0, 15)
-                                                .map((i: any) => (
-                                                    <button
-                                                        key={i.id}
-                                                        onClick={async () => {
-                                                            const updatedList = [...(selectedItem.containerItems || []).map(normalizeId), i.id];
-                                                            const updatedItem = { ...selectedItem, containerItems: updatedList };
-                                                            const res = await fetch("/api/inventory", {
-                                                                method: "PUT",
-                                                                body: JSON.stringify(updatedItem)
-                                                            });
-                                                            if (res.ok) {
-                                                                setSelectedItem(updatedItem);
-                                                                setInventory(inventory.map((inv: any) => inv.id === updatedItem.id ? updatedItem : inv));
-                                                            }
-                                                        }}
-                                                        className="w-full flex items-center justify-between px-3 py-2 bg-white/3 hover:bg-purple-500/10 hover:border-purple-500/30 border border-transparent rounded-lg text-xs transition-all text-left group"
-                                                    >
-                                                        <div>
-                                                            <span className="text-white font-semibold group-hover:text-purple-200 transition-colors">{i.name}</span>
-                                                            <span className="text-neutral-600 font-mono block text-[9px]">{i.id} • {i.category} {i.isContainer ? '• Kit' : ''}</span>
+                                                );
+                                                return (
+                                                    <div key={`item-${cId}-${idx}`} className="flex justify-between items-center bg-white/5 p-2.5 rounded-xl border border-white/5 text-xs group hover:border-white/20 transition-colors">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                                                subItem.status === 'Depoda' ? 'bg-emerald-400' :
+                                                                subItem.status === 'Zimmetli' ? 'bg-blue-400' :
+                                                                subItem.status === 'Bakımda' ? 'bg-amber-400' : 'bg-red-400'
+                                                            }`} />
+                                                            <div>
+                                                                <span className="text-white font-semibold">{subItem.name}</span>
+                                                                <span className="text-[10px] text-neutral-500 font-mono block">{subItem.category} • <span className={`${
+                                                                    subItem.status === 'Depoda' ? 'text-emerald-400' :
+                                                                    subItem.status === 'Zimmetli' ? 'text-blue-400' : 'text-amber-400'
+                                                                } font-bold`}>{subItem.status}</span></span>
+                                                            </div>
                                                         </div>
-                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                                            i.status === 'Depoda' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                            i.status === 'Zimmetli' ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'
-                                                        }`}>{i.status}</span>
-                                                    </button>
-                                                ))
-                                            }
-                                            {inventory.filter((i: any) =>
-                                                i.id !== selectedItem.id &&
-                                                !(selectedItem.containerItems || []).includes(i.id) &&
-                                                (kitItemSearch === "" ||
-                                                    i.name.toLowerCase().includes(kitItemSearch.toLowerCase()) ||
-                                                    i.id.toLowerCase().includes(kitItemSearch.toLowerCase())
-                                                )
-                                            ).length === 0 && (
-                                                <p className="text-center text-xs text-neutral-600 py-3 italic">
-                                                    {kitItemSearch ? `"${kitItemSearch}" için sonuç bulunamadı` : 'Tüm malzemeler zaten bu kitte'}
-                                                </p>
+                                                        <button
+                                                            onClick={async () => {
+                                                                const updatedList = (selectedItem.containerItems || [])
+                                                                    .map(normalizeId)
+                                                                    .filter((id: string) => id !== cId);
+                                                                const updatedItem = { ...selectedItem, containerItems: updatedList };
+                                                                const res = await fetch("/api/inventory", {
+                                                                    method: "PUT",
+                                                                    headers: { "Content-Type": "application/json" },
+                                                                    body: JSON.stringify(updatedItem)
+                                                                });
+                                                                if (res.ok) {
+                                                                    setSelectedItem(updatedItem);
+                                                                    setInventory(inventory.map((i: any) => i.id === updatedItem.id ? updatedItem : i));
+                                                                }
+                                                            }}
+                                                            className="text-[10px] text-neutral-600 hover:text-red-400 font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all px-2 py-1 hover:bg-red-500/10 rounded"
+                                                        >
+                                                            ✕ Çıkar
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                            {(selectedItem.containerItems || []).length === 0 && (
+                                                <div className="text-center py-6">
+                                                    <Box size={28} className="text-neutral-700 mx-auto mb-2" />
+                                                    <p className="text-xs text-neutral-500 italic">Bu kit henüz boş. Aşağıdan {isKitKamp ? "Kamp" : "Arama Kurtarma"} malzemesi ekleyin.</p>
+                                                </div>
                                             )}
                                         </div>
+
+                                        {/* Kite Malzeme Ekleme — Kategori Kısıtlamalı */}
+                                        <div className="pt-3 border-t border-white/5 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className={`text-[10px] uppercase tracking-widest font-extrabold flex items-center gap-1 ${kitThemeText}`}>
+                                                    ＋ {isKitKamp ? "🟢 Kite Kamp Malzemesi Ekle" : "🔴 Kite Arama Kurtarma Malzemesi Ekle"}
+                                                </span>
+                                                <span className="text-[9px] text-neutral-500 font-mono">
+                                                    {isKitKamp ? "Sadece KAMP" : "Sadece ARAMA KURTARMA"}
+                                                </span>
+                                            </div>
+
+                                            {/* Arama Kutusu */}
+                                            <input
+                                                type="text"
+                                                placeholder={isKitKamp ? "Kamp malzemesi veya barkod ara..." : "Arama kurtarma malzemesi veya barkod ara..."}
+                                                value={kitItemSearch}
+                                                onChange={e => setKitItemSearch(e.target.value)}
+                                                className="w-full bg-black/50 border border-white/10 focus:border-white/30 rounded-xl px-3 py-2 text-xs text-white outline-none transition-colors placeholder:text-neutral-600"
+                                            />
+                                            {/* Filtrelenmiş Malzeme Listesi — KESİN KATEGORİ EŞLEŞMESİ */}
+                                            <div className="space-y-1 max-h-40 overflow-y-auto pr-1">
+                                                {inventory
+                                                    .filter((i: any) =>
+                                                        i.id !== selectedItem.id &&
+                                                        !(selectedItem.containerItems || []).includes(i.id) &&
+                                                        (i.equipmentCategory || "ARAMA_KURTARMA") === targetCategory &&
+                                                        (kitItemSearch === "" ||
+                                                            i.name.toLowerCase().includes(kitItemSearch.toLowerCase()) ||
+                                                            i.id.toLowerCase().includes(kitItemSearch.toLowerCase()) ||
+                                                            (i.category || "").toLowerCase().includes(kitItemSearch.toLowerCase())
+                                                        )
+                                                    )
+                                                    .slice(0, 15)
+                                                    .map((i: any) => (
+                                                        <button
+                                                            key={i.id}
+                                                            onClick={async () => {
+                                                                const updatedList = [...(selectedItem.containerItems || []).map(normalizeId), i.id];
+                                                                const updatedItem = { ...selectedItem, containerItems: updatedList };
+                                                                const res = await fetch("/api/inventory", {
+                                                                    method: "PUT",
+                                                                    headers: { "Content-Type": "application/json" },
+                                                                    body: JSON.stringify(updatedItem)
+                                                                });
+                                                                if (res.ok) {
+                                                                    setSelectedItem(updatedItem);
+                                                                    setInventory(inventory.map((inv: any) => inv.id === updatedItem.id ? updatedItem : inv));
+                                                                }
+                                                            }}
+                                                            className={`w-full flex items-center justify-between px-3 py-2 bg-white/3 border border-transparent rounded-lg text-xs transition-all text-left group ${
+                                                                isKitKamp ? "hover:bg-emerald-500/10 hover:border-emerald-500/30" : "hover:bg-red-500/10 hover:border-red-500/30"
+                                                            }`}
+                                                        >
+                                                            <div>
+                                                                <span className="text-white font-semibold group-hover:text-white transition-colors">{i.name}</span>
+                                                                <span className="text-neutral-500 font-mono block text-[9px]">{i.id} • {i.category}</span>
+                                                            </div>
+                                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                                                i.status === 'Depoda' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                                i.status === 'Zimmetli' ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'
+                                                            }`}>{i.status}</span>
+                                                        </button>
+                                                    ))
+                                                }
+                                                {inventory.filter((i: any) =>
+                                                    i.id !== selectedItem.id &&
+                                                    !(selectedItem.containerItems || []).includes(i.id) &&
+                                                    (i.equipmentCategory || "ARAMA_KURTARMA") === targetCategory &&
+                                                    (kitItemSearch === "" ||
+                                                        i.name.toLowerCase().includes(kitItemSearch.toLowerCase()) ||
+                                                        i.id.toLowerCase().includes(kitItemSearch.toLowerCase())
+                                                    )
+                                                ).length === 0 && (
+                                                    <p className="text-center text-xs text-neutral-500 py-3 italic">
+                                                        {kitItemSearch 
+                                                            ? `"${kitItemSearch}" için uygun ${isKitKamp ? "Kamp" : "Arama Kurtarma"} malzemesi bulunamadı` 
+                                                            : `Eklenebilecek ${isKitKamp ? "Kamp & Barınma" : "Arama Kurtarma"} malzemesi yok`}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            ) : (
+                                );
+                            })() : (
                                 /* Normal malzeme — Kit'e dönüştür butonu */
                                 <div className="bg-white/3 border border-dashed border-white/10 rounded-2xl p-4 text-center">
                                     <Box size={22} className="text-neutral-600 mx-auto mb-2" />
                                     <p className="text-xs text-neutral-500 mb-3">Bu malzeme bir Kit/Konteyner değil.</p>
                                     <button
                                         onClick={convertToKit}
-                                        className="px-4 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                                            selectedItem.equipmentCategory === "KAMP"
+                                            ? "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400 hover:text-emerald-300"
+                                            : "bg-red-500/10 hover:bg-red-500/20 border-red-500/20 text-red-400 hover:text-red-300"
+                                        }`}
                                     >
                                         📦 Kit / Konteyner'e Dönüştür
                                     </button>
