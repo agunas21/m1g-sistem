@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { apiRequest } from '@/lib/api/apiClient';
 
 interface TrackerOptions {
   memberId: string;
   intervalMs?: number;      // Kaç ms'de bir gönderilsin (default: 5000 = 5sn)
-  highAccuracy?: boolean;   // Yüksek GPS doğruluğu (batarya etkiler)
+  highAccuracy?: boolean;   // Yüksek GPS doğruluğu
 }
 
 interface LocationState {
@@ -13,7 +14,11 @@ interface LocationState {
   accuracy: number | null;
   error: string | null;
   battery: number | null;
+  queuedPointsCount: number;
+  discardedIOSPointsCount: number;
 }
+
+const IOS_MAX_TTL_HOURS = 6;
 
 export function useLocationTracker({
   memberId,
@@ -25,7 +30,9 @@ export function useLocationTracker({
     lastSent: null,
     accuracy: null,
     error: null,
-    battery: null
+    battery: null,
+    queuedPointsCount: 0,
+    discardedIOSPointsCount: 0
   });
   
   const watchIdRef = useRef<number | null>(null);
@@ -52,7 +59,6 @@ export function useLocationTracker({
     } catch { }
   }, []);
 
-  // Batarya seviyesini al
   const getBattery = useCallback(async (): Promise<number | null> => {
     try {
       // @ts-ignore
@@ -63,7 +69,86 @@ export function useLocationTracker({
     }
   }, []);
 
-  // Konumu Supabase Realtime üzerinden yayınla + REST Fallback ile veritabanına kaydet
+  // Android için Background Sync kaydı
+  const registerAndroidBackgroundSync = useCallback(async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        if ('sync' in reg) {
+          // @ts-ignore
+          await reg.sync.register('location-sync');
+        }
+      }
+    } catch { }
+  }, []);
+
+  // iOS 6 saatlik TTL temizliği ve kuyruk boşaltma
+  const flushLocationQueue = useCallback(async () => {
+    if (pendingRef.current.length === 0) return;
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const now = Date.now();
+    const cutoffMs = now - (IOS_MAX_TTL_HOURS * 3600 * 1000);
+
+    let validPoints: any[] = [];
+    let discardedCount = 0;
+
+    if (isIOS) {
+      for (const p of pendingRef.current) {
+        if (p.timestamp && p.timestamp < cutoffMs) {
+          discardedCount++;
+        } else {
+          validPoints.push(p);
+        }
+      }
+    } else {
+      validPoints = [...pendingRef.current];
+    }
+
+    pendingRef.current = [];
+
+    for (const payload of validPoints) {
+      try {
+        await supabase.channel('operations-channel').send({
+          type: 'broadcast',
+          event: 'location_update',
+          payload
+        });
+        await apiRequest('/api/settings/operations/telemetry', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+      } catch {
+        // Yeniden kuyruğa at
+        pendingRef.current.push(payload);
+      }
+    }
+
+    setState(s => ({
+      ...s,
+      queuedPointsCount: pendingRef.current.length,
+      discardedIOSPointsCount: s.discardedIOSPointsCount + discardedCount
+    }));
+  }, []);
+
+  // Event Listeners for iOS (online + visibilitychange)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        flushLocationQueue();
+      }
+    };
+
+    window.addEventListener('online', flushLocationQueue);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('online', flushLocationQueue);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [flushLocationQueue]);
+
+  // Konumu gönder
   const sendLocation = useCallback(async (position: GeolocationPosition) => {
     const battery = await getBattery();
     const { coords, timestamp } = position;
@@ -78,48 +163,47 @@ export function useLocationTracker({
     };
 
     try {
-      // 1. Supabase Realtime Broadcast
-      await supabase.channel('operations-channel').send({
-        type: 'broadcast',
-        event: 'location_update',
-        payload
+      const res = await apiRequest('/api/settings/operations/telemetry', {
+        method: 'POST',
+        body: JSON.stringify(payload)
       });
 
-      // 2. HTTP REST Telemetry Fallback (Audit & Log Persistence)
-      fetch('/api/settings/operations/telemetry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(() => { });
+      if (res.status === 'ok') {
+        await supabase.channel('operations-channel').send({
+          type: 'broadcast',
+          event: 'location_update',
+          payload
+        });
 
-      setState(s => ({
-        ...s,
-        lastSent: new Date(),
-        accuracy: coords.accuracy,
-        battery,
-        error: null
-      }));
-      
-      // Bekleyen konumları gönder
-      if (pendingRef.current.length > 0) {
-        const pending = [...pendingRef.current];
-        pendingRef.current = [];
-        for (const p of pending) {
-          await supabase.channel('operations-channel').send({
-            type: 'broadcast',
-            event: 'location_update',
-            payload: p
-          });
-        }
+        setState(s => ({
+          ...s,
+          lastSent: new Date(),
+          accuracy: coords.accuracy,
+          battery,
+          error: null,
+          queuedPointsCount: pendingRef.current.length
+        }));
+
+        await flushLocationQueue();
+      } else if (res.status === 'queued_offline') {
+        pendingRef.current.push(payload);
+        setState(s => ({
+          ...s,
+          queuedPointsCount: pendingRef.current.length,
+          error: 'Bağlantı yok — GPS verisi kuyruğa alındı'
+        }));
+        await registerAndroidBackgroundSync();
       }
-    } catch (error) {
-       // Offline: kuyruğa ekle
+    } catch {
        pendingRef.current.push(payload);
-       setState(s => ({ ...s, error: 'Bağlantı yok, kuyruğa alındı' }));
+       setState(s => ({
+         ...s,
+         queuedPointsCount: pendingRef.current.length,
+         error: 'GPS verisi kuyruğa alındı'
+       }));
     }
-  }, [memberId, getBattery]);
+  }, [memberId, getBattery, flushLocationQueue, registerAndroidBackgroundSync]);
 
-  // Takibi başlat
   const startTracking = useCallback(() => {
     if (!navigator.geolocation) {
       setState(s => ({ ...s, error: 'GPS desteklenmiyor' }));
@@ -129,7 +213,6 @@ export function useLocationTracker({
     requestWakeLock();
     setState(s => ({ ...s, isTracking: true, error: null }));
 
-    // Anlık konum izle (değişince tetiklenir)
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         lastLocationRef.current = position;
@@ -145,7 +228,6 @@ export function useLocationTracker({
       }
     );
 
-    // Belirli aralıklarla gönder (batarya tasarrufu)
     intervalRef.current = setInterval(() => {
       if (lastLocationRef.current) {
         sendLocation(lastLocationRef.current);
@@ -153,7 +235,6 @@ export function useLocationTracker({
     }, intervalMs);
   }, [intervalMs, highAccuracy, sendLocation, requestWakeLock]);
 
-  // Takibi durdur
   const stopTracking = useCallback(() => {
     releaseWakeLock();
     if (watchIdRef.current !== null) {
@@ -167,7 +248,6 @@ export function useLocationTracker({
     setState(s => ({ ...s, isTracking: false }));
   }, [releaseWakeLock]);
 
-  // Sayfa kapanırken durdur
   useEffect(() => {
     return () => {
       releaseWakeLock();
@@ -180,6 +260,5 @@ export function useLocationTracker({
     };
   }, [releaseWakeLock]);
 
-  return { ...state, startTracking, stopTracking };
+  return { ...state, startTracking, stopTracking, flushLocationQueue };
 }
-

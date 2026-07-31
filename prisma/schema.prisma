@@ -63,9 +63,23 @@ model Member {
   operationVehicleAssignments OperationVehicleAssignment[]
   operationRoleAssignments    OperationRoleAssignment[]
   events                      OperationEvent[]             @relation("EventActor")
+  refreshTokens               RefreshToken[]
 
   @@index([email])
   @@index([status])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([memberId])
+  @@index([token])
 }
 
 // ─────────────────────────────────────────────
