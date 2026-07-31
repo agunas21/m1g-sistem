@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import QRCode from "qrcode";
 import { parseQRString } from "@/lib/qrResolver";
 import { scanQRFromFile } from "@/lib/qrImageScanner";
 
@@ -206,29 +207,102 @@ export default function DepoYonetimi() {
         }
     };
 
+    const generateQRCardCanvas = async (item: any): Promise<HTMLCanvasElement> => {
+        const htmlToImage = await import("html-to-image");
+        const isKamp = item.equipmentCategory === "KAMP";
+        const themeColor = isKamp ? "#16A34A" : "#DC2626";
+        const categoryTitle = isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA";
+
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://m1g.org.tr';
+        const qrUrl = `${origin}/eq/${item.id}`;
+        const qrDataUrl = await QRCode.toDataURL(qrUrl, {
+            width: 300,
+            margin: 1,
+            errorCorrectionLevel: 'H',
+            color: { dark: '#000000', light: '#ffffff' }
+        });
+
+        const tempWrapper = document.createElement("div");
+        tempWrapper.style.position = "fixed";
+        tempWrapper.style.left = "0px";
+        tempWrapper.style.top = "0px";
+        tempWrapper.style.zIndex = "-999999";
+        tempWrapper.style.opacity = "1";
+        tempWrapper.style.pointerEvents = "none";
+        tempWrapper.style.backgroundColor = "#ffffff";
+        tempWrapper.style.transform = "none";
+
+        const card = document.createElement("div");
+        card.style.width = "220px";
+        card.style.backgroundColor = "#ffffff";
+        card.style.border = `4px solid ${themeColor}`;
+        card.style.borderRadius = "16px";
+        card.style.overflow = "hidden";
+        card.style.textAlign = "center";
+        card.style.fontFamily = "system-ui, -apple-system, sans-serif";
+        card.style.boxSizing = "border-box";
+        card.style.padding = "0";
+        card.style.margin = "0";
+
+        card.innerHTML = `
+            <div style="background-color:${themeColor}; color:#ffffff; padding:8px 6px; font-size:11px; font-weight:900; letter-spacing:0.05em; text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:4px;">
+                ${categoryTitle}
+            </div>
+            <div style="padding:12px 10px 10px 10px; background-color:#ffffff;">
+                <div style="display:flex; justify-content:center; margin-bottom:8px;">
+                    <img src="${qrDataUrl}" style="width:140px; height:140px; display:block;" />
+                </div>
+                <div style="font-size:12px; color:#111111; font-weight:800; word-break:break-word; line-height:1.25; margin-bottom:4px;">
+                    ${item.name}
+                </div>
+                <div style="font-family:monospace, monospace; font-size:10px; color:${themeColor}; font-weight:700; letter-spacing:0.08em; margin-bottom:6px;">
+                    ${item.id}
+                </div>
+                <div style="font-size:8px; color:#666666; font-weight:700; letter-spacing:0.05em; border-top:1px solid ${isKamp ? "#DCFCE7" : "#FEE2E2"}; padding-top:5px;">
+                    M1G ARAMA KURTARMA DERNEĞİ
+                </div>
+            </div>
+        `;
+
+        tempWrapper.appendChild(card);
+        document.body.appendChild(tempWrapper);
+
+        await new Promise(r => setTimeout(r, 60));
+
+        const canvas = await htmlToImage.toCanvas(card, {
+            pixelRatio: 4,
+            backgroundColor: "#ffffff",
+            skipFonts: true,
+            width: 220,
+            height: card.offsetHeight
+        });
+
+        document.body.removeChild(tempWrapper);
+        return canvas;
+    };
+
     const exportToZip = async () => {
         if (selectedIds.length === 0) return;
         setExporting(true);
         try {
-            const htmlToImage = await import("html-to-image");
             const zip = new JSZip();
             const folder = zip.folder("QR_Kodlari");
             if (!folder) return;
 
             for (const id of selectedIds) {
-                const el = document.getElementById(`hidden-qr-label-${id}`);
-                if (!el) continue;
-                
-                const canvas = await htmlToImage.toCanvas(el, { pixelRatio: 4, backgroundColor: "#ffffff", skipFonts: true });
-                
+                const item = inventory.find(i => i.id === id);
+                if (!item) continue;
+
+                const canvas = await generateQRCardCanvas(item);
                 const pngData = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
-                folder.file(`QR_${id}.png`, pngData, { base64: true });
+                const safeName = (item.name || id).replace(/[^a-zA-Z0-9_\-]/g, "_");
+                folder.file(`M1G_QR_${safeName}_${id}.png`, pngData, { base64: true });
             }
 
             const content = await zip.generateAsync({ type: "blob" });
-            saveAs(content, "M1G_Depo_QR_Kodlari.zip");
+            saveAs(content, `M1G_Depo_QR_Kodlari_${new Date().toISOString().split('T')[0]}.zip`);
         } catch (error) {
-            console.error(error);
+            console.error("ZIP Export Error:", error);
             alert("Dışa aktarma başarısız oldu.");
         } finally {
             setExporting(false);
@@ -965,15 +1039,16 @@ export default function DepoYonetimi() {
                                 <button
                                     onClick={async () => {
                                         try {
-                                            const htmlToImage = await import("html-to-image");
-                                            const el = document.getElementById(`qr-label-${selectedItem.id}`);
-                                            if (!el) return;
-                                            const canvas = await htmlToImage.toCanvas(el, { pixelRatio: 4, backgroundColor: "#ffffff", skipFonts: true });
+                                            const canvas = await generateQRCardCanvas(selectedItem);
+                                            const safeName = (selectedItem.name || selectedItem.id).replace(/[^a-zA-Z0-9_\-]/g, "_");
                                             const link = document.createElement("a");
-                                            link.download = `M1G_QR_${selectedItem.id}.png`;
+                                            link.download = `M1G_QR_${safeName}_${selectedItem.id}.png`;
                                             link.href = canvas.toDataURL("image/png");
                                             link.click();
-                                        } catch { alert("İndirme başarısız."); }
+                                        } catch (e) {
+                                            console.error("Single QR Download Error:", e);
+                                            alert("İndirme başarısız.");
+                                        }
                                     }}
                                     className="w-full py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors"
                                 >
