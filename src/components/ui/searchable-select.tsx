@@ -11,11 +11,20 @@ interface Option {
 interface SearchableSelectProps {
     options: Option[];
     placeholder?: string;
-    onSelect: (value: string) => void;
+    onSelect?: (value: string) => void;
+    onChange?: (value: string) => void;
+    value?: string;
     className?: string;
 }
 
-export function SearchableSelect({ options, placeholder = "Seçiniz...", onSelect, className = "" }: SearchableSelectProps) {
+export function SearchableSelect({ 
+    options, 
+    placeholder = "Seçiniz...", 
+    onSelect, 
+    onChange, 
+    value, 
+    className = "" 
+}: SearchableSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -31,6 +40,16 @@ export function SearchableSelect({ options, placeholder = "Seçiniz...", onSelec
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [wrapperRef]);
+
+    const selectedOption = options.find(opt => opt.value === value);
+    const displayText = selectedOption ? selectedOption.label : placeholder;
+
+    const handleSelect = (val: string) => {
+        if (onSelect) onSelect(val);
+        if (onChange) onChange(val);
+        setIsOpen(false);
+        setSearchTerm("");
+    };
 
     const filteredOptions = options.filter(opt => 
         opt.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -50,7 +69,7 @@ export function SearchableSelect({ options, placeholder = "Seçiniz...", onSelec
                 className="bg-black border border-white/10 rounded p-1.5 text-[10px] text-white w-full cursor-pointer flex justify-between items-center"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <span className="text-neutral-400">{placeholder}</span>
+                <span className={selectedOption ? "text-white font-medium" : "text-neutral-400"}>{displayText}</span>
                 <ChevronDown size={12} className="text-neutral-500" />
             </div>
 
@@ -89,11 +108,7 @@ export function SearchableSelect({ options, placeholder = "Seçiniz...", onSelec
                                             <div 
                                                 key={opt.value}
                                                 className="p-2 text-[10px] text-white hover:bg-white/10 cursor-pointer transition-colors"
-                                                onClick={() => {
-                                                    onSelect(opt.value);
-                                                    setIsOpen(false);
-                                                    setSearchTerm("");
-                                                }}
+                                                onClick={() => handleSelect(opt.value)}
                                             >
                                                 {opt.label}
                                             </div>
