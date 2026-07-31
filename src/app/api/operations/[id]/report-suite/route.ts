@@ -288,7 +288,9 @@ function buildActivitySegments(events: { timestamp: Date }[]) {
 
 // 1.4 Lojistik & Araç (§3b) - ADIM 2A Esnek Araç Telemetri Filtreleme
 async function buildLogisticsData(operationId: string) {
-  // Önce entityType = "VEHICLE" olan konum kayıtlarını ara
+  const gaps: string[] = [];
+
+  // 1. Öncelikli sorgu: entityType = "VEHICLE" olan konum ve telemetri kayıtları
   let vehicleEvents = await prisma.operationEvent.findMany({
     where: { 
       operationId, 
@@ -300,31 +302,40 @@ async function buildLogisticsData(operationId: string) {
     orderBy: [{ entityId: "asc" }, { timestamp: "asc" }],
   });
 
-  // Fallback: entityType null ama entityId (araç ID) dolu olan konum güncellemeleri
+  let isFallbackUsed = false;
+
+  // 2. Fallback: entityType null/farklı ama entityId (araç ID) dolu veya konum tipi araç takibine uyan kayıtlar
   if (vehicleEvents.length === 0) {
     vehicleEvents = await prisma.operationEvent.findMany({
       where: {
         operationId,
-        entityId: { not: null },
         lat: { not: null },
         lng: { not: null },
-        type: { in: ["LOCATION_UPDATE", "VEHICLE_UPDATE", "TELEMETRY"] },
-        confidence: { gte: 0.3 }
+        confidence: { gte: 0.3 },
+        OR: [
+          { entityId: { not: null } },
+          { type: { in: ["LOCATION_UPDATE", "VEHICLE_UPDATE", "TELEMETRY"] } }
+        ]
       },
       orderBy: [{ entityId: "asc" }, { timestamp: "asc" }],
     });
+    if (vehicleEvents.length > 0) {
+      isFallbackUsed = true;
+    }
   }
 
-  const gaps: string[] = [];
-
   if (vehicleEvents.length === 0) {
-    return { status: "empty" as const, vehicles: [], gaps: ["Araç telemetri kaydı bulunamadı."] };
+    return { status: "empty" as const, vehicles: [], gaps: ["Araç telemetri/konum kaydı bulunamadı."] };
+  }
+
+  if (isFallbackUsed) {
+    gaps.push("Araç verileri doğrudan 'VEHICLE' etiketi yerine konum kayıtları fallback sorgusuyla eşleştirildi (eski kayıt formatı).");
   }
 
   const grouped = new Map<string, typeof vehicleEvents>();
   for (const e of vehicleEvents) {
-    if (!e.entityId) continue;
-    grouped.set(e.entityId, [...(grouped.get(e.entityId) ?? []), e]);
+    const key = e.entityId || "BILINMEYEN_ARAC";
+    grouped.set(key, [...(grouped.get(key) ?? []), e]);
   }
 
   const vehicles = Array.from(grouped.entries()).map(([vehicleId, events]) => {
