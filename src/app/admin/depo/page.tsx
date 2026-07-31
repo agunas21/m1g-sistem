@@ -210,8 +210,11 @@ export default function DepoYonetimi() {
     const generateQRCardCanvas = async (item: any): Promise<HTMLCanvasElement> => {
         const htmlToImage = await import("html-to-image");
         const isKamp = item.equipmentCategory === "KAMP";
-        const themeColor = isKamp ? "#16A34A" : "#DC2626";
-        const categoryTitle = isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA";
+        const isKit = item.isContainer === true;
+        const themeColor = isKit ? "#8B5CF6" : (isKamp ? "#16A34A" : "#DC2626");
+        const categoryTitle = isKit 
+            ? `📦 KİT / SET KONTEYNERİ`
+            : (isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA");
 
         const origin = typeof window !== 'undefined' ? window.location.origin : 'https://m1g.org.tr';
         const qrUrl = `${origin}/eq/${item.id}`;
@@ -613,6 +616,10 @@ export default function DepoYonetimi() {
 
         if (item) {
             setSelectedItem(item);
+            if (item.isContainer) {
+                const subCount = (item.containerItems || []).length;
+                alert(`📦 KİT / KONTEYNER KAREKODU OKUNDU!\n\nKit Adı: ${item.name}\nKit ID: ${item.id}\nİçerik: ${subCount} adet ekipman tanımlı.\n\nKit detayları ve malzeme listesi açıldı.`);
+            }
             return;
         }
 
@@ -668,15 +675,19 @@ export default function DepoYonetimi() {
     // Mevcut bir malzemeyi Kit/Konteyner'e dönüştür
     const convertToKit = async () => {
         if (!selectedItem) return;
-        if (!confirm(`"${selectedItem.name}" malzemesini bir Kit/Konteyner'e dönüştürmek istiyor musunuz? Bu işlem geri alınabilir.`)) return;
+        if (!confirm(`"${selectedItem.name}" malzemesini bir Kit/Konteyner'e dönüştürmek istiyor musunuz?\n\nDönüştürüldüğünde bu kite özel Mor Temalı Kit QR Kodu atanır ve içine malzeme eklenebilir.`)) return;
         const updatedItem = { ...selectedItem, isContainer: true, containerItems: selectedItem.containerItems || [] };
         const res = await fetch("/api/inventory", {
             method: "PUT",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedItem)
         });
         if (res.ok) {
             setSelectedItem(updatedItem);
             setInventory(inventory.map(i => i.id === updatedItem.id ? updatedItem : i));
+            alert(`✅ "${selectedItem.name}" başarıyla Kit/Konteyner'e dönüştürüldü!\n\nBu Kite özel Mor Temalı KİT QR Kodu atandı. Çekmeceden "QR Etiketi İndir" butonundan etiketi basıp kit kutusuna yapıştırabilirsiniz.`);
+        } else {
+            alert("Dönüştürme başarısız.");
         }
     };
 
@@ -955,8 +966,11 @@ export default function DepoYonetimi() {
                                 {/* QR Etiket - İndirilebilir (Kırmızı vs Yeşil Renkli Fiziksel Baskı Tasarımı) */}
                                 {(() => {
                                     const isKamp = selectedItem.equipmentCategory === "KAMP";
-                                    const themeColor = isKamp ? "#16A34A" : "#DC2626";
-                                    const categoryTitle = isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA";
+                                    const isKit = selectedItem.isContainer === true;
+                                    const themeColor = isKit ? "#8B5CF6" : (isKamp ? "#16A34A" : "#DC2626");
+                                    const categoryTitle = isKit 
+                                        ? `📦 KİT / SET KONTEYNERİ`
+                                        : (isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA");
 
                                     return (
                                         <div
