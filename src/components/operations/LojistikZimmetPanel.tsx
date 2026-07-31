@@ -113,7 +113,7 @@ export default function LojistikZimmetPanel({ operationId, membersData = [], isA
             if (selectedMember) {
                 executeAssign('assign', equipmentCode, selectedMember);
             } else {
-                toast.info(`📦 Ekipman Algılandı: ${equipmentCode}. Şimdi zimmetlenecek personeli seçin!`);
+                toast(`📦 Ekipman Algılandı: ${equipmentCode}. Şimdi zimmetlenecek personeli seçin!`);
             }
         }
 

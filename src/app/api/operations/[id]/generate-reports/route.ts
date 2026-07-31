@@ -98,7 +98,7 @@ export async function POST(
           totalEventsAnalyzed: eventCount,
           operationDurationHours: 0,
         },
-        timeline: relevantEvents.map(e => ({ time: e.timestamp, type: e.type, actor: e.actorName })),
+        timeline: relevantEvents.map(e => ({ time: e.timestamp, type: e.type, actor: (e as any).actorName ?? e.actorId ?? 'Sistem' })),
         gaps: []
       };
 

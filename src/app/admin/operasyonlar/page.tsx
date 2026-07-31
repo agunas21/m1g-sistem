@@ -24,6 +24,7 @@ import MissionLedgerPanel from "@/components/operations/MissionLedgerPanel";
 import SlashCommandConsole from "@/components/operations/SlashCommandConsole";
 import AfadComplianceWidget from "@/components/operations/AfadComplianceWidget";
 import FieldMovementReportPanel from "@/components/operations/reports/FieldMovementReportPanel";
+import ReportSuiteViewer from "@/components/operations/reports/ReportSuiteViewer";
 
 const ReportExportModal = dynamic(() => import("@/components/operations/reports/ReportExportModal"), { ssr: false });
 
@@ -1712,6 +1713,7 @@ export default function Operasyonlar() {
                                 <VehiclePlanPanel operationId={selectedOp.id} membersData={membersData} isAdmin={isAdmin} isActive={['Aktif', 'Hazırlık'].includes(selectedOp.status)} />
                                 <RoleOrganizationPanel operationId={selectedOp.id} membersData={membersData} isAdmin={isAdmin} isActive={['Aktif', 'Hazırlık'].includes(selectedOp.status)} />
                                 <FieldMovementReportPanel operationId={selectedOp.id} />
+                                <ReportSuiteViewer operationId={selectedOp.id} operationName={selectedOp.name} />
                             </div>
 
                             {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
