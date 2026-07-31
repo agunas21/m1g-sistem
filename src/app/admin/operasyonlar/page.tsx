@@ -23,6 +23,7 @@ import LojistikZimmetPanel from "@/components/operations/LojistikZimmetPanel";
 import MissionLedgerPanel from "@/components/operations/MissionLedgerPanel";
 import SlashCommandConsole from "@/components/operations/SlashCommandConsole";
 import AfadComplianceWidget from "@/components/operations/AfadComplianceWidget";
+import FieldMovementReportPanel from "@/components/operations/reports/FieldMovementReportPanel";
 
 const ReportExportModal = dynamic(() => import("@/components/operations/reports/ReportExportModal"), { ssr: false });
 
@@ -1706,10 +1707,11 @@ export default function Operasyonlar() {
                                 </div>
                             )}
 
-                            {/* ARAÇ VE GÖREV ŞEMASI (NEW MODULES) */}
+                            {/* ARAÇ, GÖREV ŞEMASI VE HAREKET RAPORU */}
                             <div className="space-y-6 mb-6">
                                 <VehiclePlanPanel operationId={selectedOp.id} membersData={membersData} isAdmin={isAdmin} isActive={['Aktif', 'Hazırlık'].includes(selectedOp.status)} />
                                 <RoleOrganizationPanel operationId={selectedOp.id} membersData={membersData} isAdmin={isAdmin} isActive={['Aktif', 'Hazırlık'].includes(selectedOp.status)} />
+                                <FieldMovementReportPanel operationId={selectedOp.id} />
                             </div>
 
                             {/* CORE SECTION - TEAMS REGISTRY AND BASE CAMP POOL */}
