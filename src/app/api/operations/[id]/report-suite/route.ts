@@ -1,0 +1,301 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { runBackgroundKavkasCheck, KavkasFlag } from '@/lib/kavkas/backgroundCheck';
+
+const IDLE_THRESHOLD_MINUTES = 30;
+const MAX_VEHICLE_SPEED_MPS = 33; // ~120 km/h
+
+export interface ReportEnvelope {
+  ozet: {
+    operationType: string;
+    durationHours: number;
+    totalPersonnel: number;
+    outcome: string | null;
+  };
+  chronology: any;
+  coverage: any;
+  personnel: any;
+  logistics: any;
+  kararAnalizi: any[];
+  sonucVeDersler: string | null;
+  kavkasFlags: KavkasFlag[];
+  gaps: string[];
+}
+
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: operationId } = await params;
+
+    const operation = await prisma.operation.findUnique({
+      where: { id: operationId },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        startTime: true,
+        endTime: true,
+        location: true,
+        description: true
+      }
+    });
+
+    if (!operation) {
+      return NextResponse.json({ error: "Operasyon bulunamadı" }, { status: 404 });
+    }
+
+    const [chronology, coverage, personnel, logistics, kavkasFlags] = await Promise.all([
+      buildChronologyData(operationId),
+      buildCoverageData(operationId),
+      buildPersonnelData(operationId),
+      buildLogisticsData(operationId),
+      runBackgroundKavkasCheck(operationId),
+    ]);
+
+    const gaps = [
+      ...(chronology.gaps ?? []),
+      ...(coverage.gaps ?? []),
+      ...(personnel.gaps ?? []),
+      ...(logistics.gaps ?? []),
+    ];
+
+    const durationHours = operation.endTime 
+      ? Number(((operation.endTime.getTime() - operation.startTime.getTime()) / (3600 * 1000)).toFixed(1))
+      : Number(((Date.now() - operation.startTime.getTime()) / (3600 * 1000)).toFixed(1));
+
+    const response: ReportEnvelope = {
+      ozet: {
+        operationType: operation.type || "Genel Operasyon",
+        durationHours,
+        totalPersonnel: personnel.personnel?.length || 0,
+        outcome: operation.description || null
+      },
+      chronology,
+      coverage,
+      personnel,
+      logistics,
+      kararAnalizi: chronology.criticalMoments || [],
+      sonucVeDersler: null, // Operatörün manuel girdisi — asla otomatik doldurulmaz
+      kavkasFlags,
+      gaps
+    };
+
+    return NextResponse.json(response);
+  } catch (error: any) {
+    console.error('[REPORT_SUITE_GET_ERROR]', error);
+    return NextResponse.json({ error: error.message || 'Sunucu hatası' }, { status: 500 });
+  }
+}
+
+// 1.1 Kronoloji (§1)
+async function buildChronologyData(operationId: string) {
+  const events = await prisma.operationEvent.findMany({
+    where: { operationId },
+    orderBy: { timestamp: "asc" },
+    include: { actor: { select: { fullName: true } } },
+  });
+
+  if (events.length === 0) {
+    return { 
+      status: "empty" as const, 
+      timeline: [], 
+      criticalMoments: [], 
+      gaps: ["Operasyon için hiç olay kaydı bulunamadı."] 
+    };
+  }
+
+  return {
+    status: "ready" as const,
+    timeline: events.map((e) => ({
+      id: e.id,
+      timestamp: e.timestamp.toISOString(),
+      type: e.type,
+      actorName: e.actor?.fullName ?? "Sistem",
+      lat: e.lat,
+      lng: e.lng,
+      isDecision: e.isDecision,
+      sourceType: e.sourceType,
+      confidence: e.confidence,
+    })),
+    criticalMoments: events
+      .filter((e) => e.isDecision)
+      .map((e) => ({ 
+        id: e.id, 
+        timestamp: e.timestamp.toISOString(), 
+        type: e.type, 
+        actorName: e.actor?.fullName ?? "Sistem" 
+      })),
+    gaps: [],
+  };
+}
+
+// 1.2 Mekânsal Analiz / Alan Kapsama (§2)
+async function buildCoverageData(operationId: string) {
+  const gpsEvents = await prisma.operationEvent.findMany({
+    where: {
+      operationId,
+      type: "LOCATION_UPDATE",
+      sourceType: { in: ["GPS", "PHONE"] },
+      confidence: { gte: 0.5 },
+      lat: { not: null },
+      lng: { not: null },
+    },
+  });
+
+  if (gpsEvents.length < 5) {
+    return { 
+      status: "insufficient" as const, 
+      heatmapGrid: [],
+      gaps: ["Alan kapsama hesaplaması için yetersiz GPS verisi (min. 5 nokta gerekli)."] 
+    };
+  }
+
+  const heatmapGrid = aggregateHeatmapGrid(gpsEvents);
+
+  return {
+    status: "no_boundary" as const,
+    heatmapGrid,
+    gaps: ["Operasyon sektör sınırı tanımlanmadığı için taranan alan yüzdesi hesaplanamıyor — sadece yoğunluk haritası gösteriliyor."],
+  };
+}
+
+function aggregateHeatmapGrid(events: { lat: number | null; lng: number | null }[]) {
+  const grid = new Map<string, { lat: number; lng: number; weight: number }>();
+  for (const e of events) {
+    if (e.lat == null || e.lng == null) continue;
+    const key = `${e.lat.toFixed(4)}_${e.lng.toFixed(4)}`;
+    const existing = grid.get(key);
+    if (existing) existing.weight += 1;
+    else grid.set(key, { lat: Number(e.lat.toFixed(4)), lng: Number(e.lng.toFixed(4)), weight: 1 });
+  }
+  return Array.from(grid.values());
+}
+
+// 1.3 Personel Faaliyet (§3a)
+async function buildPersonnelData(operationId: string) {
+  const members = await prisma.member.findMany({
+    where: { operationRoleAssignments: { some: { operationId } } },
+    select: { 
+      id: true, 
+      fullName: true, 
+      events: { where: { operationId }, orderBy: { timestamp: "asc" } } 
+    },
+  });
+
+  if (members.length === 0) {
+    return { status: "empty" as const, personnel: [], gaps: ["Operasyona atanmış personel bulunamadı."] };
+  }
+
+  return {
+    status: "ready" as const,
+    personnel: members.map((m) => {
+      if (m.events.length === 0) {
+        return { 
+          memberId: m.id, 
+          fullName: m.fullName, 
+          status: "NO_DATA" as const,
+          activeDurationMin: 0,
+          idleDurationMin: 0,
+          taskCount: 0,
+          segments: []
+        };
+      }
+
+      const activeSeconds = calculateActiveTime(m.events);
+      const totalSpanSeconds = (m.events[m.events.length - 1].timestamp.getTime() - m.events[0].timestamp.getTime()) / 1000;
+      const idleSeconds = Math.max(0, totalSpanSeconds - activeSeconds);
+
+      return {
+        memberId: m.id,
+        fullName: m.fullName,
+        status: "READY" as const,
+        activeDurationMin: Math.round(activeSeconds / 60),
+        idleDurationMin: Math.round(idleSeconds / 60),
+        taskCount: m.events.filter((e) => e.type === "GOREV_BASLADI" || e.type.includes("TASK")).length,
+        firstEventAt: m.events[0].timestamp.toISOString(),
+        lastEventAt: m.events[m.events.length - 1].timestamp.toISOString(),
+        segments: buildActivitySegments(m.events),
+      };
+    }),
+    gaps: [],
+  };
+}
+
+function calculateActiveTime(events: { timestamp: Date }[]): number {
+  let active = 0;
+  for (let i = 1; i < events.length; i++) {
+    const gapSec = (events[i].timestamp.getTime() - events[i - 1].timestamp.getTime()) / 1000;
+    if (gapSec <= IDLE_THRESHOLD_MINUTES * 60) active += gapSec;
+  }
+  return active;
+}
+
+function buildActivitySegments(events: { timestamp: Date }[]) {
+  const segments: { start: string; end: string; status: "active" | "idle" }[] = [];
+  for (let i = 1; i < events.length; i++) {
+    const gapSec = (events[i].timestamp.getTime() - events[i - 1].timestamp.getTime()) / 1000;
+    segments.push({
+      start: events[i - 1].timestamp.toISOString(),
+      end: events[i].timestamp.toISOString(),
+      status: gapSec <= IDLE_THRESHOLD_MINUTES * 60 ? "active" : "idle",
+    });
+  }
+  return segments;
+}
+
+// 1.4 Lojistik & Araç (§3b)
+async function buildLogisticsData(operationId: string) {
+  const vehicleEvents = await prisma.operationEvent.findMany({
+    where: { 
+      operationId, 
+      entityType: "VEHICLE", 
+      type: "LOCATION_UPDATE", 
+      lat: { not: null }, 
+      confidence: { gte: 0.5 } 
+    },
+    orderBy: [{ entityId: "asc" }, { timestamp: "asc" }],
+  });
+
+  if (vehicleEvents.length === 0) {
+    return { status: "empty" as const, vehicles: [], gaps: ["Araç GPS verisi bulunamadı."] };
+  }
+
+  const grouped = new Map<string, typeof vehicleEvents>();
+  for (const e of vehicleEvents) {
+    if (!e.entityId) continue;
+    grouped.set(e.entityId, [...(grouped.get(e.entityId) ?? []), e]);
+  }
+
+  const vehicles = Array.from(grouped.entries()).map(([vehicleId, events]) => {
+    const { totalKm, discardedAnomalies } = calculateDistanceHaversine(events, MAX_VEHICLE_SPEED_MPS);
+    return { vehicleId, totalKm, discardedAnomalies, pointCount: events.length };
+  });
+
+  return { 
+    status: "ready" as const, 
+    vehicles, 
+    fuelDataAvailable: false, 
+    gaps: ["Yakıt tüketimi kaydı sistemde tutulmuyor — bu metrik gösterilmiyor."] 
+  };
+}
+
+function calculateDistanceHaversine(points: { lat: number | null; lng: number | null; timestamp: Date }[], maxSpeedMps: number) {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  let totalMeters = 0, discardedAnomalies = 0;
+
+  for (let i = 1; i < points.length; i++) {
+    const [p1, p2] = [points[i - 1], points[i]];
+    if (!p1.lat || !p1.lng || !p2.lat || !p2.lng) continue;
+    const dLat = toRad(p2.lat - p1.lat), dLng = toRad(p2.lng - p1.lng);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(p1.lat)) * Math.cos(toRad(p2.lat)) * Math.sin(dLng / 2) ** 2;
+    const meters = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const seconds = (p2.timestamp.getTime() - p1.timestamp.getTime()) / 1000;
+    if (seconds <= 0) continue;
+    if (meters / seconds > maxSpeedMps) { discardedAnomalies++; continue; }
+    totalMeters += meters;
+  }
+  return { totalKm: Math.round((totalMeters / 1000) * 10) / 10, discardedAnomalies };
+}
