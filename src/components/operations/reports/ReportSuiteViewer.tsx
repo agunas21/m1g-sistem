@@ -23,9 +23,9 @@ interface ReportSuiteViewerProps {
 }
 
 const TABS = [
-  { key: "kronoloji", label: "Operasyon Kronolojisi", icon: Clock },
+  { key: "kronoloji", label: "Kronoloji", icon: Clock },
   { key: "mekansal", label: "Alan Kapsama", icon: MapPin },
-  { key: "performans_personel", label: "Personel Faaliyet", icon: Users },
+  { key: "performans_personel", label: "Personel", icon: Users },
   { key: "performans_lojistik", label: "Lojistik & Araç", icon: Truck },
 ] as const;
 
@@ -67,7 +67,7 @@ export default function ReportSuiteViewer({ operationId, operationName = "Aktif 
   if (loading) {
     return (
       <div className="w-full bg-[#0B0F12] text-[#E5E7EB] p-8 rounded-2xl border border-[#1F262C] flex items-center justify-center gap-3 font-mono text-xs">
-        <Activity size={18} className="animate-spin text-red-500" />
+        <Activity size={18} className="animate-spin text-amber-500" />
         <span>C4ISR Operasyon Rapor Zarfı Hazırlanıyor...</span>
       </div>
     );
@@ -83,13 +83,13 @@ export default function ReportSuiteViewer({ operationId, operationName = "Aktif 
   }
 
   return (
-    <div className="w-full bg-[#0B0F12] text-[#E5E7EB] rounded-2xl border border-[#1F262C] font-sans flex flex-col gap-5 p-6 shadow-2xl">
+    <div className="w-full bg-[#0B0F12] text-[#E5E7EB] rounded-2xl border border-[#1F262C] font-sans flex flex-col gap-5 p-4 sm:p-6 shadow-2xl">
       
-      {/* 🔴 HEADER & OPERASYON ÖZETİ */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#151A1E] p-4 rounded-xl border border-white/5">
+      {/* 🟡 HEADER & OPERASYON ÖZETİ */}
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-[#151A1E] p-4 rounded-xl border border-white/5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-red-500/40 text-red-400 bg-red-500/10 font-bold uppercase tracking-wider">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-amber-500/40 text-amber-400 bg-amber-500/10 font-bold uppercase tracking-wider">
               M1G C4ISR OPERASYON ANALİZ SUİTİ
             </span>
             <span className="text-[10px] font-mono text-neutral-500">ID: {operationId.substring(0, 8)}</span>
@@ -104,8 +104,8 @@ export default function ReportSuiteViewer({ operationId, operationName = "Aktif 
           </div>
         </div>
 
-        {/* TAB BUTTONS */}
-        <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        {/* TAB BUTTONS — OVERFLOW FIX & AMBER ACTIVE THEME (#E8A33D) */}
+        <div className="flex items-center gap-2 overflow-x-auto max-w-full w-full lg:w-auto pb-2 lg:pb-0 scrollbar-none flex-nowrap shrink-0">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -113,9 +113,9 @@ export default function ReportSuiteViewer({ operationId, operationName = "Aktif 
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold font-mono transition-all uppercase whitespace-nowrap ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold font-mono transition-all uppercase whitespace-nowrap shrink-0 ${
                   isActive
-                    ? "bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]"
+                    ? "bg-[#E8A33D] text-black shadow-[0_0_15px_rgba(232,163,61,0.4)] font-black border border-[#E8A33D]"
                     : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white border border-white/5"
                 }`}
               >
@@ -295,7 +295,7 @@ function PersonnelPanel({ data }: { data: any }) {
               <th className="p-3">Aktif Süre</th>
               <th className="p-3">Rölanti Süre</th>
               <th className="p-3">Görev Sayısı</th>
-              <th className="p-3">Zaman Çizelgesi Barı</th>
+              <th className="p-3">Aktiflik Oranı (🟢 % Aktif / 🟡 % Rölanti)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -316,13 +316,15 @@ function PersonnelPanel({ data }: { data: any }) {
                   <td className="p-3 text-emerald-400 font-bold">{p.activeDurationMin} dk</td>
                   <td className="p-3 text-amber-400 font-bold">{p.idleDurationMin} dk</td>
                   <td className="p-3 text-blue-400 font-bold">{p.taskCount} Adet</td>
-                  <td className="p-3 min-w-[160px]">
-                    <div className="w-full bg-amber-500/30 h-3 rounded-full overflow-hidden flex">
-                      <div 
-                        style={{ width: `${activeWidthPercent}%` }} 
-                        className="bg-emerald-500 h-full"
-                        title={`Aktif: %${activeWidthPercent}`}
-                      />
+                  <td className="p-3 min-w-[200px]">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-amber-500/30 h-3 rounded-full overflow-hidden flex border border-white/5" title={`Yeşil (Aktif): %${activeWidthPercent} | Turuncu (Rölanti): %${100 - activeWidthPercent}`}>
+                        <div 
+                          style={{ width: `${activeWidthPercent}%` }} 
+                          className="bg-emerald-500 h-full transition-all"
+                        />
+                      </div>
+                      <span className="text-[10px] text-neutral-300 font-bold w-10 text-right font-mono">%{activeWidthPercent}</span>
                     </div>
                   </td>
                 </tr>
