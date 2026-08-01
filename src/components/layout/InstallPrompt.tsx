@@ -5,11 +5,13 @@ import { X, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function InstallPrompt() {
+  const [mounted, setMounted] = useState(false);
   const [isReadyForInstall, setIsReadyForInstall] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Already installed check
     if (window.matchMedia('(display-mode: standalone)').matches) {
       return;
@@ -40,7 +42,7 @@ export default function InstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  if (!isReadyForInstall) return null;
+  if (!mounted || !isReadyForInstall) return null;
 
   if (isDismissed) {
       return (
