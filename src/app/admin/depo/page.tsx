@@ -259,7 +259,7 @@ export default function DepoYonetimi() {
                 <div style="font-family:monospace, monospace; font-size:10px; color:${themeColor}; font-weight:700; letter-spacing:0.08em; margin-bottom:6px;">
                     ${item.id}
                 </div>
-                <div style="font-size:8px; color:#666666; font-weight:700; letter-spacing:0.05em; border-top:1px solid ${isKamp ? "#DCFCE7" : "#FEE2E2"}; padding-top:5px;">
+                <div style="font-size:8px; color:#666666; font-weight:700; letter-spacing:0.05em; border-top:1px solid ${theme.borderColorLight}; padding-top:5px;">
                     M1G ARAMA KURTARMA DERNEĞİ
                 </div>
             </div>
@@ -1037,7 +1037,7 @@ export default function DepoYonetimi() {
                                                     color: "#666666",
                                                     fontWeight: "700",
                                                     letterSpacing: "0.05em",
-                                                    borderTop: `1px solid ${isKamp ? "#DCFCE7" : "#FEE2E2"}`,
+                                                    borderTop: `1px solid ${theme.borderColorLight}`,
                                                     paddingTop: "4px"
                                                 }}>
                                                     M1G ARAMA KURTARMA DERNEĞİ
@@ -1770,7 +1770,7 @@ export default function DepoYonetimi() {
                                     color: "#666666",
                                     fontWeight: "700",
                                     letterSpacing: "0.05em",
-                                    borderTop: `1px solid ${isKamp ? "#DCFCE7" : "#FEE2E2"}`,
+                                    borderTop: `1px solid ${theme.borderColorLight}`,
                                     paddingTop: "4px"
                                 }}>
                                     M1G ARAMA KURTARMA DERNEĞİ
