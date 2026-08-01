@@ -15,6 +15,7 @@ import { saveAs } from "file-saver";
 import QRCode from "qrcode";
 import { parseQRString } from "@/lib/qrResolver";
 import { scanQRFromFile } from "@/lib/qrImageScanner";
+import { getCategoryTheme } from "@/lib/categoryTheme";
 
 const getExpirationWarning = (dateStr: string) => {
     if (!dateStr) return null;
@@ -209,12 +210,9 @@ export default function DepoYonetimi() {
 
     const generateQRCardCanvas = async (item: any): Promise<HTMLCanvasElement> => {
         const htmlToImage = await import("html-to-image");
-        const isKamp = item.equipmentCategory === "KAMP";
-        const isKit = item.isContainer === true;
-        const themeColor = isKit ? "#8B5CF6" : (isKamp ? "#16A34A" : "#DC2626");
-        const categoryTitle = isKit 
-            ? `📦 KİT / SET KONTEYNERİ`
-            : (isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA");
+        const theme = getCategoryTheme(item);
+        const themeColor = theme.color;
+        const categoryTitle = theme.title;
 
         const origin = typeof window !== 'undefined' ? window.location.origin : 'https://m1g.org.tr';
         const qrUrl = `${origin}/eq/${item.id}`;
@@ -917,7 +915,7 @@ export default function DepoYonetimi() {
                                         <span className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${statusColors[selectedItem.status]}`}>
                                             {selectedItem.status}
                                         </span>
-                                        <span className="px-3 py-1 bg-white/5 border border-white/10 text-neutral-400 text-[10px] uppercase font-bold tracking-wider rounded-full">
+                                        <span className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${getCategoryTheme(selectedItem).badgeClass}`}>
                                             {selectedItem.category}
                                         </span>
                                         <span className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${
@@ -965,12 +963,9 @@ export default function DepoYonetimi() {
                                 </h3>
                                 {/* QR Etiket - İndirilebilir (Kırmızı vs Yeşil Renkli Fiziksel Baskı Tasarımı) */}
                                 {(() => {
-                                    const isKamp = selectedItem.equipmentCategory === "KAMP";
-                                    const isKit = selectedItem.isContainer === true;
-                                    const themeColor = isKit ? "#8B5CF6" : (isKamp ? "#16A34A" : "#DC2626");
-                                    const categoryTitle = isKit 
-                                        ? `📦 KİT / SET KONTEYNERİ`
-                                        : (isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA");
+                                    const theme = getCategoryTheme(selectedItem);
+                                    const themeColor = theme.color;
+                                    const categoryTitle = theme.title;
 
                                     return (
                                         <div
@@ -1379,14 +1374,22 @@ export default function DepoYonetimi() {
                                         <PenTool size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
                                     <select 
-                                        value={selectedItem.equipmentCategory || "ARAMA_KURTARMA"}
-                                        onChange={(e) => updateItemDetails('equipmentCategory', e.target.value)}
+                                        value={selectedItem.category || "Kurtarma"}
+                                        onChange={(e) => {
+                                            const newCat = e.target.value;
+                                            updateItemDetails('category', newCat);
+                                        }}
                                         className={`w-full bg-transparent font-bold focus:outline-none appearance-none cursor-pointer ${
-                                            (selectedItem.equipmentCategory || "ARAMA_KURTARMA") === "KAMP" ? "text-emerald-400" : "text-red-400"
+                                            selectedItem.category === "Lojistik" ? "text-emerald-400" :
+                                            selectedItem.category === "Yönetim" ? "text-blue-400" :
+                                            selectedItem.category === "Medikal" || selectedItem.category === "Sağlık" ? "text-amber-400" :
+                                            "text-red-400"
                                         }`}
                                     >
-                                        <option value="ARAMA_KURTARMA" className="bg-black text-red-400">🔴 Arama Kurtarma (Kırmızı Etiket)</option>
-                                        <option value="KAMP" className="bg-black text-emerald-400">🟢 Kamp & Barınma (Yeşil Etiket)</option>
+                                        <option value="Lojistik" className="bg-black text-emerald-400">🟢 Lojistik (Yeşil Etiket)</option>
+                                        <option value="Yönetim" className="bg-black text-blue-400">🔵 Yönetim Malzemeleri (Mavi Etiket)</option>
+                                        <option value="Kurtarma" className="bg-black text-red-400">🔴 Arama Kurtarma (Kırmızı Etiket)</option>
+                                        <option value="Medikal" className="bg-black text-amber-400">🟡 Sağlık / Medikal (Sarı Etiket)</option>
                                     </select>
                                 </div>
                                 <div className="bg-white/5 border border-white/5 p-4 rounded-xl relative group">
@@ -1692,9 +1695,9 @@ export default function DepoYonetimi() {
         <div className="space-y-8 pb-20 relative">
             <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
                 {inventory.map(item => {
-                    const isKamp = item.equipmentCategory === "KAMP";
-                    const themeColor = isKamp ? "#16A34A" : "#DC2626";
-                    const categoryTitle = isKamp ? "⛺ KAMP & BARINMA" : "🚨 ARAMA KURTARMA";
+                    const theme = getCategoryTheme(item);
+                    const themeColor = theme.color;
+                    const categoryTitle = theme.title;
 
                     return (
                         <div
@@ -1924,7 +1927,7 @@ export default function DepoYonetimi() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="px-3 py-1 bg-white/5 border border-white/10 text-neutral-400 text-[10px] uppercase font-bold tracking-wider rounded-full">
+                                                <span className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${getCategoryTheme({ category: group.category }).badgeClass}`}>
                                                     {group.category}
                                                 </span>
                                             </td>

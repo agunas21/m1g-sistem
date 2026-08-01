@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Box, QrCode, User, CheckCircle, Wrench, ShieldAlert, Calendar, ArrowLeft, PackageCheck, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
+import { getCategoryTheme } from "@/lib/categoryTheme";
 
 export const dynamic = "force-dynamic";
 
@@ -64,10 +65,10 @@ export default async function EquipmentDetailPage({ params }: PageProps) {
     });
   }
 
-  const isKamp = item.equipmentCategory === "KAMP";
-  const themeBorder = isKamp ? "border-emerald-500/30 shadow-[0_0_40px_rgba(16,185,129,0.15)]" : "border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.15)]";
-  const themeBadge = isKamp ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-red-500/20 text-red-300 border-red-500/30";
-  const themeIcon = isKamp ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-red-500/20 text-red-400 border-red-500/30";
+  const theme = getCategoryTheme(item);
+  const themeBorder = theme.borderClass;
+  const themeBadge = theme.badgeClass;
+  const themeIcon = theme.iconClass;
 
   const statusBadgeColor = 
     item.status === "Depoda" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
