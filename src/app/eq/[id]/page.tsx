@@ -103,7 +103,7 @@ export default async function EquipmentDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 mt-2">
                   {item.isContainer && (
                     <span className={`px-2.5 py-0.5 border text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1 ${themeBadge}`}>
-                      {isKamp ? "⛺ KAMP KİTİ" : "🚨 ARAMA KURTARMA KİTİ"} ({containerItemsData.length} Malzeme)
+                      {theme.title} ({containerItemsData.length} Malzeme)
                     </span>
                   )}
                   <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest rounded-full border ${statusBadgeColor}`}>
@@ -134,11 +134,11 @@ export default async function EquipmentDetailPage({ params }: PageProps) {
 
           {/* KİT İÇERİĞİ — EĞER BU BİR KİT / KONTEYNER İSE */}
           {item.isContainer && (
-            <div className={`bg-[#020617] border ${isKamp ? "border-emerald-500/20" : "border-red-500/20"} rounded-2xl p-5 space-y-4`}>
+            <div className={`bg-[#020617] border ${themeBorder} rounded-2xl p-5 space-y-4`}>
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <h3 className="text-white font-extrabold text-sm uppercase tracking-widest flex items-center gap-2">
-                  <Box size={18} className={isKamp ? "text-emerald-400" : "text-red-400"} /> 
-                  {isKamp ? "⛺ Kamp Kiti İçerisindeki Malzemeler" : "🚨 Arama Kurtarma Kiti İçerisindeki Malzemeler"}
+                  <Box size={18} className={theme.iconClass} /> 
+                  {theme.title} İçerisindeki Malzemeler
                 </h3>
                 <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${themeBadge}`}>
                   {containerItemsData.length} ADET

@@ -10,19 +10,7 @@ export interface CategoryTheme {
 }
 
 export function getCategoryTheme(item?: { category?: string; equipmentCategory?: string; isContainer?: boolean }): CategoryTheme {
-    if (item?.isContainer) {
-        return {
-            color: "#8B5CF6",
-            textColor: "#ffffff",
-            title: "📦 KİT / SET KONTEYNERİ",
-            badgeClass: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-            iconClass: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-            borderClass: "border-purple-500/30 shadow-[0_0_40px_rgba(139,92,246,0.15)]",
-            badgeSolid: "bg-purple-600 text-white",
-            borderColorLight: "#F3E8FF"
-        };
-    }
-
+    const isKit = item?.isContainer === true;
     const cat = (item?.category || "").toLowerCase().trim();
 
     // 1. Lojistik -> YEŞİL (#16A34A)
@@ -30,7 +18,7 @@ export function getCategoryTheme(item?: { category?: string; equipmentCategory?:
         return {
             color: "#16A34A",
             textColor: "#ffffff",
-            title: "🚚 LOJİSTİK",
+            title: isKit ? "📦 LOJİSTİK KİTİ" : "🚚 LOJİSTİK",
             badgeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
             iconClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
             borderClass: "border-emerald-500/30 shadow-[0_0_40px_rgba(16,185,129,0.15)]",
@@ -44,7 +32,7 @@ export function getCategoryTheme(item?: { category?: string; equipmentCategory?:
         return {
             color: "#2563EB",
             textColor: "#ffffff",
-            title: "📋 YÖNETİM MALZEMELERİ",
+            title: isKit ? "📦 YÖNETİM KİTİ" : "📋 YÖNETİM MALZEMELERİ",
             badgeClass: "bg-blue-500/20 text-blue-300 border-blue-500/30",
             iconClass: "bg-blue-500/20 text-blue-400 border-blue-500/30",
             borderClass: "border-blue-500/30 shadow-[0_0_40px_rgba(37,99,235,0.15)]",
@@ -58,7 +46,7 @@ export function getCategoryTheme(item?: { category?: string; equipmentCategory?:
         return {
             color: "#D97706",
             textColor: "#ffffff",
-            title: "🩺 SAĞLIK / MEDİKAL",
+            title: isKit ? "📦 SAĞLIK KİTİ" : "🩺 SAĞLIK / MEDİKAL",
             badgeClass: "bg-amber-500/20 text-amber-300 border-amber-500/30",
             iconClass: "bg-amber-500/20 text-amber-400 border-amber-500/30",
             borderClass: "border-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.15)]",
@@ -71,7 +59,7 @@ export function getCategoryTheme(item?: { category?: string; equipmentCategory?:
     return {
         color: "#DC2626",
         textColor: "#ffffff",
-        title: "🚨 ARAMA KURTARMA",
+        title: isKit ? "📦 ARAMA KURTARMA KİTİ" : "🚨 ARAMA KURTARMA",
         badgeClass: "bg-red-500/20 text-red-300 border-red-500/30",
         iconClass: "bg-red-500/20 text-red-400 border-red-500/30",
         borderClass: "border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.15)]",
