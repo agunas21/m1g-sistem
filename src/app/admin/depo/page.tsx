@@ -1927,7 +1927,7 @@ export default function DepoYonetimi() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${getCategoryTheme({ category: group.category }).badgeClass}`}>
+                                                <span className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full border ${getCategoryTheme({ category: group?.category || "" }).badgeClass}`}>
                                                     {group.category}
                                                 </span>
                                             </td>
