@@ -808,19 +808,21 @@ export default function DepoYonetimi() {
     };
 
     const filteredInventory = inventory.filter(i => 
+        i && i.id && i.name &&
         (i.name.toLowerCase().includes(search.toLowerCase()) || i.id.toLowerCase().includes(search.toLowerCase())) &&
         (filterStatus === "Tümü" || i.status === filterStatus)
     );
 
-    const getBaseName = (name: string) => name.replace(/\s#\d+$/, "");
+    const getBaseName = (name: string) => (name || "").replace(/\s#\d+$/, "");
 
     const groupedInventoryMap = filteredInventory.reduce((acc: any, item: any) => {
+        if (!item || !item.name) return acc;
         const baseName = getBaseName(item.name);
         if (!acc[baseName]) {
             acc[baseName] = {
                 id: baseName,
                 name: baseName,
-                category: item.category,
+                category: item.category || "Diğer",
                 items: [],
                 totalCount: 0,
                 inStorageCount: 0,
@@ -1695,6 +1697,7 @@ export default function DepoYonetimi() {
         <div className="space-y-8 pb-20 relative">
             <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
                 {inventory.map(item => {
+                    if (!item || !item.id) return null;
                     const theme = getCategoryTheme(item);
                     const themeColor = theme.color;
                     const categoryTitle = theme.title;
