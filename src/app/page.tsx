@@ -57,27 +57,17 @@ export default async function Home() {
 
   return (
     <div className="w-full bg-[#020617] relative">
-      {/* Global Fixed Sparkles Background */}
-      <div className="fixed inset-0 w-full h-full pointer-events-none z-[1]">
+      {/* Global Fixed Sparkles Background - Desktop Only */}
+      <div className="hidden md:block fixed inset-0 w-full h-full pointer-events-none z-[1]">
           <SparklesCore
               id="tsparticles-global-red"
               background="transparent"
               minSize={0.6}
               maxSize={2}
-              particleDensity={30}
+              particleDensity={15}
               className="w-full h-full absolute inset-0"
               particleColor="#dc2626"
               speed={1.5}
-          />
-          <SparklesCore
-              id="tsparticles-global-white"
-              background="transparent"
-              minSize={0.4}
-              maxSize={1.5}
-              particleDensity={20}
-              className="w-full h-full absolute inset-0"
-              particleColor="#ffffff"
-              speed={1}
           />
       </div>
 
