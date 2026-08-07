@@ -5,20 +5,33 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  cacheOnFrontEndNav: true,
+  reloadOnOnline: true,
   fallbacks: {
     document: "/offline.html",
   },
   workboxOptions: {
+    disableDevLogs: true,
     runtimeCaching: [
+      {
+        urlPattern: ({ request }: any) => request.mode === 'navigate',
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'documents-cache',
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+          },
+          networkTimeoutSeconds: 3,
+        },
+      },
       {
         urlPattern: /^https:\/\/.*\.tile\.openstreetmap\.org\/.*/i,
         handler: 'CacheFirst',
         options: {
           cacheName: 'map-tiles',
           expiration: {
-            maxEntries: 1000,
-            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Gün offline kalabilir
+            maxEntries: 2000,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
           },
         },
       },
@@ -28,18 +41,18 @@ const withPWA = withPWAInit({
         options: {
           cacheName: 'google-map-tiles',
           expiration: {
-            maxEntries: 1000,
+            maxEntries: 2000,
             maxAgeSeconds: 30 * 24 * 60 * 60,
           },
         },
       },
       {
-        urlPattern: /\/(koordinat|canli-pano|portal|operasyonlar)/,
+        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|woff2|css|js)$/i,
         handler: 'StaleWhileRevalidate',
         options: {
-          cacheName: 'pages-cache',
+          cacheName: 'static-assets',
           expiration: {
-            maxEntries: 50,
+            maxEntries: 300,
             maxAgeSeconds: 30 * 24 * 60 * 60,
           },
         },
