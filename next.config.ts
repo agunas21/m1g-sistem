@@ -11,6 +11,11 @@ const withPWA = withPWAInit({
   },
   workboxOptions: {
     disableDevLogs: true,
+    additionalManifestEntries: [
+      { url: '/', revision: Date.now().toString() },
+      { url: '/koordinat', revision: Date.now().toString() },
+      { url: '/offline.html', revision: Date.now().toString() }
+    ],
     runtimeCaching: [
       {
         urlPattern: ({ request }: any) => request.mode === 'navigate',
@@ -21,7 +26,7 @@ const withPWA = withPWAInit({
             maxEntries: 50,
             maxAgeSeconds: 30 * 24 * 60 * 60,
           },
-          networkTimeoutSeconds: 3,
+          networkTimeoutSeconds: 2,
         },
       },
       {
