@@ -314,9 +314,14 @@ export default function OfflineMap({
       <MapController pos={myPos} trigger={locateTrigger} />
       <MapEventHandler onClick={onMapClick} />
       
-      {/* İpucu */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] bg-black/80 backdrop-blur border border-white/10 px-3 py-1.5 md:px-4 rounded-full flex items-center justify-center pointer-events-none w-max max-w-[80%] text-center">
-          <span className="text-[9px] md:text-[10px] font-bold text-neutral-300 tracking-widest leading-tight">PİN İÇİN HARİTAYA TIKLA</span>
+      {/* İpucu ve Çevrimdışı Durum Göstergesi */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] flex flex-col items-center gap-1 pointer-events-none w-max max-w-[90%] text-center">
+          <div className="bg-black/80 backdrop-blur border border-white/10 px-3 py-1.5 md:px-4 rounded-full flex items-center justify-center gap-2">
+              <span className={`w-2 h-2 rounded-full animate-ping ${navigator.onLine ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+              <span className="text-[10px] font-bold text-neutral-300 tracking-widest leading-tight uppercase">
+                {navigator.onLine ? 'CANLI HARİTA' : '🔴 ÇEVRİMDİŞİ MOD'}
+              </span>
+          </div>
       </div>
 
       {members.map((m, idx) => {
