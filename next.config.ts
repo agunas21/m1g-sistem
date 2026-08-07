@@ -5,7 +5,10 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  cacheOnFrontEndNav: false,
+  cacheOnFrontEndNav: true,
+  fallbacks: {
+    document: "/offline.html",
+  },
   workboxOptions: {
     runtimeCaching: [
       {
@@ -15,7 +18,29 @@ const withPWA = withPWAInit({
           cacheName: 'map-tiles',
           expiration: {
             maxEntries: 1000,
-            maxAgeSeconds: 7 * 24 * 60 * 60, // 1 Hafta offline kalabilir
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Gün offline kalabilir
+          },
+        },
+      },
+      {
+        urlPattern: /^https:\/\/mt[0-3]\.google\.com\/vt\/.*/i,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'google-map-tiles',
+          expiration: {
+            maxEntries: 1000,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+          },
+        },
+      },
+      {
+        urlPattern: /\/(koordinat|canli-pano|portal|operasyonlar)/,
+        handler: 'StaleWhileRevalidate',
+        options: {
+          cacheName: 'pages-cache',
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
           },
         },
       }

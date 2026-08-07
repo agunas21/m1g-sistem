@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İnternet Bağlantısı Yok - M1G Arama Kurtarma</title>
+    <title>Çevrimdışı Mod - M1G Arama Kurtarma</title>
     <style>
         body {
             margin: 0; padding: 0;
@@ -13,55 +13,97 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             text-align: center;
         }
         .container {
-            padding: 20px;
-            max-width: 400px;
+            padding: 24px;
+            max-width: 440px;
+            width: 100%;
         }
-        .logo {
-            width: 100px;
-            margin-bottom: 20px;
-            filter: grayscale(100%);
-            opacity: 0.5;
+        .badge {
+            display: inline-block;
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
         }
         h1 {
-            color: #ef4444;
-            font-size: 24px;
-            margin-bottom: 10px;
+            color: white;
+            font-size: 26px;
+            font-weight: 900;
+            margin: 0 0 8px 0;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: -0.5px;
         }
         p {
             color: #94a3b8;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.5;
+            margin-bottom: 24px;
         }
-        .retry-btn {
-            margin-top: 20px;
-            background-color: #ef4444;
+        .tools {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: #1e293b;
             color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            text-decoration: none;
+            border: 1px solid #334155;
+            padding: 14px 20px;
+            border-radius: 12px;
             font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            letter-spacing: 1px;
-            transition: background-color 0.2s;
+            font-size: 15px;
+            transition: all 0.2s;
         }
-        .retry-btn:hover {
+        .btn-primary {
             background-color: #dc2626;
+            border-color: #ef4444;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .status-box {
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            color: #cbd5e1;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <img src="/m1g-logo.png" alt="M1G" class="logo" />
-        <h1>Bağlantı Koptu</h1>
-        <p>Görünüşe göre internet bağlantınız yok veya sunucuya ulaşılamıyor. M1G platformu çevrimdışı modda çalışamıyor, ancak verileriniz cihazınızda saklanmaktadır.</p>
-        <button class="retry-btn" onclick="window.location.reload()">Tekrar Dene</button>
+        <div class="badge">🔴 ÇEVRİMDİŞİ MOD</div>
+        <h1>ŞEBEKE / İNTERNET YOK</h1>
+        <p>İnternet bağlantısı kesildi. M1G Çevrimdışı Konum & Telsiz Araçları arka planda çalışmaya devam etmektedir.</p>
+
+        <div class="tools">
+            <a href="/koordinat" class="btn btn-primary">
+                📍 Konum Tespiti & Çevirici
+            </a>
+            <button class="btn" onclick="window.location.reload()">
+                🔄 Bağlantıyı Yenile
+            </button>
+        </div>
+
+        <div class="status-box">
+            💾 Cihazınızda alınan tüm GPS konum verileri <strong>IndexedDB</strong> veritabanına kaydedilir. İnternet geldiğinde otomatik olarak sunucuya aktarılacaktır.
+        </div>
     </div>
 </body>
 </html>
