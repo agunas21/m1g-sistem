@@ -171,6 +171,29 @@ export default function CoordinateLocator() {
                 
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-black text-red-500 tracking-tighter">KOORDİNAT ÇEVİRİCİ</h2>
+                    <button
+                        onClick={() => {
+                            if (navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition(
+                                    (pos) => {
+                                        const loc = { lat: pos.coords.latitude, lon: pos.coords.longitude, datum: "WGS84" as Datum };
+                                        setUserLocation(loc);
+                                        setCurrentLatLon(loc);
+                                        setInputStr(`${loc.lat.toFixed(5)}, ${loc.lon.toFixed(5)}`);
+                                        alert(`📍 GPS Konumunuz Alındı (Hassasiyet: ~${Math.round(pos.coords.accuracy)}m):\nEnlem: ${loc.lat.toFixed(5)}\nBoylam: ${loc.lon.toFixed(5)}`);
+                                    },
+                                    (err) => alert("GPS Konumu alınamadı: " + err.message),
+                                    { enableHighAccuracy: true, timeout: 10000 }
+                                );
+                            } else {
+                                alert("Cihazınızda GPS desteklenmiyor.");
+                            }
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-2 rounded-lg transition-all shadow flex items-center gap-1"
+                        title="Canlı GPS Konumunuzu Alın"
+                    >
+                        📍 GPS Konumumu Al
+                    </button>
                 </div>
 
                 {/* Giriş Yöntemi Sekmeleri */}

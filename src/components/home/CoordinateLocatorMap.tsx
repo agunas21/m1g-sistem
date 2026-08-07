@@ -61,38 +61,21 @@ function MapResizer() {
 }
 
 export default function CoordinateLocatorMap({ currentLatLon, markers, userLocation, handleMapClick }: any) {
-    const [icons, setIcons] = useState<any>(null);
+    const createMarkerIcon = (color: string) => {
+        let hex = '#ef4444'; // red
+        if (color === 'blue') hex = '#3b82f6';
+        if (color === 'green') hex = '#10b981';
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            delete (L.Icon.Default.prototype as any)._getIconUrl;
-            L.Icon.Default.mergeOptions({
-                iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-            });
-
-            setIcons({
-                red: new L.Icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                }),
-                blue: new L.Icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                }),
-                green: new L.Icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                })
-            });
-        }
-    }, []);
-
-    if (!icons) return <div className="flex items-center justify-center h-full text-neutral-500">Harita yükleniyor...</div>;
+        return L.divIcon({
+            className: 'custom-coord-icon',
+            html: `<div style="background-color: ${hex}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.6); position: relative;">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background-color: white; border-radius: 50%;"></div>
+                   </div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+            popupAnchor: [0, -11]
+        });
+    };
 
     return (
         <>
@@ -115,7 +98,7 @@ export default function CoordinateLocatorMap({ currentLatLon, markers, userLocat
                 <Marker 
                     key={m.id} 
                     position={[m.latLon.lat, m.latLon.lon]}
-                    icon={m.color === 'red' ? icons.red : icons.blue}
+                    icon={createMarkerIcon(m.color || 'red')}
                 >
                     <Popup>
                         <div className="font-bold">{m.label}</div>
@@ -127,7 +110,7 @@ export default function CoordinateLocatorMap({ currentLatLon, markers, userLocat
             {userLocation && (
                 <Marker 
                     position={[userLocation.lat, userLocation.lon]}
-                    icon={icons.green}
+                    icon={createMarkerIcon('green')}
                 >
                     <Popup>Sizin Konumunuz</Popup>
                 </Marker>
