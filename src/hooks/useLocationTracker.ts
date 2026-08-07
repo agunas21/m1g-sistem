@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { apiRequest } from '@/lib/api/apiClient';
+import { saveOfflineLocation, getUnsyncedLocations, removeSyncedLocations, getUnsyncedLocationsCount, OfflineLocationPoint } from '@/lib/offline/db';
 
 interface TrackerOptions {
   memberId: string;
@@ -82,54 +83,84 @@ export function useLocationTracker({
     } catch { }
   }, []);
 
-  // iOS 6 saatlik TTL temizliği ve kuyruk boşaltma
+  // iOS 6 saatlik TTL temizliği ve kuyruk boşaltma (IndexedDB tabanlı)
   const flushLocationQueue = useCallback(async () => {
-    if (pendingRef.current.length === 0) return;
+    try {
+      const unsyncedPoints = await getUnsyncedLocations(memberId);
+      if (unsyncedPoints.length === 0) return;
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const now = Date.now();
-    const cutoffMs = now - (IOS_MAX_TTL_HOURS * 3600 * 1000);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const now = Date.now();
+      const cutoffMs = now - (IOS_MAX_TTL_HOURS * 3600 * 1000);
 
-    let validPoints: any[] = [];
-    let discardedCount = 0;
+      let validPoints: OfflineLocationPoint[] = [];
+      let discardedCount = 0;
+      const idsToDelete: number[] = [];
 
-    if (isIOS) {
-      for (const p of pendingRef.current) {
-        if (p.timestamp && p.timestamp < cutoffMs) {
-          discardedCount++;
-        } else {
-          validPoints.push(p);
+      if (isIOS) {
+        for (const p of unsyncedPoints) {
+          if (p.timestamp && p.timestamp < cutoffMs) {
+            discardedCount++;
+            if (p.id) idsToDelete.push(p.id);
+          } else {
+            validPoints.push(p);
+          }
+        }
+      } else {
+        validPoints = [...unsyncedPoints];
+      }
+
+      if (idsToDelete.length > 0) {
+        await removeSyncedLocations(idsToDelete);
+      }
+
+      const syncedIds: number[] = [];
+
+      for (const p of validPoints) {
+        const payload = {
+          memberId: p.memberId,
+          lat: p.lat,
+          lng: p.lng,
+          accuracy: p.accuracy,
+          battery: p.battery,
+          timestamp: p.timestamp
+        };
+
+        try {
+          const res = await apiRequest('/api/settings/operations/telemetry', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          if (res.status === 'ok') {
+            await supabase.channel('operations-channel').send({
+              type: 'broadcast',
+              event: 'location_update',
+              payload
+            });
+            if (p.id) syncedIds.push(p.id);
+          }
+        } catch (err) {
+          console.warn("Telemetry flush payload deferred:", err);
+          break; // Stop loop if network is still down
         }
       }
-    } else {
-      validPoints = [...pendingRef.current];
-    }
 
-    pendingRef.current = [];
-
-    for (const payload of validPoints) {
-      try {
-        await supabase.channel('operations-channel').send({
-          type: 'broadcast',
-          event: 'location_update',
-          payload
-        });
-        await apiRequest('/api/settings/operations/telemetry', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-      } catch {
-        // Yeniden kuyruğa at
-        pendingRef.current.push(payload);
+      if (syncedIds.length > 0) {
+        await removeSyncedLocations(syncedIds);
       }
-    }
 
-    setState(s => ({
-      ...s,
-      queuedPointsCount: pendingRef.current.length,
-      discardedIOSPointsCount: s.discardedIOSPointsCount + discardedCount
-    }));
-  }, []);
+      const remaining = await getUnsyncedLocationsCount();
+
+      setState(s => ({
+        ...s,
+        queuedPointsCount: remaining,
+        discardedIOSPointsCount: s.discardedIOSPointsCount + discardedCount
+      }));
+    } catch (e) {
+      console.error("Error in flushLocationQueue:", e);
+    }
+  }, [memberId]);
 
   // Event Listeners for iOS (online + visibilitychange)
   useEffect(() => {
@@ -138,6 +169,13 @@ export function useLocationTracker({
         flushLocationQueue();
       }
     };
+
+    const updateQueueCount = async () => {
+      const count = await getUnsyncedLocationsCount();
+      setState(s => ({ ...s, queuedPointsCount: count }));
+    };
+
+    updateQueueCount();
 
     window.addEventListener('online', flushLocationQueue);
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -180,26 +218,27 @@ export function useLocationTracker({
           lastSent: new Date(),
           accuracy: coords.accuracy,
           battery,
-          error: null,
-          queuedPointsCount: pendingRef.current.length
+          error: null
         }));
 
         await flushLocationQueue();
-      } else if (res.status === 'queued_offline') {
-        pendingRef.current.push(payload);
+      } else {
+        await saveOfflineLocation(payload);
+        const count = await getUnsyncedLocationsCount();
         setState(s => ({
           ...s,
-          queuedPointsCount: pendingRef.current.length,
-          error: 'Bağlantı yok — GPS verisi kuyruğa alındı'
+          queuedPointsCount: count,
+          error: 'Bağlantı yok — GPS verisi IndexedDB veritabanına kaydedildi'
         }));
         await registerAndroidBackgroundSync();
       }
     } catch {
-       pendingRef.current.push(payload);
+       await saveOfflineLocation(payload);
+       const count = await getUnsyncedLocationsCount();
        setState(s => ({
          ...s,
-         queuedPointsCount: pendingRef.current.length,
-         error: 'GPS verisi kuyruğa alındı'
+         queuedPointsCount: count,
+         error: 'GPS verisi çevrimdışı IndexedDB veritabanına kaydedildi'
        }));
     }
   }, [memberId, getBattery, flushLocationQueue, registerAndroidBackgroundSync]);

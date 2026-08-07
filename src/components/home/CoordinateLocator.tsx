@@ -306,21 +306,41 @@ export default function CoordinateLocator() {
                     <div className="flex-1 pb-4">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                             <h3 className="text-sm text-neutral-400 font-bold">ÇEVİRİ SONUÇLARI</h3>
-                            <div className="flex gap-2 w-full sm:w-auto">
+                            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                 <a 
                                     href={`https://maps.google.com/?q=${currentLatLon.lat},${currentLatLon.lon}`} 
                                     target="_blank"
-                                    className="flex-1 sm:flex-none bg-white text-black font-bold px-4 py-2 rounded text-sm text-center hover:bg-gray-200"
+                                    rel="noreferrer"
+                                    className="flex-1 sm:flex-none bg-white text-black font-bold px-3 py-1.5 rounded text-xs text-center hover:bg-gray-200"
                                 >
-                                    Maps
+                                    Google Maps
                                 </a>
                                 <a 
-                                    href={`https://wa.me/?text=Konum:%20${currentLatLon.lat},${currentLatLon.lon}`}
+                                    href={`https://wa.me/?text=M1G%20Konum:%20${currentLatLon.lat},${currentLatLon.lon}`}
                                     target="_blank"
-                                    className="flex-1 sm:flex-none bg-green-600 text-white font-bold px-4 py-2 rounded text-sm text-center hover:bg-green-700"
+                                    rel="noreferrer"
+                                    className="flex-1 sm:flex-none bg-green-600 text-white font-bold px-3 py-1.5 rounded text-xs text-center hover:bg-green-700"
                                 >
                                     WhatsApp
                                 </a>
+                                <a 
+                                    href={`sms:?body=M1G%20ACIL%20KONUM:%20${currentLatLon.lat.toFixed(5)},${currentLatLon.lon.toFixed(5)}%20(MGRS:%20${mgrsStr})`}
+                                    className="flex-1 sm:flex-none bg-blue-600 text-white font-bold px-3 py-1.5 rounded text-xs text-center hover:bg-blue-700"
+                                    title="Sms ile Konum Gönder"
+                                >
+                                    📱 SMS Gönder
+                                </a>
+                                <button 
+                                    onClick={() => {
+                                        const radioText = `M1G EKIP ACIL KONUM | DD: ${currentLatLon.lat.toFixed(5)}, ${currentLatLon.lon.toFixed(5)} | MGRS: ${mgrsStr || '-'} | SAAT: ${new Date().toLocaleTimeString('tr-TR')}`;
+                                        navigator.clipboard.writeText(radioText);
+                                        alert("Telsiz anons metni panoya kopyalandı:\n" + radioText);
+                                    }}
+                                    className="flex-1 sm:flex-none bg-amber-600 text-white font-bold px-3 py-1.5 rounded text-xs text-center hover:bg-amber-700"
+                                    title="Telsiz Metni Kopyala"
+                                >
+                                    📻 Telsiz Anonsu
+                                </button>
                             </div>
                         </div>
                         <div className="space-y-3">
