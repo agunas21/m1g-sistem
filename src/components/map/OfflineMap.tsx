@@ -329,7 +329,28 @@ export default function OfflineMap({
         return (
             <div key={`member-group-${m.id}-${idx}`}>
                 {m.path && m.path.length > 1 && (
-                    <Polyline positions={m.path} color={tColor} weight={3} opacity={0.6} dashArray="5, 5" />
+                    <>
+                      {/* Arka plan parlama çizgisi */}
+                      <Polyline 
+                        positions={m.path} 
+                        color={tColor} 
+                        weight={6} 
+                        opacity={0.3} 
+                        smoothFactor={1.5}
+                        lineCap="round"
+                        lineJoin="round"
+                      />
+                      {/* Ana rota çizgisi */}
+                      <Polyline 
+                        positions={m.path} 
+                        color={tColor} 
+                        weight={3} 
+                        opacity={0.95} 
+                        smoothFactor={1.5}
+                        lineCap="round"
+                        lineJoin="round"
+                      />
+                    </>
                 )}
                 <Marker position={m.location} icon={createCustomIcon(tColor)}>
                     <Popup>

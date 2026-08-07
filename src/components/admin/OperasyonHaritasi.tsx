@@ -572,10 +572,16 @@ export default function OperasyonHaritasi({
                   />
 
                   {trails[p.member_id]?.length > 1 && (
-                    <Polyline
-                      positions={trails[p.member_id]}
-                      pathOptions={{ color:p.team_color, weight:2, opacity:0.4, dashArray:'5 5' }}
-                    />
+                    <>
+                      <Polyline
+                        positions={trails[p.member_id]}
+                        pathOptions={{ color: p.team_color, weight: 6, opacity: 0.25, lineCap: 'round', lineJoin: 'round', smoothFactor: 1.5 }}
+                      />
+                      <Polyline
+                        positions={trails[p.member_id]}
+                        pathOptions={{ color: p.team_color, weight: 3, opacity: 0.9, lineCap: 'round', lineJoin: 'round', smoothFactor: 1.5 }}
+                      />
+                    </>
                   )}
 
                   <Marker
