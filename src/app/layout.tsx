@@ -11,6 +11,7 @@ import SplashScreen from "@/components/layout/SplashScreen";
 import FloatingEmergencyButton from "@/components/layout/FloatingEmergencyButton";
 import Chatbot from "@/components/chat/Chatbot";
 import InstallPrompt from "@/components/layout/InstallPrompt";
+import PWARegister from "@/components/layout/PWARegister";
 import { getSiteSettingsDB } from "@/lib/settings";
 
 const geistSans = Geist({
@@ -89,6 +90,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-red-600/50">
+        <PWARegister />
         <InstallPrompt />
         <SplashScreen />
         <AuthProvider>
