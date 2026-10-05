@@ -56,14 +56,7 @@ export default function Navbar() {
                                 <span className="font-black text-xl md:text-2xl tracking-tighter text-white uppercase leading-none">
                                     M1<span className="text-red-500">G</span>
                                 </span>
-                                <span className="text-[9px] md:text-[10px] text-neutral-400 font-bold tracking-widest uppercase mt-0.5">AFAD Akredite Off-Road Arama Kurtarma</span>
-                            </div>
-                            <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-xl bg-red-600/15 border border-red-500/30 text-white ml-2 shadow-[0_0_15px_rgba(220,38,38,0.25)] backdrop-blur-md">
-                                <img src="/afad-akreditasyon-logo.png" alt="AFAD Akredite Logo" className="h-7 w-auto object-contain drop-shadow-md" />
-                                <div className="flex flex-col text-[8px] font-black uppercase tracking-wider leading-tight">
-                                    <span className="text-red-500">AFAD AKREDİTE</span>
-                                    <span className="text-neutral-300">DERNEK</span>
-                                </div>
+                                <span className="text-[9px] md:text-[10px] text-neutral-400 font-bold tracking-widest uppercase mt-0.5">Arama Kurtarma</span>
                             </div>
                         </Link>
 
