@@ -73,7 +73,7 @@ const Tab = ({
       <Link 
         href={href} 
         className={clsx(
-            "block px-3 py-1.5 text-xs uppercase font-bold tracking-widest transition-colors md:px-5 md:py-2 md:text-[11px]",
+            "block px-2.5 py-1.5 text-[10px] uppercase font-bold tracking-wider transition-colors lg:px-3 lg:py-2 lg:text-[10px] xl:px-4 xl:text-[11px] xl:tracking-widest whitespace-nowrap",
             isActive ? "text-red-400" : "text-neutral-400 hover:text-white"
         )}
       >

@@ -47,7 +47,7 @@ export default function Navbar() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-20 items-center">
                         {/* Logo */}
-                        <Link href="/" className="flex items-center gap-3 group">
+                        <Link href="/" className="flex items-center gap-3 group shrink-0 mr-4 lg:mr-8">
                             {logo && logo !== "/m1g-logo.png" ? (
                                 <img
                                     src={logo}
