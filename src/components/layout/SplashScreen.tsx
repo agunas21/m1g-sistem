@@ -154,25 +154,25 @@ export default function SplashScreen() {
                     />
 
                     {/* ── Content ── */}
-                    <div className="splash-fallback z-10 flex flex-col items-center justify-center gap-8 relative">
+                    <div className="splash-fallback z-10 flex flex-col items-center justify-center gap-10 relative">
                         {/* Logos Container: M1G Logo + AFAD Accreditation Shield Logo side-by-side */}
                         <motion.div
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                            className="flex items-center justify-center gap-6 md:gap-8 relative"
+                            transition={{ type: "spring", stiffness: 90, damping: 18 }}
+                            className="flex items-center justify-center gap-8 md:gap-14 relative"
                         >
-                            {/* M1G Logo with spinner */}
+                            {/* M1G Logo with large spinner */}
                             <div className="relative flex items-center justify-center">
                                 <img
                                     src="/m1g-logo.png"
                                     alt="M1G Logo"
-                                    className="w-[60px] h-[60px] md:w-[75px] md:h-[75px] object-contain absolute z-10"
+                                    className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[150px] md:h-[150px] object-contain absolute z-10"
                                 />
-                                <svg className="loader-svg" viewBox="0 0 120 120" style={{ width: '130px', height: '130px' }}>
+                                <svg className="loader-svg" viewBox="0 0 120 120" style={{ width: '230px', height: '230px' }}>
                                     <circle
-                                        cx="60" cy="60" r="57"
-                                        fill="none" stroke="currentColor" strokeWidth="3"
+                                        cx="60" cy="60" r="56"
+                                        fill="none" stroke="currentColor" strokeWidth="3.5"
                                         strokeLinecap="round" pathLength="360"
                                         className="dash spin"
                                     />
@@ -184,7 +184,7 @@ export default function SplashScreen() {
                                 <img
                                     src="/afad-akreditasyon-logo.png"
                                     alt="AFAD Akreditasyon Logo"
-                                    className="w-[70px] h-[75px] md:w-[85px] md:h-[90px] object-contain drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+                                    className="w-[120px] h-[130px] sm:w-[150px] sm:h-[165px] md:w-[180px] md:h-[195px] object-contain drop-shadow-[0_0_30px_rgba(239,68,68,0.6)]"
                                 />
                             </div>
                         </motion.div>
@@ -194,7 +194,7 @@ export default function SplashScreen() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 1 }}
-                            className="flex flex-col items-center max-w-full overflow-hidden mt-2 text-center px-4"
+                            className="flex flex-col items-center max-w-full overflow-hidden mt-4 text-center px-4"
                         >
                             <div className="splash-text-container">
                                 <span className="splash-hover-text">
@@ -208,7 +208,7 @@ export default function SplashScreen() {
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.8, delay: 0.8 }}
-                                className="mt-3 text-xs sm:text-sm md:text-base font-bold text-red-500 tracking-[0.12em] sm:tracking-[0.18em] uppercase drop-shadow-[0_0_12px_rgba(239,68,68,0.5)]"
+                                className="mt-4 text-sm sm:text-base md:text-lg font-black text-red-500 tracking-[0.14em] sm:tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]"
                             >
                                 Türkiye'nin İlk Akredite Off-Road Arama Kurtarma Derneği
                             </motion.p>
