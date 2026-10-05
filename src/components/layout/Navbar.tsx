@@ -48,9 +48,9 @@ export default function Navbar() {
                     <div className="flex justify-between h-20 items-center">
                         {/* Logo */}
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative group-hover:scale-105 transition-transform duration-500">
-                                <div className="absolute inset-0 bg-red-600 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500 rounded-full"></div>
-                                <img src={logo} alt="M1G Logo" className="w-[50px] h-[50px] object-contain relative z-10 group-hover:rotate-180 transition-transform duration-700" />
+                            <div className="relative group-hover:scale-105 transition-transform duration-300">
+                                <div className="absolute inset-0 bg-red-600/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                                <img src={logo} alt="M1G Logo" className="w-[50px] h-[50px] object-contain relative z-10" />
                             </div>
                             <div className="flex flex-col">
                                 <span className="font-black text-xl md:text-2xl tracking-tighter text-white uppercase leading-none">

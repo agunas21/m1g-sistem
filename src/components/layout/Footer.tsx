@@ -73,7 +73,7 @@ export default function Footer() {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                         <div className="col-span-1 md:col-span-2">
                             <Link href="/" className="flex items-center gap-3 mb-6 group">
-                                <img src={logo} alt="M1G Logo" className="w-[60px] h-[60px] object-contain group-hover:rotate-180 transition-transform duration-1000" />
+                                <img src={logo} alt="M1G Logo" className="w-[60px] h-[60px] object-contain group-hover:scale-105 transition-transform duration-300" />
                                 <div className="flex flex-col">
                                     <span className="text-2xl md:text-3xl font-black tracking-widest text-white uppercase leading-none">
                                         M1<span className="text-red-500">G</span>

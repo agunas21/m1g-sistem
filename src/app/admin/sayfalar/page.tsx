@@ -669,8 +669,38 @@ export default function KolaySiteDuzenleyici() {
                 {activeTab === "hero" && (
                     <div className="bg-[#050B14] border border-white/10 rounded-2xl p-6 md:p-8 space-y-6">
                         <h2 className="text-sm font-bold text-white uppercase tracking-widest border-b border-white/5 pb-4 flex items-center gap-2">
-                            <LayoutTemplate size={16} className="text-red-500" /> Anasayfa Ayarları
+                            <LayoutTemplate size={16} className="text-red-500" /> Anasayfa &amp; Header Ayarları
                         </h2>
+
+                        {/* Navbar Logo Yükleme & Yönetimi */}
+                        <div className="bg-black/40 border border-red-500/20 rounded-xl p-5 space-y-3">
+                            <label className="cms-label flex items-center gap-2 text-red-400 font-bold">
+                                <ImageIcon size={14} /> Sol Üst Navbar &amp; Footer Resmi Dernek Logosu
+                            </label>
+                            <p className="text-neutral-400 text-xs">
+                                "Anasayfa" menü butonunun solundaki ve sayfanın en altındaki resmi logo görselidir. İstediğiniz logoyu buradan seçip kaydedebilirsiniz.
+                            </p>
+                            <input type="file" accept="image/*" onChange={handleSiteLogoUpload} className="cms-file-input" />
+                            <div className="flex items-center gap-4 bg-black/60 border border-white/10 rounded-xl p-3">
+                                <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 bg-black flex items-center justify-center p-2 shrink-0">
+                                    <img src={siteLogo || "/m1g-logo.png"} alt="Logo Önizleme" className="w-full h-full object-contain" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white text-xs font-bold">Mevcut Logo: {siteLogo ? "Özel Yüklendi" : "Varsayılan (m1g-logo.png)"}</p>
+                                    <p className="text-neutral-500 text-[10px] truncate">{siteLogo || "/m1g-logo.png"}</p>
+                                </div>
+                                {siteLogo && (
+                                    <button 
+                                        type="button"
+                                        onClick={() => setSiteLogo("")}
+                                        className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-[10px] font-bold uppercase rounded-lg border border-red-500/30 transition-colors shrink-0"
+                                    >
+                                        Varsayılana Dön
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
                         <div>
                             <label className="cms-label">Ana Başlık (Hero)</label>
                             <input value={heroTitle} onChange={e => setHeroTitle(e.target.value)} className="cms-input" />
