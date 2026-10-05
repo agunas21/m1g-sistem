@@ -53,7 +53,7 @@ export default function SplashScreen() {
                         /* ── Loader ── */
                         .loader-svg {
                             color: #ef4444;
-                            filter: drop-shadow(0 0 8px rgba(239,68,68,0.6));
+                            filter: drop-shadow(0 0 10px rgba(239,68,68,0.7));
                         }
                         .dash { animation: dashArray 2s ease-in-out infinite, dashOffset 2s linear infinite; }
                         .spin {
@@ -84,10 +84,10 @@ export default function SplashScreen() {
 
                         /* ── Text fill ── */
                         .splash-text-container {
-                            --text-stroke-color: rgba(255,255,255,0.15);
+                            --text-stroke-color: rgba(255,255,255,0.2);
                             --animation-color: #ffffff;
-                            --fs-size: clamp(0.65rem, 2.5vw, 2.2rem);
-                            letter-spacing: clamp(0.5px, 0.2vw, 2px);
+                            --fs-size: clamp(0.75rem, 3.5vw, 1.8rem);
+                            letter-spacing: clamp(1px, 0.3vw, 3px);
                             font-size: var(--fs-size);
                             font-weight: 900;
                             position: relative;
@@ -95,7 +95,7 @@ export default function SplashScreen() {
                             color: transparent;
                             -webkit-text-stroke: 1px var(--text-stroke-color);
                             text-align: center;
-                            white-space: nowrap;
+                            display: inline-block;
                         }
                         .splash-hover-text {
                             position: absolute;
@@ -106,16 +106,17 @@ export default function SplashScreen() {
                             border-right: 3px solid var(--animation-color);
                             overflow: hidden;
                             animation: fillText 2s ease-in-out forwards;
-                            animation-delay: 0.5s;
+                            animation-delay: 0.4s;
                             -webkit-text-stroke: 1px var(--animation-color);
+                            white-space: nowrap;
                         }
                         @keyframes fillText {
                             0%   { width: 0%; }
-                            100% { width: 100%; filter: drop-shadow(0 0 6px rgba(255,255,255,0.3)); }
+                            100% { width: 100%; filter: drop-shadow(0 0 8px rgba(255,255,255,0.4)); }
                         }
                     `}} />
 
-                    {/* ── Animated beams (CSS only, no canvas) ── */}
+                    {/* Animated beams */}
                     {[
                         { left: '8%',  delay: '0s',    dur: '3.5s', color: '#dc2626', blur: '6px',  w: '2px'  },
                         { left: '18%', delay: '0.6s',  dur: '4.2s', color: '#ef4444', blur: '8px',  w: '3px'  },
@@ -145,7 +146,7 @@ export default function SplashScreen() {
                         />
                     ))}
 
-                    {/* ── Radial glow center ── */}
+                    {/* Radial glow center */}
                     <div
                         className="absolute inset-0 pointer-events-none"
                         style={{
@@ -153,39 +154,47 @@ export default function SplashScreen() {
                         }}
                     />
 
-                    {/* ── Content ── */}
-                    <div className="splash-fallback z-10 flex flex-col items-center justify-center gap-10 relative">
-                        {/* Logos Container: M1G Logo + AFAD Accreditation Shield Logo side-by-side */}
+                    {/* Content */}
+                    <div className="splash-fallback z-10 flex flex-col items-center justify-center gap-6 sm:gap-8 relative w-full max-w-2xl px-4">
+                        {/* Logos Container: M1G Logo + AFAD Accreditation Shield Logo side-by-side with symmetric spinners */}
                         <motion.div
-                            initial={{ scale: 0, opacity: 0 }}
+                            initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: "spring", stiffness: 90, damping: 18 }}
-                            className="flex items-center justify-center gap-8 md:gap-14 relative"
+                            className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 relative w-full"
                         >
-                            {/* M1G Logo with large spinner */}
-                            <div className="relative flex items-center justify-center">
+                            {/* M1G Logo with responsive spinner ring */}
+                            <div className="relative flex items-center justify-center w-[110px] h-[110px] sm:w-[150px] sm:h-[150px] md:w-[190px] md:h-[190px] shrink-0">
                                 <img
                                     src="/m1g-logo.png"
                                     alt="M1G Logo"
-                                    className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[150px] md:h-[150px] object-contain absolute z-10"
+                                    className="w-[70px] h-[70px] sm:w-[95px] sm:h-[95px] md:w-[125px] md:h-[125px] object-contain relative z-10 drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]"
                                 />
-                                <svg className="loader-svg" viewBox="0 0 120 120" style={{ width: '230px', height: '230px' }}>
+                                <svg className="loader-svg absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 120 120">
                                     <circle
-                                        cx="60" cy="60" r="56"
-                                        fill="none" stroke="currentColor" strokeWidth="3.5"
+                                        cx="60" cy="60" r="54"
+                                        fill="none" stroke="currentColor" strokeWidth="3"
                                         strokeLinecap="round" pathLength="360"
                                         className="dash spin"
                                     />
                                 </svg>
                             </div>
 
-                            {/* AFAD Accreditation Shield Logo */}
-                            <div className="relative flex items-center justify-center">
+                            {/* AFAD Accreditation Shield Logo with responsive spinner ring */}
+                            <div className="relative flex items-center justify-center w-[110px] h-[110px] sm:w-[150px] sm:h-[150px] md:w-[190px] md:h-[190px] shrink-0">
                                 <img
                                     src="/afad-akreditasyon-logo.png"
                                     alt="AFAD Akreditasyon Logo"
-                                    className="w-[120px] h-[130px] sm:w-[150px] sm:h-[165px] md:w-[180px] md:h-[195px] object-contain drop-shadow-[0_0_30px_rgba(239,68,68,0.6)]"
+                                    className="w-[75px] h-[82px] sm:w-[102px] sm:h-[112px] md:w-[132px] md:h-[145px] object-contain relative z-10 drop-shadow-[0_0_25px_rgba(239,68,68,0.6)]"
                                 />
+                                <svg className="loader-svg absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 120 120">
+                                    <circle
+                                        cx="60" cy="60" r="54"
+                                        fill="none" stroke="currentColor" strokeWidth="3"
+                                        strokeLinecap="round" pathLength="360"
+                                        className="dash spin"
+                                    />
+                                </svg>
                             </div>
                         </motion.div>
 
@@ -194,7 +203,7 @@ export default function SplashScreen() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 1 }}
-                            className="flex flex-col items-center max-w-full overflow-hidden mt-4 text-center px-4"
+                            className="flex flex-col items-center max-w-full text-center px-2"
                         >
                             <div className="splash-text-container">
                                 <span className="splash-hover-text">
@@ -208,7 +217,7 @@ export default function SplashScreen() {
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.8, delay: 0.8 }}
-                                className="mt-4 text-sm sm:text-base md:text-lg font-black text-red-500 tracking-[0.14em] sm:tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]"
+                                className="mt-3 text-xs sm:text-sm md:text-base font-black text-red-500 tracking-[0.12em] sm:tracking-[0.18em] uppercase drop-shadow-[0_0_15px_rgba(239,68,68,0.6)] max-w-lg leading-relaxed"
                             >
                                 Türkiye'nin İlk Akredite Off-Road Arama Kurtarma Derneği
                             </motion.p>
