@@ -168,88 +168,69 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                     style={{ opacity, y: useTransform(scrollYProgress, [0, 1], ["0%", "30%"]) }}
                     className="container relative z-10 px-4 sm:px-6 lg:px-8 pt-20 w-full"
                 >
-                    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-12 max-w-7xl mx-auto">
-                        
-                        {/* Left Side: Clean AFAD Accreditation Shield Logo (Yellow Circled Area) */}
+                    <div className="max-w-5xl">
+
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.85, x: -30 }}
-                            animate={{ opacity: 1, scale: 1, x: 0 }}
-                            transition={{ duration: 1, delay: 0.3 }}
-                            className="shrink-0 flex items-center justify-center p-2 lg:p-4"
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+                            className="flex items-center gap-4 mb-6 sm:mb-8"
                         >
-                            <img
-                                src="/afad-akreditasyon-logo.png"
-                                alt="AFAD Akreditasyon Logo"
-                                className="w-48 sm:w-60 md:w-72 lg:w-80 h-auto object-contain drop-shadow-[0_0_35px_rgba(239,68,68,0.4)] hover:scale-105 transition-transform duration-500"
-                            />
+                            <div className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md flex items-center gap-2 sm:gap-3">
+                                <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-red-600"></span>
+                                </span>
+                                <span className="text-white text-[10px] sm:text-sm font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase">
+                                    {heroBadge || "M1G Arazi & Dağ Operasyonu"}
+                                </span>
+                            </div>
                         </motion.div>
 
-                        {/* Right Side: Clean Original Hero Content */}
-                        <div className="max-w-3xl flex-1">
+                        <motion.div
+                            initial={{ opacity: 0, y: 50, filter: "blur(10px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                            className="mb-6"
+                        >
+                            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 tracking-tighter leading-[0.85] mb-4 sm:mb-6 uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                                {title || "M1G ARAMA KURTARMA"}
+                            </h1>
+                            <p className="text-lg sm:text-xl md:text-2xl font-light text-neutral-300 tracking-[0.15em] uppercase max-w-xl leading-snug drop-shadow-xl">
+                                {subtitle || "ASLA GERİDE BIRAKMA"}
+                            </p>
+                        </motion.div>
 
-                            <motion.div
-                                initial={{ opacity: 0, x: -50 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-                                className="flex items-center gap-4 mb-6 sm:mb-8"
-                            >
-                                <div className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md flex items-center gap-2 sm:gap-3">
-                                    <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-red-600"></span>
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
+                            className="max-w-2xl"
+                        >
+                            <p className="text-sm sm:text-base md:text-lg text-neutral-200 font-light leading-relaxed mb-6 sm:mb-10 border-l-4 border-red-600 pl-4 sm:pl-6 bg-black/40 backdrop-blur-md rounded-r-2xl py-4 sm:py-5 pr-4 sm:pr-6 shadow-2xl">
+                                {heroDesc || "Sadece düzlüklerde değil; sarp vadilerde, kanyonlarda ve en ağır arazilerde profesyonel müdahale. Biz durduğumuzda zaman durur."}
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-5">
+                                <Link
+                                    href="/gonullu-ol"
+                                    className="relative group overflow-hidden rounded-xl px-6 sm:px-8 py-3 sm:py-4 flex items-center justify-center bg-red-600 shadow-[0_0_20px_rgba(234,29,44,0.3)] hover:shadow-[0_0_40px_rgba(234,29,44,0.6)] transition-all"
+                                >
+                                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                                    <span className="relative z-10 text-white font-black tracking-widest uppercase flex items-center gap-3 text-sm">
+                                        Gönüllü Ol <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                                     </span>
-                                    <span className="text-white text-[10px] sm:text-sm font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase">
-                                        {heroBadge || "M1G Arazi & Dağ Operasyonu"}
-                                    </span>
-                                </div>
-                            </motion.div>
+                                </Link>
 
-                            <motion.div
-                                initial={{ opacity: 0, y: 50, filter: "blur(10px)" }}
-                                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                                className="mb-6"
-                            >
-                                <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 tracking-tighter leading-[0.85] mb-4 sm:mb-6 uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
-                                    {title || "M1G ARAMA KURTARMA DERNEĞİ"}
-                                </h1>
-                                <p className="text-lg sm:text-xl md:text-2xl font-light text-neutral-300 tracking-[0.15em] uppercase max-w-xl leading-snug drop-shadow-xl">
-                                    {subtitle || "ASLA GERİDE BIRAKMA"}
-                                </p>
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
-                                className="max-w-2xl"
-                            >
-                                <p className="text-sm sm:text-base md:text-lg text-neutral-200 font-light leading-relaxed mb-6 sm:mb-10 border-l-4 border-red-600 pl-4 sm:pl-6 bg-black/40 backdrop-blur-md rounded-r-2xl py-4 sm:py-5 pr-4 sm:pr-6 shadow-2xl">
-                                    {heroDesc || "Sadece düzlüklerde değil; sarp vadilerde, kanyonlarda ve en ağır arazilerde profesyonel müdahale. Biz durduğumuzda zaman durur."}
-                                </p>
-
-                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-5">
-                                    <Link
-                                        href="/gonullu-ol"
-                                        className="relative group overflow-hidden rounded-xl px-6 sm:px-8 py-3 sm:py-4 flex items-center justify-center bg-red-600 shadow-[0_0_20px_rgba(234,29,44,0.3)] hover:shadow-[0_0_40px_rgba(234,29,44,0.6)] transition-all"
-                                    >
-                                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                                        <span className="relative z-10 text-white font-black tracking-widest uppercase flex items-center gap-3 text-sm">
-                                            Gönüllü Ol <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-                                        </span>
-                                    </Link>
-
-                                    <a
-                                        href="#tanitim"
-                                        className="px-6 sm:px-8 py-3 sm:py-4 flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-white/5 backdrop-blur-xl hover:bg-white/10 hover:border-white/30 transition-all group"
-                                    >
-                                        <Play className="w-5 h-5 text-red-500 group-hover:scale-110 group-hover:text-red-400 transition-colors" />
-                                        <span className="text-white font-bold tracking-widest uppercase text-sm">Operasyonlar</span>
-                                    </a>
-                                </div>
-                            </motion.div>
-
-                        </div>
+                                <a
+                                    href="#tanitim"
+                                    className="px-6 sm:px-8 py-3 sm:py-4 flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-white/5 backdrop-blur-xl hover:bg-white/10 hover:border-white/30 transition-all group"
+                                >
+                                    <Play className="w-5 h-5 text-red-500 group-hover:scale-110 group-hover:text-red-400 transition-colors" />
+                                    <span className="text-white font-bold tracking-widest uppercase text-sm">Operasyonlar</span>
+                                </a>
+                            </div>
+                        </motion.div>
 
                     </div>
                 </motion.div>

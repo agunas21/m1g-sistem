@@ -154,42 +154,64 @@ export default function SplashScreen() {
                     />
 
                     {/* ── Content ── */}
-                    <div className="splash-fallback z-10 flex flex-col items-center justify-center gap-10 relative">
-                        {/* Logo + spinner */}
+                    <div className="splash-fallback z-10 flex flex-col items-center justify-center gap-8 relative">
+                        {/* Logos Container: M1G Logo + AFAD Accreditation Shield Logo side-by-side */}
                         <motion.div
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                            className="relative flex items-center justify-center"
+                            className="flex items-center justify-center gap-6 md:gap-8 relative"
                         >
-                            <img
-                                src="/m1g-logo.png"
-                                alt="M1G Logo"
-                                className="w-[65px] h-[65px] md:w-[80px] md:h-[80px] object-contain absolute z-10"
-                            />
-                            <svg className="loader-svg" viewBox="0 0 120 120" style={{ width: '140px', height: '140px' }}>
-                                <circle
-                                    cx="60" cy="60" r="57"
-                                    fill="none" stroke="currentColor" strokeWidth="3"
-                                    strokeLinecap="round" pathLength="360"
-                                    className="dash spin"
+                            {/* M1G Logo with spinner */}
+                            <div className="relative flex items-center justify-center">
+                                <img
+                                    src="/m1g-logo.png"
+                                    alt="M1G Logo"
+                                    className="w-[60px] h-[60px] md:w-[75px] md:h-[75px] object-contain absolute z-10"
                                 />
-                            </svg>
+                                <svg className="loader-svg" viewBox="0 0 120 120" style={{ width: '130px', height: '130px' }}>
+                                    <circle
+                                        cx="60" cy="60" r="57"
+                                        fill="none" stroke="currentColor" strokeWidth="3"
+                                        strokeLinecap="round" pathLength="360"
+                                        className="dash spin"
+                                    />
+                                </svg>
+                            </div>
+
+                            {/* AFAD Accreditation Shield Logo */}
+                            <div className="relative flex items-center justify-center">
+                                <img
+                                    src="/afad-akreditasyon-logo.png"
+                                    alt="AFAD Akreditasyon Logo"
+                                    className="w-[70px] h-[75px] md:w-[85px] md:h-[90px] object-contain drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+                                />
+                            </div>
                         </motion.div>
 
-                        {/* Text */}
+                        {/* Text Container */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 1 }}
-                            className="flex flex-col items-center max-w-full overflow-hidden mt-4"
+                            className="flex flex-col items-center max-w-full overflow-hidden mt-2 text-center px-4"
                         >
                             <div className="splash-text-container">
                                 <span className="splash-hover-text">
-                                    M1G ARAMA KURTARMA
+                                    M1G ARAMA KURTARMA DERNEĞİ
                                 </span>
-                                M1G ARAMA KURTARMA
+                                M1G ARAMA KURTARMA DERNEĞİ
                             </div>
+
+                            {/* Stylish Subtitle */}
+                            <motion.p
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.8 }}
+                                className="mt-3 text-xs sm:text-sm md:text-base font-bold text-red-500 tracking-[0.12em] sm:tracking-[0.18em] uppercase drop-shadow-[0_0_12px_rgba(239,68,68,0.5)]"
+                            >
+                                Türkiye'nin İlk Akredite Off-Road Arama Kurtarma Derneği
+                            </motion.p>
                         </motion.div>
                     </div>
                 </motion.div>
