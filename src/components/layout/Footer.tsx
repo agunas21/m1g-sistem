@@ -73,13 +73,23 @@ export default function Footer() {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                         <div className="col-span-1 md:col-span-2">
                             <Link href="/" className="flex items-center gap-3 mb-6 group">
-                                <img src={logo} alt="M1G Logo" className="w-[60px] h-[60px] object-contain group-hover:scale-105 transition-transform duration-300" />
-                                <div className="flex flex-col">
-                                    <span className="text-2xl md:text-3xl font-black tracking-widest text-white uppercase leading-none">
-                                        M1<span className="text-red-500">G</span>
-                                    </span>
-                                    <span className="text-xs text-neutral-400 font-bold tracking-[0.2em] uppercase mt-1">Arama Kurtarma</span>
-                                </div>
+                                {logo && logo !== "/m1g-logo.png" ? (
+                                    <img
+                                        src={logo}
+                                        alt="M1G Logo"
+                                        className="h-12 md:h-14 w-auto max-w-[240px] object-contain group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                ) : (
+                                    <>
+                                        <img src={logo || "/m1g-logo.png"} alt="M1G Logo" className="w-[60px] h-[60px] object-contain group-hover:scale-105 transition-transform duration-300" />
+                                        <div className="flex flex-col">
+                                            <span className="text-2xl md:text-3xl font-black tracking-widest text-white uppercase leading-none">
+                                                M1<span className="text-red-500">G</span>
+                                            </span>
+                                            <span className="text-xs text-neutral-400 font-bold tracking-[0.2em] uppercase mt-1">Arama Kurtarma</span>
+                                        </div>
+                                    </>
+                                )}
                             </Link>
                             <p className="text-neutral-400 mb-6 max-w-sm leading-relaxed">
                                 M1G (Arazi ve Dağ Sınıfı Araçları), Türkiye'nin en zorlu coğrafyalarında, off-road ve dağcılık donanımıyla, 7/24 ulaşılamaz denilen yerlerde hayat kurtarır.
