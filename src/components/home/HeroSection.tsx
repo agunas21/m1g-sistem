@@ -174,15 +174,16 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                             initial={{ opacity: 0, x: -50 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-                            className="flex items-center gap-4 mb-6 sm:mb-8"
+                            className="flex flex-wrap items-center gap-3 mb-6 sm:mb-8"
                         >
-                            <div className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md flex items-center gap-2 sm:gap-3">
+                            <div className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full border border-red-500/30 bg-red-600/15 backdrop-blur-md flex items-center gap-2 sm:gap-3 shadow-[0_0_20px_rgba(220,38,38,0.2)]">
+                                <img src="/afad-akreditasyon-logo.png" alt="AFAD Akreditasyon Logo" className="h-6 sm:h-7 w-auto object-contain drop-shadow-md" />
                                 <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-red-600"></span>
                                 </span>
-                                <span className="text-white text-[10px] sm:text-sm font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase">
-                                    {heroBadge || "M1G Arazi & Dağ Operasyonu"}
+                                <span className="text-white text-[10px] sm:text-xs font-black tracking-[0.15em] sm:tracking-[0.2em] uppercase">
+                                    {heroBadge || "AFAD AKREDİTE OFF-ROAD ARAMA KURTARMA DERNEĞİ"}
                                 </span>
                             </div>
                         </motion.div>
@@ -193,11 +194,11 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                             className="mb-6"
                         >
-                            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 tracking-tighter leading-[0.85] mb-4 sm:mb-6 uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
-                                {title || "M1G ARAMA KURTARMA"}
+                            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 tracking-tighter leading-[0.9] mb-4 sm:mb-6 uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                                {title || "M1G AFAD AKREDİTE OFF-ROAD ARAMA KURTARMA"}
                             </h1>
-                            <p className="text-lg sm:text-xl md:text-2xl font-light text-neutral-300 tracking-[0.15em] uppercase max-w-xl leading-snug drop-shadow-xl">
-                                {subtitle || "ASLA GERİDE BIRAKMA"}
+                            <p className="text-base sm:text-lg md:text-xl font-bold text-red-500 tracking-[0.15em] uppercase max-w-xl leading-snug drop-shadow-xl">
+                                {subtitle || "T.C. İÇİŞLERİ BAKANLIĞI AFAD AKREDİTE ARAMA KURTARMA DERNEĞİ"}
                             </p>
                         </motion.div>
 
@@ -208,7 +209,7 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                             className="max-w-2xl"
                         >
                             <p className="text-sm sm:text-base md:text-lg text-neutral-200 font-light leading-relaxed mb-6 sm:mb-10 border-l-4 border-red-600 pl-4 sm:pl-6 bg-black/40 backdrop-blur-md rounded-r-2xl py-4 sm:py-5 pr-4 sm:pr-6 shadow-2xl">
-                                {heroDesc || "Sadece düzlüklerde değil; sarp vadilerde, kanyonlarda ve en ağır arazilerde profesyonel müdahale. Biz durduğumuzda zaman durur."}
+                                {heroDesc || "AFAD Kentsel Arama Kurtarma Akreditasyonuna sahip, zorlu arazi ve doğa koşullarında 7/24 kesintisiz operasyonel güce ulaşmış profesyonel gönüllü dernek."}
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-5">
@@ -288,11 +289,15 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
                             className="w-full md:w-2/3"
                         >
-                            <div className="flex flex-col md:flex-row gap-4 mb-6">
-                                <div className="bg-red-600/10 border border-red-500/20 px-4 py-2 rounded-lg text-red-500 font-bold text-sm tracking-widest uppercase">
+                            <div className="flex flex-wrap items-center gap-3 mb-6">
+                                <div className="bg-red-600/20 border border-red-500/40 px-4 py-2 rounded-xl text-white font-black text-xs tracking-widest uppercase flex items-center gap-2.5 shadow-[0_0_15px_rgba(220,38,38,0.25)]">
+                                    <img src="/afad-akreditasyon-logo.png" alt="AFAD Akredite" className="h-5 w-auto object-contain" />
+                                    <span>AFAD AKREDİTE DERNEK</span>
+                                </div>
+                                <div className="bg-red-600/10 border border-red-500/20 px-4 py-2 rounded-xl text-red-500 font-bold text-xs tracking-widest uppercase">
                                     {aboutTag1 || "\"Asla Geride Bırakma\""}
                                 </div>
-                                <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg text-neutral-300 font-bold text-sm tracking-widest uppercase">
+                                <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-neutral-300 font-bold text-xs tracking-widest uppercase">
                                     {aboutTag2 || "\"Sıfır Hata, %100 Disiplin\""}
                                 </div>
                             </div>

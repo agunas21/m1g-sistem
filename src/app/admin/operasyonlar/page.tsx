@@ -418,8 +418,8 @@ export default function Operasyonlar() {
                     deployments: t.deployments || []
                 })),
                 baseCamp: {
-                    members: op.baseCamp?.members || [],
-                    equipment: op.baseCamp?.equipment || []
+                    members: op.baseCamp?.members || op.baseCampMembers || [],
+                    equipment: op.baseCamp?.equipment || op.baseCampEquipment || []
                 },
                 supplies: op.supplies || { 
                     ppeCount: 0, 
