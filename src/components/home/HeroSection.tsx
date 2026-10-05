@@ -168,7 +168,23 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                     style={{ opacity, y: useTransform(scrollYProgress, [0, 1], ["0%", "30%"]) }}
                     className="container relative z-10 px-4 sm:px-6 lg:px-8 pt-20 w-full"
                 >
-                    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 max-w-7xl mx-auto">
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-12 max-w-7xl mx-auto">
+                        
+                        {/* Left Side: Clean AFAD Accreditation Shield Logo (Yellow Circled Area) */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.85, x: -30 }}
+                            animate={{ opacity: 1, scale: 1, x: 0 }}
+                            transition={{ duration: 1, delay: 0.3 }}
+                            className="shrink-0 flex items-center justify-center p-2 lg:p-4"
+                        >
+                            <img
+                                src="/afad-akreditasyon-logo.png"
+                                alt="AFAD Akreditasyon Logo"
+                                className="w-48 sm:w-60 md:w-72 lg:w-80 h-auto object-contain drop-shadow-[0_0_35px_rgba(239,68,68,0.4)] hover:scale-105 transition-transform duration-500"
+                            />
+                        </motion.div>
+
+                        {/* Right Side: Clean Original Hero Content */}
                         <div className="max-w-3xl flex-1">
 
                             <motion.div
@@ -182,8 +198,8 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-red-600"></span>
                                     </span>
-                                    <span className="text-white text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase">
-                                        {heroBadge || "AFAD AKREDİTE ARAMA KURTARMA"}
+                                    <span className="text-white text-[10px] sm:text-sm font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase">
+                                        {heroBadge || "M1G Arazi & Dağ Operasyonu"}
                                     </span>
                                 </div>
                             </motion.div>
@@ -195,7 +211,7 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                                 className="mb-6"
                             >
                                 <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40 tracking-tighter leading-[0.85] mb-4 sm:mb-6 uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
-                                    {title || "M1G ARAMA KURTARMA"}
+                                    {title || "M1G ARAMA KURTARMA DERNEĞİ"}
                                 </h1>
                                 <p className="text-lg sm:text-xl md:text-2xl font-light text-neutral-300 tracking-[0.15em] uppercase max-w-xl leading-snug drop-shadow-xl">
                                     {subtitle || "ASLA GERİDE BIRAKMA"}
@@ -234,27 +250,6 @@ export default function HeroSection({ title, subtitle, heroBg, heroImages, heroB
                             </motion.div>
 
                         </div>
-
-                        {/* Elegant AFAD Accreditation Emblem Card */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 1.2, delay: 0.5 }}
-                            className="hidden lg:flex flex-col items-center justify-center p-8 rounded-3xl bg-black/40 border border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] shrink-0 hover:border-red-500/40 transition-all group"
-                        >
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-red-600 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
-                                <img
-                                    src="/afad-akreditasyon-logo.png"
-                                    alt="AFAD Kentsel Arama Kurtarma Akreditasyonu Logo"
-                                    className="w-48 sm:w-56 h-auto object-contain relative z-10 drop-shadow-[0_0_30px_rgba(239,68,68,0.3)] group-hover:scale-105 transition-transform duration-500"
-                                />
-                            </div>
-                            <div className="text-center mt-6 space-y-1">
-                                <span className="text-xs font-black tracking-[0.25em] text-white uppercase block">AFAD AKREDİTE</span>
-                                <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase block">Kentsel Arama Kurtarma</span>
-                            </div>
-                        </motion.div>
 
                     </div>
                 </motion.div>
