@@ -207,7 +207,7 @@ export default async function Home() {
                     {member.avatar ? (
                       <img
                         src={member.avatar} alt={member.fullName}
-                        className="w-full h-full object-cover filter grayscale opacity-70 group-hover:scale-110 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 ease-out"
+                        className="w-full h-full object-cover object-top filter grayscale opacity-70 group-hover:scale-110 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 ease-out"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-neutral-900">
