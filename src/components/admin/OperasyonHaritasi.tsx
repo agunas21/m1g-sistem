@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 
-import { MapContainer, TileLayer, Marker, Polyline, Circle, Popup, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Polyline, Circle, Popup, useMap, useMapEvents, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -516,12 +516,37 @@ export default function OperasyonHaritasi({
             zoomControl={true}
             whenReady={() => setMapReady(true)}
           >
-            {/* Darker OpenStreetMap tiles for night mode map look */}
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              maxZoom={19}
-            />
+            {/* Katman Secenekleri: Uydu Hibrit, Karanlik Taktik, Topografik ve Sokak */}
+            <LayersControl position="topright">
+              <LayersControl.BaseLayer name="Uydu & Arazi (Google Hibrit)" checked>
+                <TileLayer
+                  url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                  attribution="&copy; Google Maps"
+                  maxZoom={20}
+                />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="Karanlık Taktik (Esri Dark)">
+                <TileLayer
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+                  attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                  maxZoom={19}
+                />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="Google Arazi (Topoğrafik)">
+                <TileLayer
+                  url="https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}"
+                  attribution="&copy; Google Maps"
+                  maxZoom={20}
+                />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="Standart Sokak (OSM)">
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  maxZoom={19}
+                />
+              </LayersControl.BaseLayer>
+            </LayersControl>
 
             {mapReady && <MapController flyTo={flyTo} />}
             {onMapClick && <CenterPinButton onClick={onMapClick} />}
