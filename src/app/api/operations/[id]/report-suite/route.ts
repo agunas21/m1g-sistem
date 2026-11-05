@@ -102,7 +102,7 @@ async function buildChronologyData(operationId: string) {
       status: "empty" as const, 
       timeline: [], 
       criticalMoments: [], 
-      gaps: ["Operasyon için hiç olay kaydı bulunamadı."] 
+      gaps: ["Operasyon seyir defterine henüz kronolojik olay/müdahale kaydı girilmedi."] 
     };
   }
 

@@ -1333,25 +1333,24 @@ export default function OperasyonHaritasi({
         </div>
       </div>
 
-      {/* ── ASR-1 Sektör Oluşturma Modalı ─────────────────────────────── */}
+      {/* ── ASR-1 Sektör Oluşturma Yan Kartı (Harita Sağ Üstte Açılır) ─── */}
       {showSectorModal && (
-        <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0f172a] border border-amber-500/40 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative text-left">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-              <div className="flex items-center gap-2.5">
-                <span className="text-2xl">📐</span>
-                <div>
-                  <h3 className="text-base font-bold text-white uppercase tracking-wider">Yeni ASR-1 Sektörü Tanımla</h3>
-                  <p className="text-xs text-neutral-400">INSARAG Seviye 1: Geniş Alan Sektörlemesi</p>
-                </div>
+        <div className="absolute top-16 right-4 z-[1200] w-[92%] sm:w-[380px] max-h-[82%] overflow-y-auto bg-[#0f172a]/95 border border-amber-500/50 rounded-2xl p-5 shadow-2xl backdrop-blur-md text-left transition-all">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">📐</span>
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Yeni ASR-1 Sektörü Tanımla</h3>
+                <p className="text-[10px] text-neutral-400">INSARAG Seviye 1: Geniş Alan Sektörlemesi</p>
               </div>
-              <button 
-                onClick={() => setShowSectorModal(false)}
-                className="text-neutral-400 hover:text-white text-xl p-1"
-              >✕</button>
             </div>
+            <button 
+              onClick={() => setShowSectorModal(false)}
+              className="text-neutral-400 hover:text-white text-lg p-1"
+            >✕</button>
+          </div>
 
-            <form onSubmit={handleSaveSector} className="space-y-4">
+          <form onSubmit={handleSaveSector} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Sektör Kodu *</label>
@@ -1490,7 +1489,6 @@ export default function OperasyonHaritasi({
               </div>
             </form>
           </div>
-        </div>
       )}
     </div>
   )
