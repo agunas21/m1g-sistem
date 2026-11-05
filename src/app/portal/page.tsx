@@ -6,7 +6,8 @@ import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import ReactPlayer from "react-player";
-import { Loader2, PlayCircle, BookOpen, User, Signal, Video, ShieldCheck, Mail, Radio, MapPin, X } from "lucide-react";
+import { Loader2, PlayCircle, BookOpen, User, Signal, Video, ShieldCheck, Mail, Radio, MapPin, X, Car, Footprints } from "lucide-react";
+import { getMovementMode, calculateDistanceKm, MovementInfo } from "@/lib/routing";
 
 type VideoData = {
     id: string;
@@ -30,6 +31,8 @@ export default function PortalDashboard() {
     const [isClient, setIsClient] = useState(false);
     const [gpsStatus, setGpsStatus] = useState<string>("Bilinmiyor");
     const [showGpsHelp, setShowGpsHelp] = useState(false);
+    const [movementInfo, setMovementInfo] = useState<MovementInfo>({ mode: 'still', label: 'Sabit', icon: '🛑', speedKmH: 0 });
+    const [wakeLockActive, setWakeLockActive] = useState<boolean>(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -75,38 +78,79 @@ export default function PortalDashboard() {
         }
     };
 
-    // Aşama 3: Canlı Konum Ping Mekanizması
+    // Aşama 3: Kesintisiz Canlı Konum, Wake Lock & Hıza Göre Hareket Takibi (watchPosition)
     useEffect(() => {
         if (gpsStatus !== "granted" || !user) return;
 
-        const pingLocation = () => {
-            navigator.geolocation.getCurrentPosition(
-                async (pos) => {
-                    try {
-                        await fetch('/api/settings/operations/active/location', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                memberId: user.uid || user.email, // Identify the user
-                                lat: pos.coords.latitude,
-                                lng: pos.coords.longitude
-                            })
-                        });
-                    } catch (e) {
-                        console.error("Konum ping hatası:", e);
-                    }
-                },
-                (err) => console.error("Konum okuma hatası:", err),
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-            );
+        let wakeLock: any = null;
+        const requestWakeLock = async () => {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await (navigator as any).wakeLock.request('screen');
+                    setWakeLockActive(true);
+                }
+            } catch (err) {
+                console.warn('Wake Lock request deferred:', err);
+            }
+        };
+        requestWakeLock();
+
+        let lastSendTime = 0;
+        let lastCoords: { lat: number, lng: number } | null = null;
+
+        const sendPos = async (pos: GeolocationPosition) => {
+            const now = Date.now();
+            // Minimum 3 saniye aralıkla ping at (bataryayı korur ve sık günceller)
+            if (now - lastSendTime < 3000) return;
+            lastSendTime = now;
+
+            const { latitude, longitude, speed, accuracy } = pos.coords;
+
+            // Hız hesabı (m/s -> km/h veya mesafe/zaman)
+            let speedKmH = 0;
+            if (speed != null && !isNaN(speed) && speed >= 0) {
+                speedKmH = speed * 3.6;
+            } else if (lastCoords) {
+                const distKm = calculateDistanceKm(lastCoords.lat, lastCoords.lng, latitude, longitude);
+                const elapsedHours = (now - lastSendTime) / 3600000;
+                if (elapsedHours > 0) speedKmH = distKm / elapsedHours;
+            }
+            lastCoords = { lat: latitude, lng: longitude };
+
+            const currentMode = getMovementMode(speedKmH);
+            setMovementInfo(currentMode);
+
+            try {
+                await fetch('/api/settings/operations/active/location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        memberId: user.uid || user.email,
+                        lat: latitude,
+                        lng: longitude,
+                        speed: speedKmH,
+                        accuracy: accuracy || 15
+                    })
+                });
+            } catch (e) {
+                console.error("Konum ping hatası:", e);
+            }
         };
 
-        // İlk ping hemen atılsın
-        pingLocation();
+        // watchPosition: Cihaz hareket ettikçe anında tetiklenir
+        const watchId = navigator.geolocation.watchPosition(
+            sendPos,
+            (err) => console.warn("GPS izleme uyarısı:", err),
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 2000 }
+        );
 
-        // 10 saniyede bir ping at
-        const interval = setInterval(pingLocation, 60000);
-        return () => clearInterval(interval);
+        return () => {
+            navigator.geolocation.clearWatch(watchId);
+            if (wakeLock) {
+                wakeLock.release().catch(() => {});
+            }
+            setWakeLockActive(false);
+        };
     }, [gpsStatus, user]);
 
     useEffect(() => {
@@ -236,6 +280,29 @@ export default function PortalDashboard() {
                                 {gpsStatus === "granted" ? "Aktif" : gpsStatus === "denied" ? "Reddedildi" : "Bekleniyor"}
                             </span>
                         </div>
+
+                        {gpsStatus === "granted" && (
+                            <div className="space-y-2 pt-2 border-t border-white/5 text-xs">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-neutral-400 font-medium">Hareket Modu:</span>
+                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1 ${
+                                        movementInfo.mode === 'vehicle' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                                        movementInfo.mode === 'walking' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' :
+                                        'bg-neutral-800 text-neutral-300'
+                                    }`}>
+                                        <span>{movementInfo.icon}</span>
+                                        <span>{movementInfo.label}</span>
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between text-[11px] text-neutral-500">
+                                    <span>Ekran Uyku Önleyici:</span>
+                                    <span className={wakeLockActive ? "text-emerald-400 font-bold" : "text-neutral-400"}>
+                                        {wakeLockActive ? "Aktif (Açık Kalır)" : "Desteklenmiyor"}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
                         {gpsStatus !== "granted" && (
                             <button 
                                 onClick={requestGpsPermission}

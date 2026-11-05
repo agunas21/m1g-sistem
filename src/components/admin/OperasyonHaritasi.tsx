@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
+import { getMovementMode, getRoadSegment, snapFullTrail, calculateDistanceKm, MovementInfo } from '@/lib/routing'
 
 import { MapContainer, TileLayer, Marker, Polyline, Circle, Popup, useMap, useMapEvents, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -127,31 +128,59 @@ const CenterCrosshair = () => {
   );
 };
 
-function makeIcon(color: string, initials: string, isSelected: boolean) {
+function makeIcon(color: string, initials: string, isSelected: boolean, speed?: number | null) {
   if (typeof window === 'undefined') return undefined
   const L = require('leaflet')
 
   const size  = isSelected ? 44 : 36
   const ring  = isSelected ? `box-shadow:0 0 0 3px #fff, 0 0 0 5px ${color};` : ''
+  const move  = getMovementMode(speed)
+
+  // Rozet (badge) ikonu: Araç için turuncu 🚗, Yaya için mavi 🚶
+  let badgeHtml = '';
+  if (move.mode === 'vehicle') {
+    badgeHtml = `
+      <div style="
+        position:absolute;top:-4px;right:-4px;width:18px;height:18px;
+        border-radius:50%;background:#f59e0b;border:2px solid #fff;
+        display:flex;align-items:center;justify-content:center;
+        font-size:10px;box-shadow:0 2px 4px rgba(0,0,0,0.5);
+      " title="${move.label}">🚗</div>`;
+  } else if (move.mode === 'walking') {
+    badgeHtml = `
+      <div style="
+        position:absolute;top:-4px;right:-4px;width:18px;height:18px;
+        border-radius:50%;background:#0284c7;border:2px solid #fff;
+        display:flex;align-items:center;justify-content:center;
+        font-size:10px;box-shadow:0 2px 4px rgba(0,0,0,0.5);
+      " title="${move.label}">🚶</div>`;
+  }
 
   return L.divIcon({
     className: '',
     iconSize:   [size, size + 20],
     iconAnchor: [size / 2, size / 2],
     html: `
-      <div style="
-        width:${size}px;height:${size}px;border-radius:50%;
-        background:${color};border:2.5px solid #fff;
-        display:flex;align-items:center;justify-content:center;
-        font-size:${isSelected ? 13 : 11}px;font-weight:600;color:#fff;
-        cursor:pointer;${ring}transition:all .15s;
-      ">${initials}</div>
+      <div style="position:relative;width:${size}px;height:${size}px;">
+        <div style="
+          width:${size}px;height:${size}px;border-radius:50%;
+          background:${color};border:2.5px solid #fff;
+          display:flex;align-items:center;justify-content:center;
+          font-size:${isSelected ? 13 : 11}px;font-weight:600;color:#fff;
+          cursor:pointer;${ring}transition:all .15s;
+        ">${initials}</div>
+        ${badgeHtml}
+      </div>
       <div style="
         position:absolute;top:${size + 4}px;left:50%;transform:translateX(-50%);
         white-space:nowrap;background:rgba(15,20,35,.88);
         border:0.5px solid rgba(255,255,255,.15);border-radius:4px;
         padding:2px 6px;font-size:10px;color:#e2e8f0;pointer-events:none;
-      ">${initials}</div>
+        display:flex;align-items:center;gap:3px;
+      ">
+        <span>${initials}</span>
+        ${move.mode !== 'still' ? `<span style="font-size:9px;color:${move.mode === 'vehicle' ? '#f59e0b' : '#38bdf8'}">${move.icon}</span>` : ''}
+      </div>
     `,
   })
 }
@@ -226,6 +255,7 @@ export default function OperasyonHaritasi({
           colorIdx++;
           t.members.forEach((m: any) => {
               const memInfo = memberMap.get(m.id);
+              const spd = m.lastLocation?.speed ?? 0;
               map[m.id] = {
                   member_id: m.id,
                   member_name: memInfo?.fullName || m.id,
@@ -237,13 +267,19 @@ export default function OperasyonHaritasi({
                   lng: m.lastLocation?.lng,
                   accuracy: m.lastLocation?.accuracy,
                   battery: m.lastLocation?.battery,
-                  speed: 0,
+                  speed: spd,
                   is_online: m.lastLocation ? (Date.now() - m.lastLocation.timestamp < 10 * 60 * 1000) : false,
                   recorded_at: m.lastLocation ? new Date(m.lastLocation.timestamp).toISOString() : undefined
               };
               if (m.lastLocation) {
                   if (m.path && m.path.length > 0) {
-                      newTrails[m.id] = m.path.map((p:any) => [p.lat, p.lng]);
+                      const rawPoints: [number, number][] = m.path.map((p: any) => [p.lat, p.lng]);
+                      newTrails[m.id] = rawPoints;
+                      
+                      // Geçmiş rotadaki kuşbakışı uzak atlamaları OSRM ile karayolu ağına snap et
+                      snapFullTrail(rawPoints).then(snapped => {
+                          setTrails(prev => ({ ...prev, [m.id]: snapped }));
+                      }).catch(() => {});
                   } else {
                       newTrails[m.id] = [[m.lastLocation.lat, m.lastLocation.lng]];
                   }
@@ -275,17 +311,19 @@ export default function OperasyonHaritasi({
     channelRef.current = supabase.channel('operations-channel');
     
     channelRef.current.on('broadcast', { event: 'location_update' }, (payload: any) => {
-        const { memberId, lat, lng, battery, accuracy, timestamp } = payload.payload;
+        const { memberId, lat, lng, battery, accuracy, speed: reportedSpeed, timestamp } = payload.payload;
 
+        let calculatedSpeed = reportedSpeed;
         setLocations((prev: any) => {
             const p = prev[memberId];
             if (!p) return prev; 
             
-            let speed = 0;
-            if (p.lat && p.lng && p.recorded_at) {
-                const dist = getDistanceFromLatLonInKm(p.lat, p.lng, lat, lng);
-                const timeDiff = (timestamp - new Date(p.recorded_at).getTime()) / (1000 * 60 * 60);
-                if (timeDiff > 0) speed = dist / timeDiff;
+            if (calculatedSpeed === undefined || calculatedSpeed === null) {
+                if (p.lat && p.lng && p.recorded_at) {
+                    const dist = getDistanceFromLatLonInKm(p.lat, p.lng, lat, lng);
+                    const timeDiff = (timestamp - new Date(p.recorded_at).getTime()) / (1000 * 60 * 60);
+                    if (timeDiff > 0) calculatedSpeed = dist / timeDiff;
+                }
             }
 
             return {
@@ -294,15 +332,39 @@ export default function OperasyonHaritasi({
                     ...p,
                     lat, lng, battery: battery || p.battery || 100,
                     accuracy: accuracy || p.accuracy || 15,
-                    speed,
+                    speed: calculatedSpeed ?? p.speed ?? 0,
                     is_online: true,
                     recorded_at: new Date(timestamp).toISOString()
                 }
             };
         });
 
+        // Rota güncelleme: Mesafe >= 300m ise OSRM ile karayolu eşlemesi yap, yoksa ham yaya noktasını ekle
         setTrails((prev: any) => {
             const existing = prev[memberId] ?? [];
+            const lastPoint = existing[existing.length - 1];
+
+            if (lastPoint) {
+                const dist = calculateDistanceKm(lastPoint[0], lastPoint[1], lat, lng);
+                if (dist >= 0.3) {
+                    // Uzak mesafe / Araç hareketi: OSRM ile karayoluna oturt
+                    getRoadSegment(lastPoint, [lat, lng]).then(roadPoints => {
+                        setTrails(curr => {
+                            const currExisting = curr[memberId] ?? [];
+                            const updated = [...currExisting.slice(0, -1), ...roadPoints];
+                            return { ...curr, [memberId]: updated.slice(-MAX_TRAIL) };
+                        });
+                    }).catch(() => {
+                        setTrails(curr => ({
+                            ...curr,
+                            [memberId]: [...(curr[memberId] ?? []), [lat, lng] as [number, number]].slice(-MAX_TRAIL)
+                        }));
+                    });
+                    return prev;
+                }
+            }
+
+            // Normal yaya veya yakın nokta: Ham GPS koordinatını direkt ekle
             const updated = [...existing, [lat, lng] as [number, number]];
             return { ...prev, [memberId]: updated.slice(-MAX_TRAIL) };
         });
@@ -585,7 +647,7 @@ export default function OperasyonHaritasi({
             {people.map(p => {
               if (p.lat === undefined || p.lng === undefined) return null;
               const isSelected = selected === p.member_id
-              const icon = makeIcon(p.team_color, getInitials(p.member_name), isSelected)
+              const icon = makeIcon(p.team_color, getInitials(p.member_name), isSelected, p.speed)
               if (!icon) return null
 
               return (
@@ -664,12 +726,35 @@ export default function OperasyonHaritasi({
 
               {selPer.lat !== undefined ? (
                   <>
+                    {/* Hareket Türü Göstergesi */}
+                    {(() => {
+                      const move = getMovementMode(selPer.speed);
+                      return (
+                        <div style={{
+                          display:'flex', alignItems:'center', justifyContent:'space-between',
+                          padding:'8px 12px', borderRadius:8, marginBottom:10,
+                          background: move.mode === 'vehicle' ? 'rgba(245,158,11,0.15)' : move.mode === 'walking' ? 'rgba(56,189,248,0.15)' : 'rgba(30,41,59,0.5)',
+                          border: `1px solid ${move.mode === 'vehicle' ? 'rgba(245,158,11,0.3)' : move.mode === 'walking' ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.08)'}`
+                        }}>
+                          <span style={{ fontSize:12, color:'#94a3b8', fontWeight:500 }}>Hareket Durumu:</span>
+                          <span style={{
+                            fontSize:12, fontWeight:700,
+                            color: move.mode === 'vehicle' ? '#fbbf24' : move.mode === 'walking' ? '#38bdf8' : '#cbd5e1',
+                            display:'flex', alignItems:'center', gap:6
+                          }}>
+                            <span>{move.icon}</span>
+                            <span>{move.label}</span>
+                          </span>
+                        </div>
+                      );
+                    })()}
+
                     {/* İstatistik kartları */}
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:12 }} className="overflow-x-auto pb-2 md:pb-0">
                       {[
                         { label:'Batarya', value:`${Math.round(Number(selPer.battery ?? 100))}%`, color: Number(selPer.battery ?? 100) < 20 ? '#f87171' : '#4ade80' },
                         { label:'GPS ±m',  value:`±${Math.round(Number(selPer.accuracy ?? 15))}m`, color:'#93c5fd' },
-                        { label:'Hız',     value:`${selPer.speed != null ? Math.round(Number(selPer.speed)) : '—'} km/h`, color:'#e2e8f0' },
+                        { label:'Hız',     value:`${selPer.speed != null ? Math.round(Number(selPer.speed)) : 0} km/s`, color: Number(selPer.speed) > 15 ? '#fbbf24' : '#e2e8f0' },
                         { label:'Sinyal',  value: selPer.recorded_at ? new Date(selPer.recorded_at).toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' }) : '—', color:'#e2e8f0' },
                       ].map(s => (
                         <div key={s.label} style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center', minWidth: '70px' }}>

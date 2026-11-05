@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
 import { getCollectionDB, writeCollectionDB } from '@/lib/settings';
+import { supabase } from '@/lib/supabase';
 
 // Mesafe hesaplama (Haversine formülü) - kilometre cinsinden döner
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -23,16 +24,17 @@ function deg2rad(deg: number) {
   return deg * (Math.PI/180)
 }
 
-// POST: Üyeden gelen konum verisini (lat, lng) al ve bireysel olarak kaydet
+// POST: Üyeden gelen konum verisini (lat, lng, speed, accuracy, battery) al ve bireysel olarak kaydet
 export async function POST(req: Request) {
     try {
         const payload = await req.json();
-        const { memberId, lat, lng } = payload;
+        const { memberId, lat, lng, speed, accuracy, battery } = payload;
 
-        if (!memberId || !lat || !lng) {
+        if (!memberId || lat === undefined || lng === undefined) {
             return NextResponse.json({ error: 'Eksik veri: memberId, lat, lng gerekli' }, { status: 400 });
         }
 
+        const now = Date.now();
         const operations = await getCollectionDB('global_operations');
         let updated = false;
 
@@ -46,15 +48,28 @@ export async function POST(req: Request) {
                 if (memberIndex !== -1) {
                         const m = team.members[memberIndex];
                         
-                        const newLocation = { lat, lng, timestamp: Date.now() };
-                        
-                        // Mesafe hesapla
+                        // Hız hesabı (Eğer cihazdan speed gelmediyse mesafe/zaman üzerinden hesapla)
+                        let calculatedSpeed = speed !== undefined ? speed : 0;
                         if (m.lastLocation && m.lastLocation.lat && m.lastLocation.lng) {
                             const distKm = getDistanceFromLatLonInKm(m.lastLocation.lat, m.lastLocation.lng, lat, lng);
                             m.distanceCovered = (m.distanceCovered || 0) + distKm;
+                            
+                            if (speed === undefined && m.lastLocation.timestamp) {
+                                const hours = (now - m.lastLocation.timestamp) / 3600000;
+                                if (hours > 0) calculatedSpeed = distKm / hours;
+                            }
                         } else {
                             m.distanceCovered = m.distanceCovered || 0;
                         }
+
+                        const newLocation = { 
+                            lat: Number(lat), 
+                            lng: Number(lng), 
+                            speed: Math.round(Number(calculatedSpeed) * 10) / 10,
+                            accuracy: accuracy ? Number(accuracy) : 15,
+                            battery: battery !== undefined ? Number(battery) : (m.lastLocation?.battery ?? 100),
+                            timestamp: now 
+                        };
                         
                         m.lastLocation = newLocation;
                         
@@ -62,12 +77,12 @@ export async function POST(req: Request) {
                         if (!m.path) m.path = [];
                         m.path.push(newLocation);
                         
-                        // Çok uzamaması için son 100 noktayı tut
-                        if (m.path.length > 100) {
-                            m.path = m.path.slice(m.path.length - 100);
+                        // Çok uzamaması için son 200 noktayı tut
+                        if (m.path.length > 200) {
+                            m.path = m.path.slice(m.path.length - 200);
                         }
 
-                        // Timin genel konumunu da (basitlik için) güncelleyelim
+                        // Timin genel konumunu da güncelleyelim
                         operations[i].teams[t].location = newLocation;
                         updated = true;
                     }
@@ -76,7 +91,25 @@ export async function POST(req: Request) {
 
         if (updated) {
             await writeCollectionDB('global_operations', operations);
-            return NextResponse.json({ success: true, message: 'Tim konumu güncellendi' });
+
+            // Supabase Realtime broadcast kanalı üzerinden haritaya anında ilet
+            try {
+                supabase.channel('operations-channel').send({
+                    type: 'broadcast',
+                    event: 'location_update',
+                    payload: {
+                        memberId,
+                        lat: Number(lat),
+                        lng: Number(lng),
+                        speed: speed !== undefined ? Number(speed) : undefined,
+                        accuracy: accuracy ? Number(accuracy) : 15,
+                        battery: battery !== undefined ? Number(battery) : 100,
+                        timestamp: now
+                    }
+                }).catch(() => {});
+            } catch {}
+
+            return NextResponse.json({ success: true, message: 'Tim konumu ve hız verisi güncellendi' });
         } else {
             return NextResponse.json({ success: false, message: 'Aktif sahada olan ilgili tim bulunamadı' });
         }
