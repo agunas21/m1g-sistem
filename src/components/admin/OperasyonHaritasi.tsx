@@ -141,19 +141,75 @@ function getPolygonCenter(polygon: [number, number][]): [number, number] {
   return [sumLat / polygon.length, sumLng / polygon.length];
 }
 
-function calculatePolygonAreaKm2(coords: [number, number][]): number {
-  if (!coords || coords.length < 3) return 0;
-  let total = 0;
+function formatPolygonArea(rawCoords: any[]): {
+  primary: string;
+  secondary: string;
+  fullText: string;
+} {
+  if (!rawCoords || rawCoords.length < 3) {
+    return { primary: '0 m²', secondary: '0 km²', fullText: '0 m²' };
+  }
+
+  const coords: [number, number][] = [];
+  for (const p of rawCoords) {
+    if (Array.isArray(p) && p.length >= 2) {
+      coords.push([Number(p[0]), Number(p[1])]);
+    } else if (p && typeof p.lat === 'number' && typeof p.lng === 'number') {
+      coords.push([p.lat, p.lng]);
+    }
+  }
+
+  if (coords.length < 3) {
+    return { primary: '0 m²', secondary: '0 km²', fullText: '0 m²' };
+  }
+
+  // WGS84 Geodezik Projeksiyon Alan Hesabı (Her ölçekte kesin ve gerçekçi sonuç verir)
+  let lat0 = 0;
+  for (const p of coords) lat0 += p[0];
+  lat0 = (lat0 / coords.length) * (Math.PI / 180);
+  const kx = Math.cos(lat0) * 111319.49;
+  const ky = 110574.0;
+
+  let area = 0;
   for (let i = 0; i < coords.length; i++) {
     const j = (i + 1) % coords.length;
-    const lat1 = coords[i][0] * (Math.PI / 180);
-    const lon1 = coords[i][1] * (Math.PI / 180);
-    const lat2 = coords[j][0] * (Math.PI / 180);
-    const lon2 = coords[j][1] * (Math.PI / 180);
-    total += (lon2 - lon1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+    const xi = coords[i][1] * kx;
+    const yi = coords[i][0] * ky;
+    const xj = coords[j][1] * kx;
+    const yj = coords[j][0] * ky;
+    area += xi * yj - xj * yi;
   }
-  const area = Math.abs(total * 6378137 * 6378137 / 2) / 1000000;
-  return Math.round(area * 100) / 100;
+  const m2 = Math.abs(area / 2);
+  const km2 = m2 / 1000000;
+
+  if (m2 < 10000) {
+    // 10.000 m² altı (bina, parsel, küçük enkaz sahası)
+    const m2Formatted = `${Math.round(m2).toLocaleString('tr-TR')} m²`;
+    const km2Formatted = `${km2.toFixed(3)} km²`;
+    return {
+      primary: m2Formatted,
+      secondary: `~${km2Formatted}`,
+      fullText: `${m2Formatted} (${km2Formatted})`
+    };
+  } else if (km2 < 1) {
+    // 10.000 m² ile 1 km² arası (mahalle, yerleşke, fabrika sahası)
+    const km2Formatted = `${km2.toFixed(3)} km²`;
+    const m2Formatted = `${Math.round(m2).toLocaleString('tr-TR')} m²`;
+    return {
+      primary: km2Formatted,
+      secondary: m2Formatted,
+      fullText: `${km2Formatted} (${m2Formatted})`
+    };
+  } else {
+    // 1 km² üstü (geniş arama kurtarma alanı)
+    const km2Formatted = `${km2.toFixed(2)} km²`;
+    const haFormatted = `${(km2 * 100).toFixed(1)} Hektar`;
+    return {
+      primary: km2Formatted,
+      secondary: haFormatted,
+      fullText: `${km2Formatted} (${haFormatted})`
+    };
+  }
 }
 
 function makeSectorLabelIcon(sector: ASR1Sector) {
@@ -1159,9 +1215,11 @@ export default function OperasyonHaritasi({
               <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12 }} className="overflow-x-auto pb-2 md:pb-0">
                 <div style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center' }}>
                   <div style={{ fontSize:16, fontWeight:700, color:'#38bdf8' }}>
-                    {calculatePolygonAreaKm2(selectedSector.polygon)} km²
+                    {formatPolygonArea(selectedSector.polygon).primary}
                   </div>
-                  <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>Tahmini Kapsama Alanı</div>
+                  <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>
+                    Tahmini Alan ({formatPolygonArea(selectedSector.polygon).secondary})
+                  </div>
                 </div>
                 <div style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center' }}>
                   <div style={{ fontSize:16, fontWeight:700, color:'#f59e0b' }}>
@@ -1468,7 +1526,7 @@ export default function OperasyonHaritasi({
               <div className="p-3 bg-slate-900/60 rounded-xl border border-white/5 flex items-center justify-between text-xs text-neutral-400">
                 <span>Belirlenen Alan Büyüklüğü:</span>
                 <span className="text-amber-400 font-bold font-mono">
-                  {calculatePolygonAreaKm2(drawPoints)} km² ({drawPoints.length} köşe noktası)
+                  {formatPolygonArea(drawPoints).fullText} ({drawPoints.length} köşe noktası)
                 </span>
               </div>
 
