@@ -5,9 +5,10 @@ import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 import { getMovementMode, getRoadSegment, snapFullTrail, calculateDistanceKm, MovementInfo } from '@/lib/routing'
 
-import { MapContainer, TileLayer, Marker, Polyline, Circle, Popup, useMap, useMapEvents, LayersControl } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Polyline, Polygon, Circle, CircleMarker, Popup, useMap, useMapEvents, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import type { ASR1Sector } from '@/app/api/settings/operations/active/sectors/route'
 
 // ── Tipler ──────────────────────────────────────────────────────────────────
 interface PersonnelLocation {
@@ -128,6 +129,77 @@ const CenterCrosshair = () => {
   );
 };
 
+// ── ASR-1 Sektör Yardımcı Fonksiyonları ─────────────────────────────────────
+function getPolygonCenter(polygon: [number, number][]): [number, number] {
+  if (!polygon || polygon.length === 0) return [0, 0];
+  let sumLat = 0;
+  let sumLng = 0;
+  for (const pt of polygon) {
+    sumLat += pt[0];
+    sumLng += pt[1];
+  }
+  return [sumLat / polygon.length, sumLng / polygon.length];
+}
+
+function calculatePolygonAreaKm2(coords: [number, number][]): number {
+  if (!coords || coords.length < 3) return 0;
+  let total = 0;
+  for (let i = 0; i < coords.length; i++) {
+    const j = (i + 1) % coords.length;
+    const lat1 = coords[i][0] * (Math.PI / 180);
+    const lon1 = coords[i][1] * (Math.PI / 180);
+    const lat2 = coords[j][0] * (Math.PI / 180);
+    const lon2 = coords[j][1] * (Math.PI / 180);
+    total += (lon2 - lon1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+  }
+  const area = Math.abs(total * 6378137 * 6378137 / 2) / 1000000;
+  return Math.round(area * 100) / 100;
+}
+
+function makeSectorLabelIcon(sector: ASR1Sector) {
+  if (typeof window === 'undefined') return undefined;
+  const L = require('leaflet');
+  
+  const statusColor = 
+    sector.status === 'Aktif Arama' ? '#22c55e' :
+    sector.status === 'Yüksek Risk' ? '#ef4444' :
+    sector.status === 'Tamamlandı' ? '#94a3b8' : '#eab308';
+
+  const color = sector.color || statusColor;
+
+  return L.divIcon({
+    className: 'asr1-sector-label-marker',
+    iconSize: [140, 50],
+    iconAnchor: [70, 25],
+    html: `
+      <div style="
+        background: rgba(15, 23, 42, 0.95);
+        border: 2px solid ${color};
+        border-radius: 8px;
+        padding: 4px 8px;
+        color: #fff;
+        text-align: center;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+        cursor: pointer;
+        user-select: none;
+        backdrop-filter: blur(4px);
+      ">
+        <div style="font-size: 10px; font-weight: 800; letter-spacing: 1px; color: ${color}; text-transform: uppercase;">
+          ASR-1 ${sector.code}
+        </div>
+        <div style="font-size: 11px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">
+          ${sector.name}
+        </div>
+        ${sector.assignedTeamName ? `
+          <div style="font-size: 9px; font-weight: 600; color: #38bdf8; margin-top: 1px;">
+            🚩 ${sector.assignedTeamName}
+          </div>
+        ` : ''}
+      </div>
+    `
+  });
+}
+
 function makeIcon(color: string, initials: string, isSelected: boolean, speed?: number | null) {
   if (typeof window === 'undefined') return undefined
   const L = require('leaflet')
@@ -227,6 +299,25 @@ export default function OperasyonHaritasi({
   const [opStats,    setOpStats]    = useState({ name: "Yükleniyor...", activeCount: 0 })
   const [myPos,      setMyPos]      = useState<[number, number] | null>(null)
   
+  // ASR-1 Sektörleme State'leri
+  const [sectors, setSectors] = useState<ASR1Sector[]>([])
+  const [selectedSector, setSelectedSector] = useState<ASR1Sector | null>(null)
+  const [isDrawingSector, setIsDrawingSector] = useState(false)
+  const [drawPoints, setDrawPoints] = useState<[number, number][]>([])
+  const [showSectorModal, setShowSectorModal] = useState(false)
+  const [teamsList, setTeamsList] = useState<{ id: string, name: string }[]>([])
+  const [newSectorForm, setNewSectorForm] = useState({
+    code: 'Sektör A',
+    name: 'Kuzey Afet Sektörü',
+    status: 'Değerlendirme' as 'Değerlendirme' | 'Aktif Arama' | 'Tamamlandı' | 'Yüksek Risk',
+    priority: 'Orta' as 'Kritik' | 'Orta' | 'Düşük',
+    assignedTeamId: '',
+    assignedTeamName: '',
+    hazards: '',
+    radioChannel: 'CH-1 / 446.00625 MHz',
+    color: '#3b82f6'
+  })
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const lastPingRef = useRef<number>(0)
   const channelRef = useRef<any>(null)
@@ -239,6 +330,16 @@ export default function OperasyonHaritasi({
         const ops = await resOp.json();
         const op = ops.find((o: any) => o.id === operationId);
         if (!op) return;
+
+        // ASR-1 Sektörlerini yükle
+        fetch(`/api/settings/operations/active/sectors?operationId=${operationId}`)
+          .then(r => r.json())
+          .then(d => { if (d.sectors) setSectors(d.sectors); })
+          .catch(() => { if (op.sectors) setSectors(op.sectors); });
+
+        if (op.teams) {
+          setTeamsList(op.teams.map((t: any) => ({ id: t.id, name: t.name })));
+        }
 
         const resMem = await fetch('/api/members');
         const membersArr = await resMem.json();
@@ -375,9 +476,118 @@ export default function OperasyonHaritasi({
 
   const handleSelect = useCallback((id: string) => {
     setSelected(prev => prev === id ? null : id)
+    setSelectedSector(null)
     const loc = locations[id]
     if (loc && loc.lat !== undefined && loc.lng !== undefined) setFlyTo([loc.lat, loc.lng])
   }, [locations])
+
+  // ── ASR-1 Sektör Çizim & Yönetim Fonksiyonları ────────────────────────────
+  const getNextSectorCode = (currentSectors: ASR1Sector[]) => {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const used = new Set(currentSectors.map(s => s.code.replace(/[^A-Z]/g, '')));
+    for (let i = 0; i < letters.length; i++) {
+      if (!used.has(letters[i])) {
+        return `Sektör ${letters[i]}`;
+      }
+    }
+    return `Sektör ${currentSectors.length + 1}`;
+  };
+
+  const startSectorDrawing = () => {
+    setIsDrawingSector(true);
+    setDrawPoints([]);
+    setSelected(null);
+    setSelectedSector(null);
+  };
+
+  const handleCancelDrawing = () => {
+    setIsDrawingSector(false);
+    setDrawPoints([]);
+  };
+
+  const handleUndoDrawingPoint = () => {
+    setDrawPoints(prev => prev.slice(0, -1));
+  };
+
+  const handleFinishDrawing = () => {
+    if (drawPoints.length < 3) return;
+    const defaultCode = getNextSectorCode(sectors);
+    setNewSectorForm({
+      code: defaultCode,
+      name: `${defaultCode} Afet Sahası`,
+      status: 'Değerlendirme',
+      priority: 'Orta',
+      assignedTeamId: teamsList[0]?.id || '',
+      assignedTeamName: teamsList[0]?.name || '',
+      hazards: '',
+      radioChannel: 'CH-1 / 446.00625 MHz',
+      color: '#3b82f6'
+    });
+    setShowSectorModal(true);
+  };
+
+  const handleSaveSector = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (drawPoints.length < 3) return;
+
+    const payload = {
+      operationId,
+      code: newSectorForm.code,
+      name: newSectorForm.name,
+      polygon: drawPoints,
+      assignedTeamId: newSectorForm.assignedTeamId,
+      assignedTeamName: newSectorForm.assignedTeamName,
+      status: newSectorForm.status,
+      priority: newSectorForm.priority,
+      hazards: newSectorForm.hazards,
+      radioChannel: newSectorForm.radioChannel,
+      color: newSectorForm.color
+    };
+
+    try {
+      const res = await fetch('/api/settings/operations/active/sectors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.sector) {
+          setSectors(prev => [...prev.filter(s => s.id !== data.sector.id), data.sector]);
+          setSelectedSector(data.sector);
+        }
+      }
+    } catch (err) {
+      console.error("Sektör kaydedilemedi", err);
+    } finally {
+      setIsDrawingSector(false);
+      setDrawPoints([]);
+      setShowSectorModal(false);
+    }
+  };
+
+  const handleDeleteSector = async (sectorId: string) => {
+    if (!confirm("Bu ASR-1 sektörünü silmek istediğinize emin misiniz?")) return;
+    try {
+      const res = await fetch(`/api/settings/operations/active/sectors?operationId=${operationId}&sectorId=${sectorId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setSectors(prev => prev.filter(s => s.id !== sectorId));
+        if (selectedSector?.id === sectorId) setSelectedSector(null);
+      }
+    } catch (err) {
+      console.error("Sektör silinemedi", err);
+    }
+  };
+
+  const handleMapClick = (lat: number, lng: number) => {
+    if (isDrawingSector) {
+      setDrawPoints(prev => [...prev, [lat, lng]]);
+    } else if (onMapClick) {
+      onMapClick(lat, lng);
+    }
+  };
 
   // ── Konumumu Bul ve Gönder ────────────────────────────────────────────────
   const pingLocation = async (lat: number, lng: number) => {
@@ -564,6 +774,38 @@ export default function OperasyonHaritasi({
           </button>
           <span style={{ fontSize:16, color:'#4ade80' }}>●</span>
           <span style={{ fontSize:15, fontWeight:600, color:'#e2e8f0' }} className="ml-1">Operasyon izleme</span>
+
+          {/* ASR-1 Sektör Butonu */}
+          <button
+            onClick={startSectorDrawing}
+            disabled={isDrawingSector}
+            className={`ml-3 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
+              isDrawingSector 
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                : 'bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 text-white'
+            }`}
+            title="INSARAG ASR-1 Geniş Alan Sektör Çizimi"
+          >
+            <span>📐</span>
+            <span className="hidden sm:inline">ASR-1 Sektör Çiz</span>
+          </button>
+
+          {sectors.length > 0 && (
+            <span 
+              className="ml-2 px-2.5 py-1 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold cursor-pointer hover:bg-amber-500/25 transition-colors hidden sm:inline-flex items-center gap-1"
+              onClick={() => {
+                if (selectedSector) setSelectedSector(null);
+                else {
+                  setSelectedSector(sectors[0]);
+                  setFlyTo(getPolygonCenter(sectors[0].polygon));
+                }
+              }}
+              title="Kayıtlı ASR-1 Sektörleri"
+            >
+              <span>🏷️</span> {sectors.length} Sektör
+            </span>
+          )}
+
           <span style={{ width:'1px', height:18, background:'#374151' }} className="mx-2 hidden sm:inline" />
           <span style={S.tbStat} className="hidden sm:inline">Aktif: <span style={S.tbVal}>{onlineN}</span></span>
           <span style={S.tbStat} className="ml-auto">Toplam: <span style={S.tbVal}>{people.length}</span></span>
@@ -571,6 +813,56 @@ export default function OperasyonHaritasi({
 
         {/* Leaflet harita */}
         <div style={S.mapCont}>
+          {/* ASR-1 Çizim Yüzen Kontrol Çubuğu */}
+          {isDrawingSector && (
+            <div style={{
+              position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 1100, display: 'flex', alignItems: 'center', gap: 10,
+              background: 'rgba(15, 23, 42, 0.95)', border: '1px solid #f59e0b',
+              padding: '8px 16px', borderRadius: 30, boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(8px)'
+            }}>
+              <span style={{ fontSize: 13, color: '#f59e0b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📐</span> ASR-1 Çizim: <span style={{ color: '#fff' }}>{drawPoints.length} köşe</span>
+              </span>
+              
+              <button
+                onClick={handleFinishDrawing}
+                disabled={drawPoints.length < 3}
+                style={{
+                  background: drawPoints.length >= 3 ? '#16a34a' : '#334155',
+                  color: '#fff', border: 'none', padding: '6px 14px', borderRadius: 20,
+                  fontSize: 11, fontWeight: 700, cursor: drawPoints.length >= 3 ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.2s'
+                }}
+              >
+                ✓ Sektörü Tamamla
+              </button>
+
+              <button
+                onClick={handleUndoDrawingPoint}
+                disabled={drawPoints.length === 0}
+                style={{
+                  background: '#374151', color: '#e2e8f0', border: 'none', padding: '6px 12px',
+                  borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: drawPoints.length > 0 ? 'pointer' : 'not-allowed'
+                }}
+                title="Son noktayı geri al"
+              >
+                ↩ Geri
+              </button>
+
+              <button
+                onClick={handleCancelDrawing}
+                style={{
+                  background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px',
+                  borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                }}
+              >
+                ✕ İptal
+              </button>
+            </div>
+          )}
+
           <MapContainer
             center={initialCenter}
             zoom={initialZoom}
@@ -611,8 +903,77 @@ export default function OperasyonHaritasi({
             </LayersControl>
 
             {mapReady && <MapController flyTo={flyTo} />}
-            {onMapClick && <CenterPinButton onClick={onMapClick} />}
-            {onMapClick && <CenterCrosshair />}
+            <MapEventHandler onClick={handleMapClick} />
+            {onMapClick && !isDrawingSector && <CenterPinButton onClick={onMapClick} />}
+            {onMapClick && !isDrawingSector && <CenterCrosshair />}
+
+            {/* ASR-1 Sektörleri */}
+            {sectors.map((sec) => {
+              const isSecSelected = selectedSector?.id === sec.id;
+              const center = getPolygonCenter(sec.polygon);
+              const icon = makeSectorLabelIcon(sec);
+
+              return (
+                <div key={sec.id}>
+                  <Polygon
+                    positions={sec.polygon}
+                    pathOptions={{
+                      color: sec.color,
+                      fillColor: sec.color,
+                      fillOpacity: isSecSelected ? 0.35 : 0.16,
+                      weight: isSecSelected ? 4 : 2.5,
+                      dashArray: sec.status === 'Değerlendirme' ? '6, 6' : undefined
+                    }}
+                    eventHandlers={{
+                      click: (e) => {
+                        L.DomEvent.stopPropagation(e);
+                        setSelectedSector(sec);
+                        setSelected(null);
+                      }
+                    }}
+                  />
+                  {icon && (
+                    <Marker
+                      position={center}
+                      icon={icon}
+                      eventHandlers={{
+                        click: (e) => {
+                          L.DomEvent.stopPropagation(e);
+                          setSelectedSector(sec);
+                          setSelected(null);
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+
+            {/* ASR-1 Çizim Önizlemesi */}
+            {isDrawingSector && drawPoints.length > 0 && (
+              <>
+                {drawPoints.map((pt, idx) => (
+                  <CircleMarker
+                    key={idx}
+                    center={pt}
+                    radius={6}
+                    pathOptions={{ color: '#f59e0b', fillColor: '#fff', fillOpacity: 1, weight: 2 }}
+                  />
+                ))}
+                {drawPoints.length >= 2 && (
+                  <Polyline
+                    positions={drawPoints}
+                    pathOptions={{ color: '#f59e0b', weight: 2.5, dashArray: '6, 6' }}
+                  />
+                )}
+                {drawPoints.length >= 3 && (
+                  <Polygon
+                    positions={drawPoints}
+                    pathOptions={{ color: '#f59e0b', fillColor: '#f59e0b', fillOpacity: 0.22, weight: 2 }}
+                  />
+                )}
+              </>
+            )}
 
             {pins.map((pin) => (
               <Marker key={pin.id} position={pin.location} icon={getPinIcon(pin.type)}>
@@ -698,9 +1059,123 @@ export default function OperasyonHaritasi({
           </button>
         </div>
 
-        {/* ── Detay paneli (pin/liste tıklanınca açılır) ──── */}
-        <div style={S.dpPanel(!!selPer)}>
-          {selPer && (
+        {/* ── Detay paneli (personel veya sektör tıklanınca açılır) ──── */}
+        <div style={S.dpPanel(!!selPer || !!selectedSector)}>
+          {/* ASR-1 Sektör Detay Kartı */}
+          {selectedSector && (
+            <div>
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+                <div style={{
+                  width:42, height:42, borderRadius:10,
+                  background: (selectedSector.color || '#3b82f6') + '22',
+                  border: `2px solid ${selectedSector.color || '#3b82f6'}`,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:18, flexShrink:0
+                }}>
+                  📐
+                </div>
+                <div style={{ flex: 1, minWidth:0 }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:'#f1f5f9' }}>
+                    ASR-1 {selectedSector.code}
+                  </div>
+                  <div style={{ fontSize:12, color:'#94a3b8', marginTop:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {selectedSector.name}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedSector(null)}
+                  style={{ marginLeft:'auto', background:'transparent', border:'none', cursor:'pointer', color:'#64748b', fontSize:24, lineHeight:1 }}
+                >×</button>
+              </div>
+
+              {/* Durum & Öncelik Rozetleri */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                <span style={{
+                  padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                  background: selectedSector.status === 'Aktif Arama' ? 'rgba(34,197,94,0.2)' : selectedSector.status === 'Yüksek Risk' ? 'rgba(239,68,68,0.2)' : 'rgba(234,179,8,0.2)',
+                  color: selectedSector.status === 'Aktif Arama' ? '#4ade80' : selectedSector.status === 'Yüksek Risk' ? '#f87171' : '#facc15',
+                  border: `1px solid ${selectedSector.color || '#3b82f6'}44`
+                }}>
+                  ● {selectedSector.status}
+                </span>
+                <span style={{
+                  padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                  background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                  Öncelik: {selectedSector.priority}
+                </span>
+              </div>
+
+              {/* İstatistikler */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:12 }} className="overflow-x-auto pb-2 md:pb-0">
+                <div style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center' }}>
+                  <div style={{ fontSize:16, fontWeight:700, color:'#38bdf8' }}>
+                    {calculatePolygonAreaKm2(selectedSector.polygon)} km²
+                  </div>
+                  <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>Tahmini Kapsama Alanı</div>
+                </div>
+                <div style={{ background:'#1f2937', borderRadius:8, padding:'10px 8px', textAlign:'center' }}>
+                  <div style={{ fontSize:16, fontWeight:700, color:'#f59e0b' }}>
+                    {selectedSector.polygon.length} Köşe
+                  </div>
+                  <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>Sınır Koordinatı</div>
+                </div>
+              </div>
+
+              {/* Görevli Tim Bilgisi */}
+              <div style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 10, marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>GÖREVLİ TİM</div>
+                <div style={{ fontSize: 13, color: '#f8fafc', fontWeight: 700, marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>🚩</span>
+                  <span>{selectedSector.assignedTeamName || 'Henüz tim atanmadı'}</span>
+                </div>
+              </div>
+
+              {/* Tehlikeler ve KBRN */}
+              {selectedSector.hazards && (
+                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: 10, marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, color: '#f87171', fontWeight: 700 }}>⚠️ RİSK & TEHLİKELER</div>
+                  <div style={{ fontSize: 12, color: '#fecaca', marginTop: 2 }}>{selectedSector.hazards}</div>
+                </div>
+              )}
+
+              {/* Telsiz Kanalı */}
+              {selectedSector.radioChannel && (
+                <div style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 10, marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>TELSİZ FREKANSI / KANAL</div>
+                  <div style={{ fontSize: 12, color: '#e2e8f0', marginTop: 2, fontFamily: 'monospace' }}>📻 {selectedSector.radioChannel}</div>
+                </div>
+              )}
+
+              {/* Aksiyon butonları */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => {
+                    const center = getPolygonCenter(selectedSector.polygon);
+                    setFlyTo(center);
+                  }}
+                  style={{
+                    flex: 2, padding: '10px 0', borderRadius: 8, background: '#2563eb',
+                    color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  Haritada Ortala
+                </button>
+                <button
+                  onClick={() => handleDeleteSector(selectedSector.id)}
+                  style={{
+                    flex: 1, padding: '10px 0', borderRadius: 8, background: 'rgba(239,68,68,0.15)',
+                    color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', fontSize: 13, fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  Sektörü Sil
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Personel Detay Kartı */}
+          {!selectedSector && selPer && (
             <>
               <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
                 <div style={{
@@ -808,6 +1283,166 @@ export default function OperasyonHaritasi({
           )}
         </div>
       </div>
+
+      {/* ── ASR-1 Sektör Oluşturma Modalı ─────────────────────────────── */}
+      {showSectorModal && (
+        <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0f172a] border border-amber-500/40 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative text-left">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">📐</span>
+                <div>
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider">Yeni ASR-1 Sektörü Tanımla</h3>
+                  <p className="text-xs text-neutral-400">INSARAG Seviye 1: Geniş Alan Sektörlemesi</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowSectorModal(false)}
+                className="text-neutral-400 hover:text-white text-xl p-1"
+              >✕</button>
+            </div>
+
+            <form onSubmit={handleSaveSector} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Sektör Kodu *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={newSectorForm.code} 
+                    onChange={e => setNewSectorForm({ ...newSectorForm, code: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-bold focus:border-amber-500 outline-none"
+                    placeholder="örn: Sektör A"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Öncelik Seviyesi</label>
+                  <select
+                    value={newSectorForm.priority}
+                    onChange={e => setNewSectorForm({ ...newSectorForm, priority: e.target.value as any })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500 outline-none"
+                  >
+                    <option value="Kritik">1 - Kritik (Acil)</option>
+                    <option value="Orta">2 - Orta Öncelik</option>
+                    <option value="Düşük">3 - Düşük</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Sektör Tanımı / Bölge Adı *</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newSectorForm.name} 
+                  onChange={e => setNewSectorForm({ ...newSectorForm, name: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500 outline-none"
+                  placeholder="örn: Manavkuyu Afet Bölgesi"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Operasyonel Durum</label>
+                  <select
+                    value={newSectorForm.status}
+                    onChange={e => setNewSectorForm({ ...newSectorForm, status: e.target.value as any })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500 outline-none"
+                  >
+                    <option value="Değerlendirme">🟡 Değerlendirme Sürüyor</option>
+                    <option value="Aktif Arama">🟢 Aktif Arama Kurtarma</option>
+                    <option value="Yüksek Risk">🔴 Yüksek Risk / Tehlike</option>
+                    <option value="Tamamlandı">⚪ Arama Tamamlandı</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Görevlendirilen Tim</label>
+                  <select
+                    value={newSectorForm.assignedTeamId}
+                    onChange={e => {
+                      const team = teamsList.find(t => t.id === e.target.value);
+                      setNewSectorForm({ 
+                        ...newSectorForm, 
+                        assignedTeamId: e.target.value,
+                        assignedTeamName: team ? team.name : ''
+                      });
+                    }}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500 outline-none"
+                  >
+                    <option value="">-- Tim Seçilmedi --</option>
+                    {teamsList.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Tehlikeler / Risk Notları</label>
+                <input 
+                  type="text" 
+                  value={newSectorForm.hazards} 
+                  onChange={e => setNewSectorForm({ ...newSectorForm, hazards: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500 outline-none"
+                  placeholder="örn: Doğalgaz kaçağı, çökmüş viyadük, KBRN şüphesi"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Telsiz Frekansı / Kanal</label>
+                  <input 
+                    type="text" 
+                    value={newSectorForm.radioChannel} 
+                    onChange={e => setNewSectorForm({ ...newSectorForm, radioChannel: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-amber-500 outline-none"
+                    placeholder="örn: CH-1 / 446.00625"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Sektör Rengi</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    {['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899'].map(c => (
+                      <button
+                        type="button"
+                        key={c}
+                        onClick={() => setNewSectorForm({ ...newSectorForm, color: c })}
+                        style={{ background: c }}
+                        className={`w-7 h-7 rounded-full border-2 transition-transform ${newSectorForm.color === c ? 'scale-125 border-white shadow-lg' : 'border-transparent opacity-70'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-900/60 rounded-xl border border-white/5 flex items-center justify-between text-xs text-neutral-400">
+                <span>Belirlenen Alan Büyüklüğü:</span>
+                <span className="text-amber-400 font-bold font-mono">
+                  {calculatePolygonAreaKm2(drawPoints)} km² ({drawPoints.length} köşe noktası)
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSectorModal(false)}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-neutral-300 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-600/30"
+                >
+                  Sektörü Kaydet
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

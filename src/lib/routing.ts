@@ -155,3 +155,4 @@ export async function snapFullTrail(
 
   return result;
 }
+
