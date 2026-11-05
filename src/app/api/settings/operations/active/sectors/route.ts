@@ -174,3 +174,4 @@ export async function DELETE(req: Request) {
         return NextResponse.json({ error: 'Sektör silinemedi: ' + String(error) }, { status: 500 });
     }
 }
+

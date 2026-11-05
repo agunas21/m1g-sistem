@@ -272,9 +272,14 @@ function MapController({ flyTo }: { flyTo: [number, number] | null }) {
 }
 
 function MapEventHandler({ onClick }: { onClick?: (lat: number, lng: number) => void }) {
+  const onClickRef = useRef(onClick);
+  useEffect(() => {
+    onClickRef.current = onClick;
+  }, [onClick]);
+
   useMapEvents({
     click(e) {
-      if (onClick) onClick(e.latlng.lat, e.latlng.lng);
+      if (onClickRef.current) onClickRef.current(e.latlng.lat, e.latlng.lng);
     }
   });
   return null;
@@ -581,11 +586,45 @@ export default function OperasyonHaritasi({
     }
   };
 
-  const handleMapClick = (lat: number, lng: number) => {
-    if (isDrawingSector) {
+  const isDrawingSectorRef = useRef(isDrawingSector);
+  useEffect(() => {
+    isDrawingSectorRef.current = isDrawingSector;
+  }, [isDrawingSector]);
+
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    if (isDrawingSectorRef.current) {
       setDrawPoints(prev => [...prev, [lat, lng]]);
     } else if (onMapClick) {
       onMapClick(lat, lng);
+    }
+  }, [onMapClick]);
+
+  // ── Eski/Geçmiş GPS Verilerini Sıfırlama ─────────────────────────────────
+  const handleClearOperationGPS = async () => {
+    if (!confirm("⚠️ Bu operasyondaki tüm eski GPS konum geçmişini ve rotaları sıfırlamak istiyor musunuz?\n\nBu işlem önceki tatbikatlardan kalan yanlış/eski konumları temizler ve sadece sahada olan üyelerden gelen yeni canlı sinyalleri gösterir.")) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/settings/operations/active/location?operationId=${operationId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setLocations(prev => {
+          const reset: Record<string, PersonnelLocation> = {};
+          for (const [k, v] of Object.entries(prev)) {
+            reset[k] = { ...v, lat: undefined, lng: undefined, is_online: false, speed: 0, recorded_at: undefined };
+          }
+          return reset;
+        });
+        setTrails({});
+        setSelected(null);
+        alert("Eski GPS verileri ve rotalar temizlendi. Sistem artık sadece sahada yeni sinyal atan üyeleri gösterecektir.");
+      } else {
+        alert("GPS verileri temizlenirken bir hata oluştu.");
+      }
+    } catch (e) {
+      console.error("GPS reset error", e);
+      alert("GPS verileri temizlenemedi.");
     }
   };
 
@@ -806,6 +845,16 @@ export default function OperasyonHaritasi({
             </span>
           )}
 
+          {/* Eski GPS Temizleme Butonu */}
+          <button
+            onClick={handleClearOperationGPS}
+            className="ml-2 px-2.5 py-1.5 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-300 rounded-xl text-xs font-bold flex items-center gap-1 transition-all"
+            title="Önceki tatbikatlardan kalan eski GPS verilerini ve rotaları sıfırla"
+          >
+            <span>🧹</span>
+            <span className="hidden lg:inline">Eski GPS'i Sıfırla</span>
+          </button>
+
           <span style={{ width:'1px', height:18, background:'#374151' }} className="mx-2 hidden sm:inline" />
           <span style={S.tbStat} className="hidden sm:inline">Aktif: <span style={S.tbVal}>{onlineN}</span></span>
           <span style={S.tbStat} className="ml-auto">Toplam: <span style={S.tbVal}>{people.length}</span></span>
@@ -866,7 +915,7 @@ export default function OperasyonHaritasi({
           <MapContainer
             center={initialCenter}
             zoom={initialZoom}
-            style={{ height:'100%', width:'100%', background:'#111827' }}
+            style={{ height:'100%', width:'100%', background:'#111827', cursor: isDrawingSector ? 'crosshair' : undefined }}
             zoomControl={true}
             whenReady={() => setMapReady(true)}
           >

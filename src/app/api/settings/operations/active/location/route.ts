@@ -119,3 +119,48 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Konum kaydedilemedi: ' + String(error) }, { status: 500 });
     }
 }
+
+// DELETE: Operasyona ait eski GPS konumlarını ve rotaları sıfırla
+export async function DELETE(req: Request) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const operationId = searchParams.get('operationId');
+
+        if (!operationId) {
+            return NextResponse.json({ error: 'operationId gerekli' }, { status: 400 });
+        }
+
+        const operations = await getCollectionDB('global_operations');
+        let updated = false;
+
+        for (let i = 0; i < operations.length; i++) {
+            if (operations[i].id === operationId) {
+                // Tüm timlerin ve üyelerin eski GPS ve rota verilerini sıfırla
+                if (operations[i].teams) {
+                    for (let t = 0; t < operations[i].teams.length; t++) {
+                        operations[i].teams[t].location = undefined;
+                        if (operations[i].teams[t].members) {
+                            for (let m = 0; m < operations[i].teams[t].members.length; m++) {
+                                operations[i].teams[t].members[m].lastLocation = undefined;
+                                operations[i].teams[t].members[m].path = [];
+                                operations[i].teams[t].members[m].distanceCovered = 0;
+                            }
+                        }
+                    }
+                }
+                updated = true;
+                break;
+            }
+        }
+
+        if (updated) {
+            await writeCollectionDB('global_operations', operations);
+            return NextResponse.json({ success: true, message: 'Operasyonun eski GPS konumları ve rotaları başarıyla temizlendi' });
+        } else {
+            return NextResponse.json({ error: 'Operasyon bulunamadı' }, { status: 404 });
+        }
+    } catch (error) {
+        console.error('[active-operations/location DELETE]', error);
+        return NextResponse.json({ error: 'Konumlar temizlenemedi: ' + String(error) }, { status: 500 });
+    }
+}
