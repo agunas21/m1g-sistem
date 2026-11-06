@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getSiteGalleryDB, writeSiteGalleryDB, getSiteReportsDB, writeSiteReportsDB } from '@/lib/settings';
+import { verifyJwt } from '@/lib/crypto';
 
 async function readGallery(): Promise<any> {
     return await getSiteGalleryDB();
@@ -38,6 +40,16 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) {
+            return NextResponse.json({ error: 'Yetkisiz erişim: Oturum açmalısınız.' }, { status: 401 });
+        }
+        const user = verifyJwt(token);
+        if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
+            return NextResponse.json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, { status: 403 });
+        }
+
         const body = await req.json();
 
         // 1. action="upload_image" 

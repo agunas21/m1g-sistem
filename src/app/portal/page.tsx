@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import ReactPlayer from "react-player";
 import { Loader2, PlayCircle, BookOpen, User, Signal, Video, ShieldCheck, Mail, Radio, MapPin, X, Car, Footprints } from "lucide-react";
 import { getMovementMode, calculateDistanceKm, MovementInfo } from "@/lib/routing";
+import { saveOfflineLocation, getUnsyncedLocations, removeSyncedLocations, getUnsyncedLocationsCount } from "@/lib/offline/db";
 
 type VideoData = {
     id: string;
@@ -33,6 +34,9 @@ export default function PortalDashboard() {
     const [showGpsHelp, setShowGpsHelp] = useState(false);
     const [movementInfo, setMovementInfo] = useState<MovementInfo>({ mode: 'still', label: 'Sabit', icon: '🛑', speedKmH: 0 });
     const [wakeLockActive, setWakeLockActive] = useState<boolean>(false);
+    const [offlineQueueCount, setOfflineQueueCount] = useState<number>(0);
+    const [sosSent, setSosSent] = useState<boolean>(false);
+    const [sosLoading, setSosLoading] = useState<boolean>(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -98,10 +102,42 @@ export default function PortalDashboard() {
         let lastSendTime = 0;
         let lastCoords: { lat: number, lng: number } | null = null;
 
+        // Çevrimdışı (offline) biriken konumları sunucuya boşalt (flush)
+        const flushOfflineQueue = async () => {
+            try {
+                const memberKey = user.uid || user.id || user.email;
+                const unsynced = await getUnsyncedLocations(memberKey);
+                if (unsynced.length > 0) {
+                    const res = await fetch('/api/settings/operations/active/location', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            memberId: memberKey,
+                            points: unsynced.map(p => ({
+                                lat: p.lat,
+                                lng: p.lng,
+                                accuracy: p.accuracy,
+                                battery: p.battery,
+                                timestamp: p.timestamp
+                            }))
+                        })
+                    });
+                    if (res.ok) {
+                        const ids = unsynced.map(p => p.id!).filter(Boolean);
+                        await removeSyncedLocations(ids);
+                        setOfflineQueueCount(0);
+                    }
+                }
+            } catch (err) {
+                // Sessizce geç; sonraki pingde tekrar dener
+            }
+        };
+
         const sendPos = async (pos: GeolocationPosition) => {
             const now = Date.now();
             // Minimum 3 saniye aralıkla ping at (bataryayı korur ve sık günceller)
             if (now - lastSendTime < 3000) return;
+            const prevSendTime = lastSendTime;
             lastSendTime = now;
 
             const { latitude, longitude, speed, accuracy } = pos.coords;
@@ -110,9 +146,9 @@ export default function PortalDashboard() {
             let speedKmH = 0;
             if (speed != null && !isNaN(speed) && speed >= 0) {
                 speedKmH = speed * 3.6;
-            } else if (lastCoords) {
+            } else if (lastCoords && prevSendTime > 0) {
                 const distKm = calculateDistanceKm(lastCoords.lat, lastCoords.lng, latitude, longitude);
-                const elapsedHours = (now - lastSendTime) / 3600000;
+                const elapsedHours = (now - prevSendTime) / 3600000;
                 if (elapsedHours > 0) speedKmH = distKm / elapsedHours;
             }
             lastCoords = { lat: latitude, lng: longitude };
@@ -120,20 +156,39 @@ export default function PortalDashboard() {
             const currentMode = getMovementMode(speedKmH);
             setMovementInfo(currentMode);
 
+            const memberKey = user.uid || user.id || user.email;
+
             try {
-                await fetch('/api/settings/operations/active/location', {
+                const res = await fetch('/api/settings/operations/active/location', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        memberId: user.uid || user.email,
+                        memberId: memberKey,
                         lat: latitude,
                         lng: longitude,
                         speed: speedKmH,
                         accuracy: accuracy || 15
                     })
                 });
+
+                if (res.ok) {
+                    // Çevrimiçi başarılı: Hafızada bekleyen noktaları da senkronize et
+                    await flushOfflineQueue();
+                } else {
+                    throw new Error("HTTP error: " + res.status);
+                }
             } catch (e) {
-                console.error("Konum ping hatası:", e);
+                // İnternet kopuksa veya istek başarısızsa IndexedDB'ye kaydet
+                await saveOfflineLocation({
+                    memberId: memberKey,
+                    lat: latitude,
+                    lng: longitude,
+                    accuracy: accuracy || 15,
+                    battery: 100,
+                    timestamp: now
+                });
+                const count = await getUnsyncedLocationsCount();
+                setOfflineQueueCount(count);
             }
         };
 
@@ -152,6 +207,47 @@ export default function PortalDashboard() {
             setWakeLockActive(false);
         };
     }, [gpsStatus, user]);
+
+    const handleSendSos = async () => {
+        if (!navigator.geolocation || !user) return;
+        setSosLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                try {
+                    const { latitude, longitude } = pos.coords;
+                    const opRes = await fetch('/api/settings/operations/active');
+                    const opData = await opRes.json();
+                    const activeOp = opData.operations?.[0] || opData.operation;
+                    
+                    if (activeOp?.id) {
+                        await fetch('/api/settings/operations/active/pins', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                operationId: activeOp.id,
+                                name: `🚨 ACİL SOS: ${user.fullName || user.name || 'Gönüllü Personel'}`,
+                                type: 'SOS',
+                                lat: latitude,
+                                lng: longitude,
+                                createdBy: user.fullName || user.name || 'Gönüllü'
+                            })
+                        });
+                    }
+
+                    setSosSent(true);
+                } catch (e) {
+                    console.error("SOS gönderim hatası:", e);
+                } finally {
+                    setSosLoading(false);
+                }
+            },
+            (err) => {
+                alert("Konum alınamadığı için SOS gönderilemedi: " + err.message);
+                setSosLoading(false);
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+        );
+    };
 
     useEffect(() => {
         if (isTestMode) {
@@ -299,6 +395,26 @@ export default function PortalDashboard() {
                                     <span className={wakeLockActive ? "text-emerald-400 font-bold" : "text-neutral-400"}>
                                         {wakeLockActive ? "Aktif (Açık Kalır)" : "Desteklenmiyor"}
                                     </span>
+                                </div>
+                                {offlineQueueCount > 0 && (
+                                    <div className="flex items-center justify-between text-[11px] text-amber-400 bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
+                                        <span>💾 Çevrimdışı Bellek:</span>
+                                        <span className="font-bold">{offlineQueueCount} nokta beklemede</span>
+                                    </div>
+                                )}
+                                <div className="pt-2">
+                                    <button
+                                        onClick={handleSendSos}
+                                        disabled={sosLoading || sosSent}
+                                        className={`w-full py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                                            sosSent 
+                                                ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-300' 
+                                                : 'bg-red-600 hover:bg-red-500 active:scale-95 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse'
+                                        }`}
+                                    >
+                                        <span className="text-sm">{sosSent ? '✅' : '🚨'}</span>
+                                        <span>{sosLoading ? 'SOS İLETİLİYOR...' : sosSent ? 'SOS İLETİLDİ' : 'ACİL DURUM / MAYDAY (SOS)'}</span>
+                                    </button>
                                 </div>
                             </div>
                         )}

@@ -66,6 +66,23 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
 
 // ── Pin Icons ──────────────────────────────────────────────────────────────
 const getPinIcon = (type: string) => {
+  if (type === "SOS" || type === "Acil" || type === "Kritik Durum" || type.includes("SOS")) {
+    return L.divIcon({
+      className: 'custom-pin-sos-icon',
+      html: `
+        <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; inset: -4px; background: rgba(239, 68, 68, 0.4); border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+          <div style="width: 28px; height: 28px; background: #dc2626; border: 2px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(239,68,68,0.9); font-size: 13px;">
+            🚨
+          </div>
+        </div>
+      `,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -17],
+    });
+  }
+
   let bgColor = "#3b82f6"; // default blue
   if (type === "Kamp") bgColor = "#10b981"; // green
   if (type === "Tehlike") bgColor = "#f97316"; // orange

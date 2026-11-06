@@ -20,11 +20,26 @@ export async function POST(
     const { id: operationId } = await params;
     const body = await request.json();
 
+    // Actor kontrolü: super-admin veya veritabanında henüz kaydı olmayan kullanıcılar için FK hatasını önle
+    let validActorId: string | null = null;
+    if (user.sub && user.sub !== 'super-admin') {
+      const memberExists = await prisma.member.findUnique({
+        where: { id: user.sub as string },
+        select: { id: true }
+      });
+      if (memberExists) validActorId = memberExists.id;
+    }
+
+    const payloadData = {
+      ...(body.payload || {}),
+      ...(validActorId ? {} : { authorName: user.name || user.fullName || 'Sistem Yöneticisi', authorRole: user.role || 'Super Admin' })
+    };
+
     // Mission Ledger: Append-only event
     const event = await prisma.operationEvent.create({
       data: {
         operationId,
-        actorId: user.sub as string,
+        actorId: validActorId,
         
         type: body.type,
         entityType: body.entityType,
@@ -32,7 +47,7 @@ export async function POST(
         role: body.role,
         lat: body.lat,
         lng: body.lng,
-        payload: body.payload || {},
+        payload: payloadData,
         sourceType: body.sourceType || 'SYSTEM',
         confidence: body.confidence !== undefined ? body.confidence : 1.0,
         isDecision: body.isDecision || false,

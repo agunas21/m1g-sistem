@@ -1,8 +1,20 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { sendEmail } from '@/lib/mailer';
+import { verifyJwt } from '@/lib/crypto';
 
 export async function POST(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) {
+            return NextResponse.json({ error: 'Yetkisiz erişim: Oturum açmalısınız.' }, { status: 401 });
+        }
+        const user = verifyJwt(token);
+        if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
+            return NextResponse.json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, { status: 403 });
+        }
+
         const { testEmail } = await req.json();
         const to = testEmail || process.env.SMTP_USER;
 

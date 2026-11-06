@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getSiteImagesDB, writeSiteImagesDB } from '@/lib/settings';
+import { verifyJwt } from '@/lib/crypto';
 
 // GET: Görsel verilerini döndür (siteLogo, siteFavicon, heroImages, sponsor logoları)
 export async function GET() {
@@ -25,6 +27,16 @@ export async function GET() {
 // POST: Görsel verilerini güncelle
 export async function POST(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) {
+            return NextResponse.json({ error: 'Yetkisiz erişim: Oturum açmalısınız.' }, { status: 401 });
+        }
+        const user = verifyJwt(token);
+        if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
+            return NextResponse.json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, { status: 403 });
+        }
+
         const body = await req.json();
         const existing = await getSiteImagesDB();
 

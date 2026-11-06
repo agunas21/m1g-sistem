@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getCollectionDB, writeCollectionDB } from '@/lib/settings';
-
+import { verifyJwt } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
 async function getDocuments() {
@@ -20,6 +21,16 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) {
+            return NextResponse.json({ error: 'Yetkisiz erişim: Oturum açmalısınız.' }, { status: 401 });
+        }
+        const user = verifyJwt(token);
+        if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
+            return NextResponse.json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, { status: 403 });
+        }
+
         const payload = await req.json();
         const documents = await getDocuments();
         
@@ -45,6 +56,16 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) {
+            return NextResponse.json({ error: 'Yetkisiz erişim: Oturum açmalısınız.' }, { status: 401 });
+        }
+        const user = verifyJwt(token);
+        if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
+            return NextResponse.json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, { status: 403 });
+        }
+
         const { id } = await req.json();
         let documents = await getDocuments();
         documents = documents.filter((doc: any) => doc.id !== id);

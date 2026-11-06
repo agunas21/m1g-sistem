@@ -2,7 +2,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getCollectionDB, writeCollectionDB } from '@/lib/settings';
+import { verifyJwt } from '@/lib/crypto';
 
 export interface ASR1Sector {
     id: string;
@@ -24,6 +26,12 @@ export interface ASR1Sector {
 // GET: Operasyona ait ASR-1 sektörlerini listele
 export async function GET(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token || !verifyJwt(token)) {
+            return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(req.url);
         const operationId = searchParams.get('operationId');
 
@@ -48,6 +56,16 @@ export async function GET(req: Request) {
 // POST: Yeni ASR-1 Sektörü ekle veya güncelle
 export async function POST(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) {
+            return NextResponse.json({ error: 'Yetkisiz erişim: Oturum açmalısınız.' }, { status: 401 });
+        }
+        const user = verifyJwt(token);
+        if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
+            return NextResponse.json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, { status: 403 });
+        }
+
         const payload = await req.json();
         const {
             operationId,
@@ -141,6 +159,16 @@ export async function POST(req: Request) {
 // DELETE: Sektör sil
 export async function DELETE(req: Request) {
     try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('m1g_session')?.value;
+        if (!token) {
+            return NextResponse.json({ error: 'Yetkisiz erişim: Oturum açmalısınız.' }, { status: 401 });
+        }
+        const user = verifyJwt(token);
+        if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
+            return NextResponse.json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, { status: 403 });
+        }
+
         const { searchParams } = new URL(req.url);
         const operationId = searchParams.get('operationId');
         const sectorId = searchParams.get('sectorId');
