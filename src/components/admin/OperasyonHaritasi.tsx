@@ -9,6 +9,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Polygon, Circle, CircleMarke
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import type { ASR1Sector } from '@/app/api/settings/operations/active/sectors/route'
+import type { INSARAGWorksite } from '@/app/api/settings/operations/active/worksites/route'
 
 // ── Tipler ──────────────────────────────────────────────────────────────────
 interface PersonnelLocation {
@@ -273,6 +274,60 @@ function makeSectorLabelIcon(sector: ASR1Sector) {
   });
 }
 
+function makeWorksiteIcon(ws: INSARAGWorksite) {
+  if (typeof window === 'undefined') return undefined;
+  const L = require('leaflet');
+
+  const statusColor =
+    ws.status === 'Acil Müdahale' || ws.status === 'Canlı Tespiti Var' ? '#ef4444' :
+    ws.status === 'Arama Sürüyor' ? '#f59e0b' :
+    ws.status === 'Temizlendi' ? '#10b981' :
+    ws.status === 'Yüksek Risk' ? '#7f1d1d' : '#3b82f6';
+
+  const pulseEffect = (ws.status === 'Acil Müdahale' || ws.status === 'Canlı Tespiti Var')
+    ? 'box-shadow: 0 0 15px rgba(239, 68, 68, 0.85); animation: pulse 1.5s infinite;'
+    : 'box-shadow: 0 4px 12px rgba(0,0,0,0.6);';
+
+  const hazardBadge = ws.hazards && ws.hazards.length > 0 
+    ? `<div style="background:#dc2626; color:#fff; font-size:8px; font-weight:800; padding:1px 4px; border-radius:3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">⚠️ ${ws.hazards[0]}</div>`
+    : '';
+
+  return L.divIcon({
+    className: 'insarag-worksite-marker',
+    iconSize: [110, 64],
+    iconAnchor: [55, 32],
+    html: `
+      <div style="
+        background: rgba(15, 23, 42, 0.95);
+        border: 2px solid ${statusColor};
+        border-radius: 8px;
+        padding: 4px 6px;
+        color: #fff;
+        text-align: center;
+        font-family: monospace, sans-serif;
+        cursor: pointer;
+        user-select: none;
+        backdrop-filter: blur(4px);
+        ${pulseEffect}
+      ">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:2px; margin-bottom:2px;">
+          <span style="font-size:9px; font-weight:900; color:${statusColor}; letter-spacing:0.5px;">ASR-3 [${ws.code}]</span>
+          <span style="font-size:8px; font-weight:700; color:#94a3b8;">TUR-M1G</span>
+        </div>
+        <div style="font-size:10px; font-weight:700; color:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${ws.name}
+        </div>
+        <div style="display:flex; justify-content:space-around; align-items:center; margin-top:2px; font-size:10px; font-weight:900; background:rgba(0,0,0,0.4); border-radius:4px; padding:1px 0;">
+          <span style="color:#22c55e;">${ws.victims?.liveExtracted || 0} L</span>
+          <span style="color:#64748b;">|</span>
+          <span style="color:#ef4444;">${ws.victims?.deceasedExtracted || 0} D</span>
+        </div>
+        ${hazardBadge}
+      </div>
+    `
+  });
+}
+
 function makeIcon(color: string, initials: string, isSelected: boolean, speed?: number | null) {
   if (typeof window === 'undefined') return undefined
   const L = require('leaflet')
@@ -396,6 +451,30 @@ export default function OperasyonHaritasi({
     color: '#3b82f6'
   })
 
+  // ASR-3 INSARAG Enkaz Triyaj State'leri
+  const [worksites, setWorksites] = useState<INSARAGWorksite[]>([])
+  const [selectedWorksite, setSelectedWorksite] = useState<INSARAGWorksite | null>(null)
+  const [isAddingWorksite, setIsAddingWorksite] = useState(false)
+  const [worksiteClickPos, setWorksiteClickPos] = useState<[number, number] | null>(null)
+  const [showWorksiteModal, setShowWorksiteModal] = useState(false)
+  const [worksiteForm, setWorksiteForm] = useState({
+    code: 'A-1',
+    name: 'Yıkık Bina Enkazı',
+    address: '',
+    structureType: 'Betonarme' as 'Betonarme' | 'Yığma' | 'Çelik' | 'Ahşap' | 'Diğer',
+    collapseType: 'Sandviç (Pancake)' as 'Sandviç (Pancake)' | 'V-Tipi' | 'Yana Yatma' | 'Kısmi Çökme' | 'Yumuşak Kat',
+    status: 'Canlı Tespiti Var' as 'Acil Müdahale' | 'Canlı Tespiti Var' | 'Arama Sürüyor' | 'Tahliye Edildi' | 'Temizlendi' | 'Yüksek Risk',
+    priority: 'Kritik (P1)' as 'Kritik (P1)' | 'Yüksek (P2)' | 'Düşük (P3)',
+    liveExtracted: 0,
+    deceasedExtracted: 0,
+    suspectedLive: 1,
+    suspectedDeceased: 0,
+    hazards: [] as string[],
+    assignedTeamName: '',
+    radioChannel: 'CH-1 / 446.00625 MHz',
+    notes: ''
+  })
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const lastPingRef = useRef<number>(0)
   const channelRef = useRef<any>(null)
@@ -414,6 +493,12 @@ export default function OperasyonHaritasi({
           .then(r => r.json())
           .then(d => { if (d.sectors) setSectors(d.sectors); })
           .catch(() => { if (op.sectors) setSectors(op.sectors); });
+
+        // ASR-3 INSARAG Enkazlarını yükle
+        fetch(`/api/settings/operations/active/worksites?operationId=${operationId}`)
+          .then(r => r.json())
+          .then(d => { if (d.worksites) setWorksites(d.worksites); })
+          .catch(() => { if (op.worksites) setWorksites(op.worksites); });
 
         if (op.teams) {
           setTeamsList(op.teams.map((t: any) => ({ id: t.id, name: t.name })));
@@ -547,7 +632,23 @@ export default function OperasyonHaritasi({
             const updated = [...existing, [lat, lng] as [number, number]];
             return { ...prev, [memberId]: updated.slice(-MAX_TRAIL) };
         });
-    }).subscribe();
+    });
+
+    // Realtime ASR-3 Enkaz güncellemeleri
+    channelRef.current.on('broadcast', { event: 'worksite_update' }, (payload: any) => {
+        if (payload?.payload?.worksite) {
+            const ws = payload.payload.worksite;
+            setWorksites(prev => [...prev.filter(w => w.id !== ws.id), ws]);
+        }
+    });
+
+    channelRef.current.on('broadcast', { event: 'worksite_delete' }, (payload: any) => {
+        if (payload?.payload?.worksiteId) {
+            setWorksites(prev => prev.filter(w => w.id !== payload.payload.worksiteId));
+        }
+    });
+
+    channelRef.current.subscribe();
 
     return () => { if(channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [])
@@ -659,18 +760,133 @@ export default function OperasyonHaritasi({
     }
   };
 
+  // ── ASR-3 INSARAG Enkaz Yönetim Fonksiyonları ────────────────────────────
+  const handleQuickVictimUpdate = async (type: 'live' | 'deceased', delta: number) => {
+    if (!selectedWorksite) return;
+    const currentLive = selectedWorksite.victims?.liveExtracted || 0;
+    const currentDeceased = selectedWorksite.victims?.deceasedExtracted || 0;
+
+    const updatedVictims = {
+      ...selectedWorksite.victims,
+      liveExtracted: type === 'live' ? Math.max(0, currentLive + delta) : currentLive,
+      deceasedExtracted: type === 'deceased' ? Math.max(0, currentDeceased + delta) : currentDeceased,
+    };
+
+    const updatedWorksite: INSARAGWorksite = {
+      ...selectedWorksite,
+      victims: updatedVictims,
+      updatedAt: Date.now()
+    };
+
+    setSelectedWorksite(updatedWorksite);
+    setWorksites(prev => prev.map(w => w.id === updatedWorksite.id ? updatedWorksite : w));
+
+    try {
+      await fetch('/api/settings/operations/active/worksites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operationId,
+          ...updatedWorksite
+        })
+      });
+    } catch (err) {
+      console.error("Enkaz kazazede sayısı güncellenemedi", err);
+    }
+  };
+
+  const handleSaveWorksite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!worksiteClickPos) return;
+
+    const payload = {
+      operationId,
+      code: worksiteForm.code,
+      name: worksiteForm.name,
+      address: worksiteForm.address,
+      location: worksiteClickPos,
+      structureType: worksiteForm.structureType,
+      collapseType: worksiteForm.collapseType,
+      status: worksiteForm.status,
+      priority: worksiteForm.priority,
+      victims: {
+        liveExtracted: Number(worksiteForm.liveExtracted) || 0,
+        deceasedExtracted: Number(worksiteForm.deceasedExtracted) || 0,
+        suspectedLive: Number(worksiteForm.suspectedLive) || 0,
+        suspectedDeceased: Number(worksiteForm.suspectedDeceased) || 0,
+      },
+      hazards: worksiteForm.hazards,
+      assignedTeamName: worksiteForm.assignedTeamName,
+      radioChannel: worksiteForm.radioChannel,
+      notes: worksiteForm.notes,
+      markingDate: new Date().toLocaleString('tr-TR')
+    };
+
+    try {
+      const res = await fetch('/api/settings/operations/active/worksites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.worksite) {
+          setWorksites(prev => [...prev.filter(w => w.id !== data.worksite.id), data.worksite]);
+          setSelectedWorksite(data.worksite);
+        }
+      }
+    } catch (err) {
+      console.error("Enkaz kaydedilemedi", err);
+    } finally {
+      setIsAddingWorksite(false);
+      setWorksiteClickPos(null);
+      setShowWorksiteModal(false);
+    }
+  };
+
+  const handleDeleteWorksite = async (worksiteId: string) => {
+    if (!confirm("Bu INSARAG enkaz kaydını silmek istediğinize emin misiniz?")) return;
+    try {
+      const res = await fetch(`/api/settings/operations/active/worksites?operationId=${operationId}&worksiteId=${worksiteId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setWorksites(prev => prev.filter(w => w.id !== worksiteId));
+        if (selectedWorksite?.id === worksiteId) setSelectedWorksite(null);
+      }
+    } catch (err) {
+      console.error("Enkaz silinemedi", err);
+    }
+  };
+
   const isDrawingSectorRef = useRef(isDrawingSector);
+  const isAddingWorksiteRef = useRef(isAddingWorksite);
   useEffect(() => {
     isDrawingSectorRef.current = isDrawingSector;
   }, [isDrawingSector]);
+  useEffect(() => {
+    isAddingWorksiteRef.current = isAddingWorksite;
+  }, [isAddingWorksite]);
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
     if (isDrawingSectorRef.current) {
       setDrawPoints(prev => [...prev, [lat, lng]]);
+    } else if (isAddingWorksiteRef.current) {
+      setWorksiteClickPos([lat, lng]);
+      setIsAddingWorksite(false);
+      const nextCode = `A-${worksites.length + 1}`;
+      setWorksiteForm(prev => ({
+        ...prev,
+        code: nextCode,
+        name: `Enkaz ${nextCode}`,
+        address: '',
+        assignedTeamName: teamsList[0]?.name || ''
+      }));
+      setShowWorksiteModal(true);
     } else if (onMapClick) {
       onMapClick(lat, lng);
     }
-  }, [onMapClick]);
+  }, [onMapClick, worksites.length, teamsList]);
 
   // ── Eski/Geçmiş GPS Verilerini Sıfırlama ─────────────────────────────────
   const handleClearOperationGPS = async () => {
@@ -918,6 +1134,42 @@ export default function OperasyonHaritasi({
             </span>
           )}
 
+          {/* ASR-3 INSARAG Enkaz Butonu */}
+          <button
+            onClick={() => {
+              setIsAddingWorksite(prev => !prev);
+              setIsDrawingSector(false);
+              setSelected(null);
+              setSelectedSector(null);
+              setSelectedWorksite(null);
+            }}
+            className={`ml-2 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
+              isAddingWorksite 
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse'
+                : 'bg-emerald-600/80 hover:bg-emerald-600 border border-emerald-400/30 text-white'
+            }`}
+            title="INSARAG ASR-3 Enkaz Değerlendirme & Triyaj İşareti Ekle"
+          >
+            <span>🏗️</span>
+            <span className="hidden sm:inline">{isAddingWorksite ? 'Haritaya Tıkla' : 'ASR-3 Enkaz Ekle'}</span>
+          </button>
+
+          {worksites.length > 0 && (
+            <span 
+              className="ml-2 px-2.5 py-1 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold cursor-pointer hover:bg-emerald-500/25 transition-colors hidden sm:inline-flex items-center gap-1"
+              onClick={() => {
+                if (selectedWorksite) setSelectedWorksite(null);
+                else {
+                  setSelectedWorksite(worksites[0]);
+                  setFlyTo(worksites[0].location);
+                }
+              }}
+              title="Kayıtlı ASR-3 Enkazları"
+            >
+              <span>🏢</span> {worksites.length} Enkaz
+            </span>
+          )}
+
           {/* Eski GPS Temizleme Butonu */}
           <button
             onClick={handleClearOperationGPS}
@@ -985,10 +1237,32 @@ export default function OperasyonHaritasi({
             </div>
           )}
 
+          {isAddingWorksite && (
+            <div style={{
+              position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 1000, background: 'rgba(15,23,42,0.92)', border: '1.5px solid #10b981',
+              borderRadius: 30, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)'
+            }}>
+              <span style={{ fontSize: 13, color: '#34d399', fontWeight: 700 }}>
+                📍 ASR-3: Haritada enkazın / binanın konumuna tıklayın
+              </span>
+              <button
+                onClick={() => setIsAddingWorksite(false)}
+                style={{
+                  background: '#ef4444', color: '#fff', border: 'none', padding: '4px 10px',
+                  borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer'
+                }}
+              >
+                ✕ İptal
+              </button>
+            </div>
+          )}
+
           <MapContainer
             center={initialCenter}
             zoom={initialZoom}
-            style={{ height:'100%', width:'100%', background:'#111827', cursor: isDrawingSector ? 'crosshair' : undefined }}
+            style={{ height:'100%', width:'100%', background:'#111827', cursor: (isDrawingSector || isAddingWorksite) ? 'crosshair' : undefined }}
             zoomControl={true}
             whenReady={() => setMapReady(true)}
           >
@@ -1026,8 +1300,8 @@ export default function OperasyonHaritasi({
 
             {mapReady && <MapController flyTo={flyTo} />}
             <MapEventHandler onClick={handleMapClick} />
-            {onMapClick && !isDrawingSector && <CenterPinButton onClick={onMapClick} />}
-            {onMapClick && !isDrawingSector && <CenterCrosshair />}
+            {onMapClick && !isDrawingSector && !isAddingWorksite && <CenterPinButton onClick={onMapClick} />}
+            {onMapClick && !isDrawingSector && !isAddingWorksite && <CenterCrosshair />}
 
             {/* ASR-1 Sektörleri */}
             {sectors.map((sec) => {
@@ -1117,6 +1391,22 @@ export default function OperasyonHaritasi({
               </Marker>
             ))}
 
+            {/* ASR-3 INSARAG Enkazları */}
+            {worksites.map((ws) => (
+              <Marker
+                key={ws.id}
+                position={ws.location}
+                icon={makeWorksiteIcon(ws)}
+                eventHandlers={{
+                  click: () => {
+                    setSelectedWorksite(ws);
+                    setSelectedSector(null);
+                    setSelected(null);
+                  }
+                }}
+              />
+            ))}
+
             {myPos && (
               <Marker position={myPos} icon={myLocationIcon}>
                 <Popup>
@@ -1181,10 +1471,195 @@ export default function OperasyonHaritasi({
           </button>
         </div>
 
-        {/* ── Detay paneli (personel veya sektör tıklanınca açılır) ──── */}
-        <div style={S.dpPanel(!!selPer || !!selectedSector)}>
+        {/* ── Detay paneli (personel, sektör veya enkaz tıklanınca açılır) ──── */}
+        <div style={S.dpPanel(!!selPer || !!selectedSector || !!selectedWorksite)}>
+          {/* ASR-3 INSARAG Enkaz Triyaj Detay Kartı */}
+          {selectedWorksite && (
+            <div>
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+                <div style={{
+                  width:42, height:42, borderRadius:10,
+                  background: 'rgba(16,185,129,0.15)',
+                  border: '2px solid #10b981',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:18, flexShrink:0
+                }}>
+                  🏢
+                </div>
+                <div style={{ flex: 1, minWidth:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span style={{ fontSize:15, fontWeight:800, color:'#34d399', fontFamily:'monospace' }}>
+                      ASR-3 [{selectedWorksite.code}]
+                    </span>
+                    <span style={{ fontSize:10, fontWeight:700, background:'rgba(255,255,255,0.1)', color:'#94a3b8', padding:'2px 6px', borderRadius:4 }}>
+                      TUR-M1G
+                    </span>
+                  </div>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9', marginTop:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {selectedWorksite.name}
+                  </div>
+                  {selectedWorksite.address && (
+                    <div style={{ fontSize:11, color:'#94a3b8', marginTop:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      📍 {selectedWorksite.address}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedWorksite(null)}
+                  style={{ marginLeft:'auto', background:'transparent', border:'none', cursor:'pointer', color:'#64748b', fontSize:24, lineHeight:1 }}
+                >×</button>
+              </div>
+
+              {/* Durum, Öncelik & Yapı Türü Rozetleri */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                <span style={{
+                  padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                  background: selectedWorksite.status === 'Acil Müdahale' || selectedWorksite.status === 'Canlı Tespiti Var' ? 'rgba(239,68,68,0.2)' :
+                              selectedWorksite.status === 'Temizlendi' ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)',
+                  color: selectedWorksite.status === 'Acil Müdahale' || selectedWorksite.status === 'Canlı Tespiti Var' ? '#f87171' :
+                         selectedWorksite.status === 'Temizlendi' ? '#34d399' : '#fbbf24',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                  ● {selectedWorksite.status}
+                </span>
+                <span style={{
+                  padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                  background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                  Öncelik: {selectedWorksite.priority}
+                </span>
+                <span style={{
+                  padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                  background: 'rgba(59,130,246,0.15)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.3)'
+                }}>
+                  🏗️ {selectedWorksite.structureType} / {selectedWorksite.collapseType}
+                </span>
+              </div>
+
+              {/* Kazazede & Canlı / Vefat Hızlı Güncelleme Sayaçları */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:12 }}>
+                {/* Canlı Çıkarılan (L) */}
+                <div style={{ background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.3)', borderRadius:8, padding:'8px', textAlign:'center' }}>
+                  <div style={{ fontSize:10, color:'#86efac', fontWeight:700 }}>CANLI ÇIKARILAN (L)</div>
+                  <div style={{ fontSize:18, fontWeight:900, color:'#22c55e', margin:'4px 0' }}>
+                    {selectedWorksite.victims?.liveExtracted || 0}
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'center', gap:4 }}>
+                    <button
+                      onClick={() => handleQuickVictimUpdate(selectedWorksite, 'liveExtracted', -1)}
+                      style={{ background:'rgba(255,255,255,0.1)', border:'none', color:'#fff', width:24, height:24, borderRadius:4, cursor:'pointer', fontWeight:'bold' }}
+                    >-</button>
+                    <button
+                      onClick={() => handleQuickVictimUpdate(selectedWorksite, 'liveExtracted', 1)}
+                      style={{ background:'#22c55e', border:'none', color:'#fff', width:24, height:24, borderRadius:4, cursor:'pointer', fontWeight:'bold' }}
+                    >+</button>
+                  </div>
+                </div>
+
+                {/* Vefat (D) */}
+                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:8, padding:'8px', textAlign:'center' }}>
+                  <div style={{ fontSize:10, color:'#fca5a5', fontWeight:700 }}>VEFAT (D)</div>
+                  <div style={{ fontSize:18, fontWeight:900, color:'#ef4444', margin:'4px 0' }}>
+                    {selectedWorksite.victims?.deceasedExtracted || 0}
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'center', gap:4 }}>
+                    <button
+                      onClick={() => handleQuickVictimUpdate(selectedWorksite, 'deceasedExtracted', -1)}
+                      style={{ background:'rgba(255,255,255,0.1)', border:'none', color:'#fff', width:24, height:24, borderRadius:4, cursor:'pointer', fontWeight:'bold' }}
+                    >-</button>
+                    <button
+                      onClick={() => handleQuickVictimUpdate(selectedWorksite, 'deceasedExtracted', 1)}
+                      style={{ background:'#ef4444', border:'none', color:'#fff', width:24, height:24, borderRadius:4, cursor:'pointer', fontWeight:'bold' }}
+                    >+</button>
+                  </div>
+                </div>
+
+                {/* Şüpheli / Beklenen Canlı */}
+                <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:8, padding:'8px', textAlign:'center' }}>
+                  <div style={{ fontSize:10, color:'#fde68a', fontWeight:700 }}>ŞÜPHELİ CANLI</div>
+                  <div style={{ fontSize:18, fontWeight:900, color:'#f59e0b', margin:'4px 0' }}>
+                    {selectedWorksite.victims?.suspectedLive || 0}
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'center', gap:4 }}>
+                    <button
+                      onClick={() => handleQuickVictimUpdate(selectedWorksite, 'suspectedLive', -1)}
+                      style={{ background:'rgba(255,255,255,0.1)', border:'none', color:'#fff', width:24, height:24, borderRadius:4, cursor:'pointer', fontWeight:'bold' }}
+                    >-</button>
+                    <button
+                      onClick={() => handleQuickVictimUpdate(selectedWorksite, 'suspectedLive', 1)}
+                      style={{ background:'#f59e0b', border:'none', color:'#fff', width:24, height:24, borderRadius:4, cursor:'pointer', fontWeight:'bold' }}
+                    >+</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tehlikeler ve Riskler */}
+              {selectedWorksite.hazards && selectedWorksite.hazards.length > 0 && (
+                <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8, padding: 8, marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, color: '#f87171', fontWeight: 700 }}>⚠️ SAHA RİSKLERİ & TEHLİKELER</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                    {selectedWorksite.hazards.map((h, i) => (
+                      <span key={i} style={{ background: 'rgba(239,68,68,0.25)', color: '#fecaca', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4 }}>
+                        {h}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Görevli Tim & Telsiz */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:10 }}>
+                <div style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 8 }}>
+                  <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>GÖREVLİ TİM</div>
+                  <div style={{ fontSize: 12, color: '#f8fafc', fontWeight: 700, marginTop: 2 }}>
+                    🚩 {selectedWorksite.assignedTeamName || 'Henüz tim atanmadı'}
+                  </div>
+                </div>
+                <div style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 8 }}>
+                  <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>TELSİZ FREKANSI</div>
+                  <div style={{ fontSize: 12, color: '#e2e8f0', marginTop: 2, fontFamily: 'monospace' }}>
+                    📻 {selectedWorksite.radioChannel || 'CH-1'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Aksiyon butonları */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => setFlyTo(selectedWorksite.location)}
+                  style={{
+                    flex: 1, padding: '10px 0', borderRadius: 8, background: '#2563eb',
+                    color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  Haritada Ortala
+                </button>
+                <a
+                  href={`https://maps.google.com/?q=${selectedWorksite.location[0]},${selectedWorksite.location[1]}&navigate=yes`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    flex: 1, padding: '10px 0', borderRadius: 8, background: '#059669',
+                    color: '#fff', textAlign: 'center', textDecoration: 'none', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
+                >
+                  ↗ Google Maps
+                </a>
+                <button
+                  onClick={() => handleDeleteWorksite(selectedWorksite.id)}
+                  style={{
+                    padding: '10px 14px', borderRadius: 8, background: 'rgba(239,68,68,0.15)',
+                    color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', fontSize: 13, fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  Sil
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ASR-1 Sektör Detay Kartı */}
-          {selectedSector && (
+          {!selectedWorksite && selectedSector && (
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
                 <div style={{
@@ -1299,7 +1774,7 @@ export default function OperasyonHaritasi({
           )}
 
           {/* Personel Detay Kartı */}
-          {!selectedSector && selPer && (
+          {!selectedWorksite && !selectedSector && selPer && (
             <>
               <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
                 <div style={{
@@ -1564,6 +2039,235 @@ export default function OperasyonHaritasi({
               </div>
             </form>
           </div>
+      )}
+
+      {/* ── ASR-3 INSARAG Enkaz Triyaj Yan Kartı (Harita Sağ Üstte Açılır) ─── */}
+      {showWorksiteModal && (
+        <div className="absolute top-16 right-4 z-[1200] w-[92%] sm:w-[420px] max-h-[85%] overflow-y-auto bg-[#0f172a]/95 border border-emerald-500/50 rounded-2xl p-5 shadow-2xl backdrop-blur-md text-left transition-all">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">🏗️</span>
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">ASR-3 İşaretleme & Triyaj</h3>
+                <p className="text-[10px] text-emerald-400">INSARAG Worksite Assessment (İş Sahası Değerlendirmesi)</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowWorksiteModal(false)}
+              className="text-neutral-400 hover:text-white text-lg p-1"
+            >✕</button>
+          </div>
+
+          <form onSubmit={handleSaveWorksite} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Enkaz Kodu *</label>
+                <input 
+                  type="text" 
+                  required
+                  value={worksiteForm.code} 
+                  onChange={e => setWorksiteForm({ ...worksiteForm, code: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono font-bold focus:border-emerald-500 outline-none"
+                  placeholder="örn: A-1, B-2"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Öncelik Seviyesi</label>
+                <select
+                  value={worksiteForm.priority}
+                  onChange={e => setWorksiteForm({ ...worksiteForm, priority: e.target.value as any })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                >
+                  <option value="Kritik (P1)">🔴 P1 - Kritik (Canlı İhtimali)</option>
+                  <option value="Yüksek (P2)">🟡 P2 - Yüksek Öncelik</option>
+                  <option value="Düşük (P3)">🔵 P3 - Düşük / İkincil Arama</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Bina / Enkaz Tanımı *</label>
+              <input 
+                type="text" 
+                required
+                value={worksiteForm.name} 
+                onChange={e => setWorksiteForm({ ...worksiteForm, name: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                placeholder="örn: Huzur Apartmanı (8 Katlı)"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Adres / Konum Tarifi</label>
+              <input 
+                type="text" 
+                value={worksiteForm.address} 
+                onChange={e => setWorksiteForm({ ...worksiteForm, address: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                placeholder="örn: Atatürk Cad. No: 42, Köşe Başı"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Yapı Türü</label>
+                <select
+                  value={worksiteForm.structureType}
+                  onChange={e => setWorksiteForm({ ...worksiteForm, structureType: e.target.value as any })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                >
+                  <option value="Betonarme">Betonarme Karkas</option>
+                  <option value="Yığma">Yığma Tuğla / Taş</option>
+                  <option value="Çelik">Çelik Konstrüksiyon</option>
+                  <option value="Ahşap">Ahşap</option>
+                  <option value="Diğer">Diğer</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Çökme Tipi</label>
+                <select
+                  value={worksiteForm.collapseType}
+                  onChange={e => setWorksiteForm({ ...worksiteForm, collapseType: e.target.value as any })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                >
+                  <option value="Sandviç (Pancake)">Sandviç (Pancake)</option>
+                  <option value="V-Tipi">V-Tipi Çökme</option>
+                  <option value="Yana Yatma">Yana Yatma (Devrilme)</option>
+                  <option value="Kısmi Çökme">Kısmi Çökme</option>
+                  <option value="Yumuşak Kat">Yumuşak Kat (Zemin Çökmesi)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Operasyon Durumu</label>
+                <select
+                  value={worksiteForm.status}
+                  onChange={e => setWorksiteForm({ ...worksiteForm, status: e.target.value as any })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                >
+                  <option value="Canlı Tespiti Var">🟢 Canlı Tespiti Var</option>
+                  <option value="Acil Müdahale">🚨 Acil Müdahale Gerekiyor</option>
+                  <option value="Arama Sürüyor">🟡 Arama Sürüyor</option>
+                  <option value="Temizlendi">⚪ Temizlendi (Arama Bitti)</option>
+                  <option value="Tahliye Edildi">📦 Tahliye Edildi</option>
+                  <option value="Yüksek Risk">⛔ Yüksek Risk (Tehlikeli)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Görevlendirilen Tim</label>
+                <select
+                  value={worksiteForm.assignedTeamName}
+                  onChange={e => setWorksiteForm({ ...worksiteForm, assignedTeamName: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
+                >
+                  <option value="">-- Tim Seçilmedi --</option>
+                  {teamsList.map(t => (
+                    <option key={t.id} value={t.name}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Kazazede Bilgileri */}
+            <div className="p-3 bg-slate-900/80 rounded-xl border border-white/5 space-y-2">
+              <span className="block text-[11px] font-bold text-neutral-300 uppercase tracking-widest">
+                INSARAG Kazazede Sayıları
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[10px] text-emerald-400 font-bold mb-1">Canlı Çıkarılan (L)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={worksiteForm.liveExtracted}
+                    onChange={e => setWorksiteForm({ ...worksiteForm, liveExtracted: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-emerald-400 font-bold text-center outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-rose-400 font-bold mb-1">Vefat (D)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={worksiteForm.deceasedExtracted}
+                    onChange={e => setWorksiteForm({ ...worksiteForm, deceasedExtracted: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-rose-400 font-bold text-center outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-amber-400 font-bold mb-1">Şüpheli Canlı</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={worksiteForm.suspectedLive}
+                    onChange={e => setWorksiteForm({ ...worksiteForm, suspectedLive: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-amber-400 font-bold text-center outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Tehlikeler Checkbox */}
+            <div>
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">
+                Saha Riskleri & Tehlikeler (G)
+              </label>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {['Gaz Kaçağı (Gaz)', 'Yangın Riski', 'Asbest / KBRN', 'İkincil Çökme Riski', 'Elektrik Tehlikesi', 'Sel / Su Baskını'].map(hazard => {
+                  const checked = worksiteForm.hazards.includes(hazard);
+                  return (
+                    <label key={hazard} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${checked ? 'bg-rose-500/15 border-rose-500/40 text-rose-300' : 'bg-slate-900 border-slate-800 text-slate-400'}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setWorksiteForm(prev => ({ ...prev, hazards: [...prev.hazards, hazard] }));
+                          } else {
+                            setWorksiteForm(prev => ({ ...prev, hazards: prev.hazards.filter(h => h !== hazard) }));
+                          }
+                        }}
+                        className="rounded accent-rose-500"
+                      />
+                      <span className="text-[11px]">{hazard}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Telsiz Frekansı</label>
+              <input 
+                type="text" 
+                value={worksiteForm.radioChannel} 
+                onChange={e => setWorksiteForm({ ...worksiteForm, radioChannel: e.target.value })}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-emerald-500 outline-none"
+                placeholder="örn: CH-1 / 446.00625"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowWorksiteModal(false)}
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-neutral-300 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/30"
+              >
+                Enkazı Kaydet (ASR-3)
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   )

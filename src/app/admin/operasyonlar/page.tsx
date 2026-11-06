@@ -690,6 +690,24 @@ export default function Operasyonlar() {
         alert("Acil afet komut paneli hazırlandı!");
     };
 
+    // WhatsApp Üzerinden Tek Tıkla Seferberlik & Çağrı Paylaşımı
+    const handleShareWhatsAppMobilization = () => {
+        if (!selectedOp) return;
+        const opTime = new Date(selectedOp.startTime || Date.now()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        const radioInfo = selectedOp.radioChannel ? `\n📻 Telsiz Frekansı: ${selectedOp.radioChannel}` : '';
+        const msg = `🚨 *M1G ARAMA KURTARMA - ACİL SEFERBERLİK ÇAĞRISI* 🚨\n\n` +
+                    `*Operasyon:* ${selectedOp.name}\n` +
+                    `*Tür:* ${selectedOp.type}\n` +
+                    `*Başlangıç:* ${opTime}\n` +
+                    `${radioInfo}\n\n` +
+                    `⚠️ *Tüm personelin ivedilikle aşağıdaki bağlantıya tıklayarak afet durumunu (Geliyorum / Gelemiyorum / İntikaldeyim) bildirmesi ve canlı GPS intikal haritasına katılması zorunludur:*\n\n` +
+                    `👉 https://m1g.org.tr/portal\n\n` +
+                    `_M1G Afet Komuta Masası_`;
+        
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    };
+
     // Open closure modal / screen instead of direct archiving
     const handleOpenClosureModal = () => {
         if (!selectedOp) return;
@@ -1559,6 +1577,15 @@ export default function Operasyonlar() {
                                         {selectedOp.status === "Aktif" && (
                                             <button onClick={() => setShowQrModal(true)} className="px-4 py-2.5 bg-indigo-600/20 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all border border-indigo-500/20">
                                                 <ScanBarcode size={14} /> TİM BAĞLANTI QR
+                                            </button>
+                                        )}
+                                        {selectedOp.status === "Aktif" && (
+                                            <button 
+                                                onClick={handleShareWhatsAppMobilization} 
+                                                className="px-4 py-2.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all border border-emerald-500/30"
+                                                title="M1G WhatsApp Grubuna Tek Tıkla Seferberlik İlanı Gönder"
+                                            >
+                                                <MessageSquare size={14} /> WHATSAPP ÇAĞRISI
                                             </button>
                                         )}
                                         {selectedOp.status === "Aktif" ? (
