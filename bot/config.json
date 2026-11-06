@@ -1,0 +1,40 @@
+{
+  "serverPort": 3050,
+  "m1gApiUrl": "https://m1g.org.tr",
+  "botSecretKey": "m1g-secret-whatsapp-token-2026",
+  "communityRules": {
+    "blockUnauthorizedLinks": true,
+    "blockSpamFlood": true,
+    "nightQuietHours": {
+      "enabled": true,
+      "startHour": 23,
+      "endHour": 7,
+      "warningMessage": "⚠️ Sayın @name, saat 23:00 - 07:00 arasında afet haberleşmesini açık tutmak adına acil durumlar haricinde genel sohbet yapılması uygun değildir."
+    },
+    "badWordsList": [
+      "küfür1", "küfür2", "reklam", "bahis", "kumar"
+    ]
+  },
+  "departmentAdmins": {
+    "lojistik": {
+      "name": "Lojistik & Depo Amiri",
+      "phone": "905320000001"
+    },
+    "harekat": {
+      "name": "Operasyon & Harekât Amiri",
+      "phone": "905320000002"
+    },
+    "egitim": {
+      "name": "Eğitim & Akreditasyon Sorumlusu",
+      "phone": "905320000003"
+    },
+    "yonetim": {
+      "name": "Dernek Genel Sekreterliği & Başkanlık",
+      "phone": "905320000004"
+    }
+  },
+  "templates": {
+    "welcome": "🚨 *M1G ARAMA KURTARMA AİLESİNE HOŞ GELDİNİZ!* 🚨\n\nDeğerli gönüllümüz @name, M1G operasyonel haberleşme grubumuza hoş geldiniz.\n\n📌 *Lütfen Dikkat Edilmesi Gerekenler:*\n1. Acil durumlar haricinde grupta gereksiz link, reklam ve flood paylaşımı yasaktır.\n2. Profilinizi ve ekipman durumunuzu güncellemek için: https://m1g.org.tr/portal\n3. Herhangi bir malzeme arızası veya mazeretiniz olduğunda bu bota özelden yazabilirsiniz.\n\n_Birlikte Daha Güçlüyüz! Afetsiz Günler Dileriz._",
+    "birthday": "🎂 *M1G AİLESİ İYİ Kİ DOĞDUN!* 🎈\n\nBugün değerli arama kurtarma gönüllümüz *@name* arkadaşımızın doğum günü! 🎉\n\nM1G Arama Kurtarma Derneği olarak kendisine sevdikleriyle birlikte sağlıklı, huzurlu ve afetsiz nice yaşlar dileriz. Emeklerin ve fedakarlıkların için sonsuz teşekkürler! 🚒💪"
+  }
+}
