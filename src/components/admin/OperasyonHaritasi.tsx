@@ -455,6 +455,8 @@ export default function OperasyonHaritasi({
   const [worksites, setWorksites] = useState<INSARAGWorksite[]>([])
   const [selectedWorksite, setSelectedWorksite] = useState<INSARAGWorksite | null>(null)
   const [isAddingWorksite, setIsAddingWorksite] = useState(false)
+  const [editingWorksiteId, setEditingWorksiteId] = useState<string | null>(null)
+  const [showWorksiteHistoryModal, setShowWorksiteHistoryModal] = useState(false)
   const [worksiteClickPos, setWorksiteClickPos] = useState<[number, number] | null>(null)
   const [showWorksiteModal, setShowWorksiteModal] = useState(false)
   const [worksiteForm, setWorksiteForm] = useState({
@@ -472,7 +474,8 @@ export default function OperasyonHaritasi({
     hazards: [] as string[],
     assignedTeamName: '',
     radioChannel: 'CH-1 / 446.00625 MHz',
-    notes: ''
+    notes: '',
+    updateNote: ''
   })
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -761,50 +764,85 @@ export default function OperasyonHaritasi({
   };
 
   // ── ASR-3 INSARAG Enkaz Yönetim Fonksiyonları ────────────────────────────
-  const handleQuickVictimUpdate = async (type: 'live' | 'deceased', delta: number) => {
+  const handleQuickVictimUpdate = async (type: 'live' | 'deceased' | 'suspectedLive', delta: number) => {
     if (!selectedWorksite) return;
     const currentLive = selectedWorksite.victims?.liveExtracted || 0;
     const currentDeceased = selectedWorksite.victims?.deceasedExtracted || 0;
+    const currentSuspected = selectedWorksite.victims?.suspectedLive || 0;
 
     const updatedVictims = {
       ...selectedWorksite.victims,
       liveExtracted: type === 'live' ? Math.max(0, currentLive + delta) : currentLive,
       deceasedExtracted: type === 'deceased' ? Math.max(0, currentDeceased + delta) : currentDeceased,
+      suspectedLive: type === 'suspectedLive' ? Math.max(0, currentSuspected + delta) : currentSuspected,
+      suspectedDeceased: selectedWorksite.victims?.suspectedDeceased || 0
     };
 
-    const updatedWorksite: INSARAGWorksite = {
-      ...selectedWorksite,
-      victims: updatedVictims,
-      updatedAt: Date.now()
-    };
-
-    setSelectedWorksite(updatedWorksite);
-    setWorksites(prev => prev.map(w => w.id === updatedWorksite.id ? updatedWorksite : w));
+    const actionMsg = type === 'live'
+      ? `${delta > 0 ? '+1' : '-1'} Canlı Çıkarıldı (Toplam: ${updatedVictims.liveExtracted})`
+      : type === 'deceased'
+      ? `${delta > 0 ? '+1' : '-1'} Vefat Kaydı (Toplam: ${updatedVictims.deceasedExtracted})`
+      : `${delta > 0 ? '+1' : '-1'} Şüpheli Canlı Tespiti (Toplam: ${updatedVictims.suspectedLive})`;
 
     try {
-      await fetch('/api/settings/operations/active/worksites', {
+      const res = await fetch('/api/settings/operations/active/worksites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           operationId,
-          ...updatedWorksite
+          ...selectedWorksite,
+          victims: updatedVictims,
+          logAction: actionMsg
         })
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.worksite) {
+          setSelectedWorksite(data.worksite);
+          setWorksites(prev => prev.map(w => w.id === data.worksite.id ? data.worksite : w));
+        }
+      }
     } catch (err) {
       console.error("Enkaz kazazede sayısı güncellenemedi", err);
     }
   };
 
+  const handleStartEditWorksite = (ws: INSARAGWorksite) => {
+    setEditingWorksiteId(ws.id);
+    setWorksiteClickPos(ws.location);
+    setWorksiteForm({
+      code: ws.code,
+      name: ws.name,
+      address: ws.address || '',
+      structureType: ws.structureType,
+      collapseType: ws.collapseType,
+      status: ws.status,
+      priority: ws.priority,
+      liveExtracted: ws.victims?.liveExtracted || 0,
+      deceasedExtracted: ws.victims?.deceasedExtracted || 0,
+      suspectedLive: ws.victims?.suspectedLive || 0,
+      suspectedDeceased: ws.victims?.suspectedDeceased || 0,
+      hazards: ws.hazards || [],
+      assignedTeamName: ws.assignedTeamName || '',
+      radioChannel: ws.radioChannel || 'CH-1 / 446.00625 MHz',
+      notes: ws.notes || '',
+      updateNote: ''
+    });
+    setShowWorksiteModal(true);
+  };
+
   const handleSaveWorksite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!worksiteClickPos) return;
+    const loc = editingWorksiteId ? selectedWorksite?.location || worksiteClickPos : worksiteClickPos;
+    if (!loc) return;
 
     const payload = {
       operationId,
+      id: editingWorksiteId || undefined,
       code: worksiteForm.code,
       name: worksiteForm.name,
       address: worksiteForm.address,
-      location: worksiteClickPos,
+      location: loc,
       structureType: worksiteForm.structureType,
       collapseType: worksiteForm.collapseType,
       status: worksiteForm.status,
@@ -819,6 +857,7 @@ export default function OperasyonHaritasi({
       assignedTeamName: worksiteForm.assignedTeamName,
       radioChannel: worksiteForm.radioChannel,
       notes: worksiteForm.notes,
+      updateNote: worksiteForm.updateNote,
       markingDate: new Date().toLocaleString('tr-TR')
     };
 
@@ -839,6 +878,7 @@ export default function OperasyonHaritasi({
       console.error("Enkaz kaydedilemedi", err);
     } finally {
       setIsAddingWorksite(false);
+      setEditingWorksiteId(null);
       setWorksiteClickPos(null);
       setShowWorksiteModal(false);
     }
@@ -1623,23 +1663,84 @@ export default function OperasyonHaritasi({
                 </div>
               </div>
 
+              {/* Son Vardiya / Durum Değişikliği Özeti & Tarihçe Butonu */}
+              {selectedWorksite.history && selectedWorksite.history.length > 0 && (
+                <div style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  padding: '8px 10px',
+                  marginBottom: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8
+                }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 10, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>🕒 {selectedWorksite.history[0].timeString}</span>
+                      <span style={{ color: '#64748b' }}>•</span>
+                      <span style={{ color: '#38bdf8', fontWeight: 600 }}>{selectedWorksite.history[0].authorName}</span>
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#f8fafc', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {selectedWorksite.history[0].action}
+                      {selectedWorksite.history[0].details ? ` (${selectedWorksite.history[0].details})` : ''}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowWorksiteHistoryModal(true)}
+                    style={{
+                      background: 'rgba(56,189,248,0.15)',
+                      border: '1px solid rgba(56,189,248,0.3)',
+                      color: '#38bdf8',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '5px 9px',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }}
+                    title="Saat bazlı tüm vardiya ve durum geçmişini incele"
+                  >
+                    <span>📜 Tarihçe</span>
+                    <span style={{ background: '#0284c7', color: '#fff', fontSize: 10, padding: '1px 5px', borderRadius: 10 }}>
+                      {selectedWorksite.history.length}
+                    </span>
+                  </button>
+                </div>
+              )}
+
               {/* Aksiyon butonları */}
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <button
                   onClick={() => setFlyTo(selectedWorksite.location)}
                   style={{
-                    flex: 1, padding: '10px 0', borderRadius: 8, background: '#2563eb',
+                    flex: 1, minWidth: '100px', padding: '10px 0', borderRadius: 8, background: '#2563eb',
                     color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer'
                   }}
                 >
                   Haritada Ortala
+                </button>
+                <button
+                  onClick={() => handleStartEditWorksite(selectedWorksite)}
+                  style={{
+                    flex: 1, minWidth: '130px', padding: '10px 0', borderRadius: 8, background: '#d97706',
+                    color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                  }}
+                  title="Tim değiştir, vardiya devret veya durum güncelle"
+                >
+                  <span>✏️ Vardiya / Düzenle</span>
                 </button>
                 <a
                   href={`https://maps.google.com/?q=${selectedWorksite.location[0]},${selectedWorksite.location[1]}&navigate=yes`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
-                    flex: 1, padding: '10px 0', borderRadius: 8, background: '#059669',
+                    flex: 1, minWidth: '110px', padding: '10px 0', borderRadius: 8, background: '#059669',
                     color: '#fff', textAlign: 'center', textDecoration: 'none', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}
                 >
@@ -2043,22 +2144,45 @@ export default function OperasyonHaritasi({
 
       {/* ── ASR-3 INSARAG Enkaz Triyaj Yan Kartı (Harita Sağ Üstte Açılır) ─── */}
       {showWorksiteModal && (
-        <div className="absolute top-16 right-4 z-[1200] w-[92%] sm:w-[420px] max-h-[85%] overflow-y-auto bg-[#0f172a]/95 border border-emerald-500/50 rounded-2xl p-5 shadow-2xl backdrop-blur-md text-left transition-all">
+        <div className={`absolute top-16 right-4 z-[1200] w-[92%] sm:w-[420px] max-h-[85%] overflow-y-auto bg-[#0f172a]/95 border ${editingWorksiteId ? 'border-amber-500/50' : 'border-emerald-500/50'} rounded-2xl p-5 shadow-2xl backdrop-blur-md text-left transition-all`}>
           <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
             <div className="flex items-center gap-2.5">
-              <span className="text-xl">🏗️</span>
+              <span className="text-xl">{editingWorksiteId ? '✏️' : '🏗️'}</span>
               <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">ASR-3 İşaretleme & Triyaj</h3>
-                <p className="text-[10px] text-emerald-400">INSARAG Worksite Assessment (İş Sahası Değerlendirmesi)</p>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  {editingWorksiteId ? 'ASR-3 Vardiya Devri & Güncelleme' : 'ASR-3 İşaretleme & Triyaj'}
+                </h3>
+                <p className={`text-[10px] ${editingWorksiteId ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  {editingWorksiteId ? 'INSARAG Enkaz Düzenleme & Zaman Damgalı Log' : 'INSARAG Worksite Assessment (İş Sahası Değerlendirmesi)'}
+                </p>
               </div>
             </div>
             <button 
-              onClick={() => setShowWorksiteModal(false)}
+              onClick={() => {
+                setShowWorksiteModal(false);
+                setEditingWorksiteId(null);
+              }}
               className="text-neutral-400 hover:text-white text-lg p-1"
             >✕</button>
           </div>
 
           <form onSubmit={handleSaveWorksite} className="space-y-4">
+            {editingWorksiteId && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-1">
+                <label className="block text-[11px] font-bold text-amber-400 uppercase tracking-widest">
+                  Vardiya Devir / Güncelleme Gerekçesi (Log Notu) *
+                </label>
+                <input 
+                  type="text" 
+                  value={worksiteForm.updateNote} 
+                  onChange={e => setWorksiteForm({ ...worksiteForm, updateNote: e.target.value })}
+                  className="w-full bg-slate-900 border border-amber-500/50 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-400 outline-none"
+                  placeholder="örn: Vardiya devri yapıldı, Tim B görevi devraldı"
+                />
+                <span className="text-[10px] text-neutral-400 block">Bu gerekçe saat ve komuta yetkilisiyle birlikte enkaz tarihçesine kaydedilir.</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Enkaz Kodu *</label>
@@ -2254,19 +2378,100 @@ export default function OperasyonHaritasi({
             <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setShowWorksiteModal(false)}
+                onClick={() => {
+                  setShowWorksiteModal(false);
+                  setEditingWorksiteId(null);
+                }}
                 className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-neutral-300 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors"
               >
                 İptal
               </button>
               <button
                 type="submit"
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/30"
+                className={`flex-1 py-3 ${editingWorksiteId ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'} text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg`}
               >
-                Enkazı Kaydet (ASR-3)
+                {editingWorksiteId ? 'Vardiyayı / Bilgileri Güncelle' : 'Enkazı Kaydet (ASR-3)'}
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ── INSARAG ASR-3 Vardiya & Durum Tarihçesi Modal ─────────────── */}
+      {showWorksiteHistoryModal && selectedWorksite && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg max-h-[85vh] bg-[#0b1329] border border-sky-500/30 rounded-2xl p-6 shadow-2xl flex flex-col text-left">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl p-2 bg-sky-500/20 rounded-xl border border-sky-500/30">📜</span>
+                <div>
+                  <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                    <span>ASR-3 [{selectedWorksite.code}]</span>
+                    <span className="text-xs font-mono text-sky-400 font-bold bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">TUR-M1G</span>
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-0.5 font-medium">{selectedWorksite.name} — Vardiya & İşlem Günlüğü</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowWorksiteHistoryModal(false)}
+                className="text-neutral-400 hover:text-white p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              >✕</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-1 space-y-3">
+              {(!selectedWorksite.history || selectedWorksite.history.length === 0) ? (
+                <div className="text-center py-8 text-neutral-500 text-xs">
+                  Henüz kaydedilmiş bir vardiya veya durum geçmişi bulunmuyor.
+                </div>
+              ) : (
+                selectedWorksite.history.map((log, idx) => (
+                  <div key={log.id || idx} className="p-3.5 bg-slate-900/90 rounded-xl border border-white/10 space-y-2 relative">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-mono font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+                        🕒 {log.timeString}
+                      </span>
+                      <span className="text-[11px] text-neutral-400 font-medium">
+                        Yetkili: <strong className="text-neutral-200">{log.authorName || 'Komuta Masası'}</strong>
+                      </span>
+                    </div>
+
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>📌</span>
+                      <span>{log.action}</span>
+                    </div>
+
+                    {log.details && (
+                      <div className="text-xs text-neutral-300 italic bg-black/40 p-2 rounded-lg border-l-2 border-amber-500/60">
+                        "{log.details}"
+                      </div>
+                    )}
+
+                    {log.victimsSnapshot && (
+                      <div className="flex items-center gap-3 pt-1 text-[11px] font-mono text-neutral-400">
+                        <span className="text-emerald-400">L: {log.victimsSnapshot.liveExtracted} Canlı</span>
+                        <span>•</span>
+                        <span className="text-rose-400">D: {log.victimsSnapshot.deceasedExtracted} Vefat</span>
+                        <span>•</span>
+                        <span className="text-amber-400">Şüpheli: {log.victimsSnapshot.suspectedLive}</span>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-white/10 mt-4 shrink-0 flex items-center justify-between">
+              <span className="text-[11px] text-neutral-500">
+                INSARAG Seviye 3 Enkaz Değerlendirme & Takip Standardı
+              </span>
+              <button
+                onClick={() => setShowWorksiteHistoryModal(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-colors"
+              >
+                Kapat
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

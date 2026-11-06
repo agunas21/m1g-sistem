@@ -7,6 +7,24 @@ import { getCollectionDB, writeCollectionDB } from '@/lib/settings';
 import { verifyJwt } from '@/lib/crypto';
 import { supabase } from '@/lib/supabase';
 
+export interface INSARAGWorksiteLog {
+    id: string;
+    timestamp: string;      // ISO format
+    timeString: string;     // Okunabilir format: "16:10 - 06.11.2026"
+    authorName: string;     // Güncelleyen komuta yetkilisi
+    action: string;         // Örn: "Vardiya Devri: Tim 1 ➔ Tim 2"
+    details?: string;       // Vardiya notu / Değişiklik gerekçesi
+    prevTeamName?: string;
+    newTeamName?: string;
+    prevStatus?: string;
+    newStatus?: string;
+    victimsSnapshot?: {
+        liveExtracted: number;
+        deceasedExtracted: number;
+        suspectedLive: number;
+    };
+}
+
 export interface INSARAGWorksite {
     id: string;                    // örn: "WS-8921"
     code: string;                  // örn: "A-1" (Sektör A, 1. Enkaz)
@@ -29,6 +47,7 @@ export interface INSARAGWorksite {
     radioChannel?: string;         // örn: "CH-1 / 446.00625 MHz"
     markingDate: string;           // ISO veya okunabilir tarih/saat
     notes?: string;
+    history?: INSARAGWorksiteLog[]; // INSARAG Saat Bazlı Vardiya & Durum Tarihçesi
     createdAt: number;
     updatedAt: number;
 }
@@ -110,12 +129,53 @@ export async function POST(req: Request) {
                 if (!operations[i].worksites) operations[i].worksites = [];
 
                 const now = Date.now();
+                const userAuthor = (user as any).name || (user as any).email || 'Komuta Masası';
+                const nowTimeStr = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('tr-TR');
+
                 const existingIdx = id ? operations[i].worksites.findIndex((w: any) => w.id === id) : -1;
 
                 if (existingIdx !== -1) {
-                    // Güncelle
+                    // Mevcut enkazı güncelle ve INSARAG Vardiya/Durum Logu oluştur
+                    const prev = operations[i].worksites[existingIdx];
+                    const prevHistory: INSARAGWorksiteLog[] = prev.history || [];
+
+                    // Değişiklikleri tespit et
+                    const changes: string[] = [];
+                    if (prev.assignedTeamName !== assignedTeamName) {
+                        changes.push(`Vardiya Devri: ${prev.assignedTeamName || 'Atanmadı'} ➔ ${assignedTeamName || 'Atanmadı'}`);
+                    }
+                    if (prev.status !== status) {
+                        changes.push(`Durum: ${prev.status} ➔ ${status}`);
+                    }
+                    if (prev.priority !== priority) {
+                        changes.push(`Öncelik: ${prev.priority} ➔ ${priority}`);
+                    }
+                    if (prev.victims?.liveExtracted !== victims?.liveExtracted || prev.victims?.deceasedExtracted !== victims?.deceasedExtracted || prev.victims?.suspectedLive !== victims?.suspectedLive) {
+                        changes.push(`Kazazede Sayımı (Canlı: ${victims?.liveExtracted || 0}, Vefat: ${victims?.deceasedExtracted || 0}, Şüpheli: ${victims?.suspectedLive || 0})`);
+                    }
+
+                    const actionSummary = payload.logAction || (changes.length > 0 ? changes.join(' | ') : 'Enkaz Bilgileri / Notlar Güncellendi');
+
+                    const newLog: INSARAGWorksiteLog = {
+                        id: `LOG-${now}`,
+                        timestamp: new Date().toISOString(),
+                        timeString: nowTimeStr,
+                        authorName: userAuthor,
+                        action: actionSummary,
+                        details: payload.updateNote || notes || '',
+                        prevTeamName: prev.assignedTeamName,
+                        newTeamName: assignedTeamName,
+                        prevStatus: prev.status,
+                        newStatus: status,
+                        victimsSnapshot: {
+                            liveExtracted: victims?.liveExtracted || 0,
+                            deceasedExtracted: victims?.deceasedExtracted || 0,
+                            suspectedLive: victims?.suspectedLive || 0
+                        }
+                    };
+
                     operations[i].worksites[existingIdx] = {
-                        ...operations[i].worksites[existingIdx],
+                        ...prev,
                         code,
                         name,
                         address,
@@ -131,11 +191,28 @@ export async function POST(req: Request) {
                         radioChannel,
                         markingDate,
                         notes,
+                        history: [newLog, ...prevHistory],
                         updatedAt: now
                     };
                     savedWorksite = operations[i].worksites[existingIdx];
                 } else {
-                    // Yeni oluştur
+                    // Yeni oluştur ve ilk saha işaretleme logunu ekle
+                    const initialLog: INSARAGWorksiteLog = {
+                        id: `LOG-${now}`,
+                        timestamp: new Date().toISOString(),
+                        timeString: nowTimeStr,
+                        authorName: userAuthor,
+                        action: 'ASR-3 İlk Saha İşaretlemesi Yapıldı',
+                        details: notes || 'Enkaz komuta sistemine ilk kez kaydedildi',
+                        newTeamName: assignedTeamName,
+                        newStatus: status,
+                        victimsSnapshot: {
+                            liveExtracted: victims?.liveExtracted || 0,
+                            deceasedExtracted: victims?.deceasedExtracted || 0,
+                            suspectedLive: victims?.suspectedLive || 0
+                        }
+                    };
+
                     const newWorksite: INSARAGWorksite = {
                         id: id || `WS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
                         code,
@@ -153,6 +230,7 @@ export async function POST(req: Request) {
                         radioChannel,
                         markingDate,
                         notes,
+                        history: [initialLog],
                         createdAt: now,
                         updatedAt: now
                     };
