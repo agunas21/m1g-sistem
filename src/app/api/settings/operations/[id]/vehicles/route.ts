@@ -19,7 +19,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             include: {
                 assignments: {
                     include: {
-                        member: true
+                        member: {
+                            select: { id: true, fullName: true, role: true, phone: true, email: true, bloodType: true, avatar: true }
+                        }
                     }
                 }
             },
@@ -80,7 +82,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             include: {
                 assignments: {
                     include: {
-                        member: true
+                        member: {
+                            select: { id: true, fullName: true, role: true, phone: true, email: true, bloodType: true, avatar: true }
+                        }
                     }
                 }
             }

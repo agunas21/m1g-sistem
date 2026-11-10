@@ -386,15 +386,40 @@ export default function KolaySiteDuzenleyici() {
         }
     };
 
-    const handleAddSponsor = (e: React.FormEvent<HTMLFormElement>) => {
+    const persistSponsors = async (updatedSponsors: any[]) => {
+        try {
+            await Promise.all([
+                fetch("/api/settings/images", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        sponsors: updatedSponsors.map((s: any) => ({ id: s.id, name: s.name, role: s.role, logo: s.logo || "" }))
+                    }),
+                }),
+                fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        sponsors: updatedSponsors.map((s: any) => ({ id: s.id, name: s.name, role: s.role }))
+                    }),
+                }),
+            ]);
+        } catch (err) {
+            console.error("Sponsor auto-save error:", err);
+        }
+    };
+
+    const handleAddSponsor = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         const name = fd.get("sponsorName") as string;
         const role = fd.get("sponsorRole") as string;
         if (name && role) {
-            setSponsors([...sponsors, { id: Date.now(), name, role, logo: newSponsorLogo || "" }]);
+            const updated = [...sponsors, { id: Date.now(), name, role, logo: newSponsorLogo || "" }];
+            setSponsors(updated);
             (e.target as HTMLFormElement).reset();
             setNewSponsorLogo("");
+            await persistSponsors(updated);
         }
     };
 
@@ -406,18 +431,32 @@ export default function KolaySiteDuzenleyici() {
         setActivities(activities.map(a => a.id === id ? { ...a, [field]: value } : a));
     };
 
+    const persistActivities = async (nextGallery: any[], nextReports: any[]) => {
+        try {
+            await fetch("/api/settings/activities", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ activityGallery: nextGallery, activityReports: nextReports }),
+            });
+        } catch (err) {
+            console.error("Activities auto-save error:", err);
+        }
+    };
+
     const handleGalleryPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             setLoading(true);
             try {
                 const url = await uploadFileToServer(file);
-                setActivityGallery([...activityGallery, {
+                const updatedGallery = [...activityGallery, {
                     id: Date.now(),
                     common: "Yeni Görsel",
                     binomial: "",
                     photo: { url, text: "Yeni görsel", by: "M1G Ekibi" }
-                }]);
+                }];
+                setActivityGallery(updatedGallery);
+                await persistActivities(updatedGallery, activityReports);
             } catch (err: any) {
                 alert(err.message);
             } finally {
@@ -456,20 +495,22 @@ export default function KolaySiteDuzenleyici() {
         setEditingReport(newReport);
     };
 
-    const saveReport = () => {
+    const saveReport = async () => {
         if (!editingReport || !editingReport.title) return;
         const exists = activityReports.find((r: any) => r.id === editingReport.id);
-        if (exists) {
-            setActivityReports(activityReports.map((r: any) => r.id === editingReport.id ? editingReport : r));
-        } else {
-            setActivityReports([editingReport, ...activityReports]);
-        }
+        const updatedReports = exists
+            ? activityReports.map((r: any) => r.id === editingReport.id ? editingReport : r)
+            : [editingReport, ...activityReports];
+        setActivityReports(updatedReports);
         setEditingReport(null);
+        await persistActivities(activityGallery, updatedReports);
     };
 
-    const deleteReport = (id: number) => {
+    const deleteReport = async (id: number) => {
         if (confirm("Bu faaliyet raporunu silmek istediğinizden emin misiniz?")) {
-            setActivityReports(activityReports.filter((r: any) => r.id !== id));
+            const updatedReports = activityReports.filter((r: any) => r.id !== id);
+            setActivityReports(updatedReports);
+            await persistActivities(activityGallery, updatedReports);
         }
     };
 
@@ -828,6 +869,16 @@ export default function KolaySiteDuzenleyici() {
                                         <input value={aboutTag2} onChange={e => setAboutTag2(e.target.value)} className="cms-input" placeholder="Örn: Sıfır Hata, %100 Disiplin" />
                                     </div>
                                 </div>
+                                <div>
+                                    <label className="cms-label">Kurumsal Kimlik Açıklama Metni (Anasayfa Hakkımızda Paragrafı)</label>
+                                    <textarea
+                                        rows={4}
+                                        value={aboutText}
+                                        onChange={e => setAboutText(e.target.value)}
+                                        className="cms-input resize-none"
+                                        placeholder="M1G Arama Kurtarma Derneği, afet ve acil durumlarda..."
+                                    />
+                                </div>
                             </div>
 
                             {/* Faaliyetlerimiz Bölümü */}
@@ -841,6 +892,28 @@ export default function KolaySiteDuzenleyici() {
                                     <div>
                                         <label className="cms-label">Bölüm Ana Başlığı</label>
                                         <input value={activitiesTitle} onChange={e => setActivitiesTitle(e.target.value)} className="cms-input" placeholder="Örn: Faaliyetlerimiz" />
+                                    </div>
+                                </div>
+                                <div className="pt-2 space-y-3">
+                                    <label className="cms-label">Anasayfa 6'lı Uzmanlık Kartları</label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {activities.map((act: any) => (
+                                            <div key={act.id} className="bg-black/40 border border-white/10 rounded-xl p-3 space-y-2">
+                                                <input
+                                                    value={act.title}
+                                                    onChange={e => updateActivity(act.id, "title", e.target.value)}
+                                                    className="cms-input font-bold text-xs"
+                                                    placeholder="Kart Başlığı"
+                                                />
+                                                <textarea
+                                                    rows={2}
+                                                    value={act.desc}
+                                                    onChange={e => updateActivity(act.id, "desc", e.target.value)}
+                                                    className="cms-input resize-none text-xs"
+                                                    placeholder="Kart Açıklaması"
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -1298,7 +1371,11 @@ export default function KolaySiteDuzenleyici() {
                                         <div className="aspect-[3/4] w-full rounded-lg overflow-hidden bg-black relative border border-white/5">
                                             <img src={item.photo.url} className="w-full h-full object-cover" />
                                             <button 
-                                                onClick={() => setActivityGallery(activityGallery.filter(g => g.id !== item.id))}
+                                                onClick={async () => {
+                                                    const updatedGallery = activityGallery.filter(g => g.id !== item.id);
+                                                    setActivityGallery(updatedGallery);
+                                                    await persistActivities(updatedGallery, activityReports);
+                                                }}
                                                 className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg"
                                             >
                                                 <Trash2 size={14} />
@@ -1392,7 +1469,11 @@ export default function KolaySiteDuzenleyici() {
                                             <p className="text-neutral-500 text-xs">{s.role}</p>
                                         </div>
                                     </div>
-                                    <button onClick={() => setSponsors(sponsors.filter(sp => sp.id !== s.id))} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors">
+                                    <button onClick={async () => {
+                                        const updated = sponsors.filter(sp => sp.id !== s.id);
+                                        setSponsors(updated);
+                                        await persistSponsors(updated);
+                                    }} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors">
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
@@ -1617,15 +1698,15 @@ export default function KolaySiteDuzenleyici() {
                                     <label className="cms-label">Başlık</label>
                                     <input
                                         value={editingEvent?.title || ""}
-                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", type: "egitim", date: "", location: "", mandatory: false }), title: e.target.value })}
+                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", type: "egitim", category: "egitim", date: "", time: "14:00", location: "", description: "", mandatory: false }), title: e.target.value })}
                                         className="cms-input" placeholder="Etkinlik başlığı..."
                                     />
                                 </div>
                                 <div>
                                     <label className="cms-label">Kategori</label>
                                     <select
-                                        value={editingEvent?.type || "egitim"}
-                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", date: "", location: "", mandatory: false }), type: e.target.value })}
+                                        value={editingEvent?.type || editingEvent?.category || "egitim"}
+                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", date: "", time: "14:00", location: "", description: "", mandatory: false }), type: e.target.value, category: e.target.value })}
                                         className="cms-input"
                                     >
                                         {EVENT_CATEGORIES.map(c => <option key={c} value={c}>{EVENT_CAT_LABELS[c]}</option>)}
@@ -1636,16 +1717,33 @@ export default function KolaySiteDuzenleyici() {
                                     <input
                                         type="date"
                                         value={editingEvent?.date || ""}
-                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", type: "egitim", location: "", mandatory: false }), date: e.target.value })}
+                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", type: "egitim", category: "egitim", time: "14:00", location: "", description: "", mandatory: false }), date: e.target.value })}
                                         className="cms-input"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="cms-label">Saat</label>
+                                    <input
+                                        type="text"
+                                        value={editingEvent?.time || ""}
+                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", type: "egitim", category: "egitim", date: "", location: "", description: "", mandatory: false }), time: e.target.value })}
+                                        className="cms-input" placeholder="Örn: 14:00"
                                     />
                                 </div>
                                 <div>
                                     <label className="cms-label">Konum</label>
                                     <input
                                         value={editingEvent?.location || ""}
-                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", type: "egitim", date: "", mandatory: false }), location: e.target.value })}
+                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", type: "egitim", category: "egitim", date: "", time: "14:00", description: "", mandatory: false }), location: e.target.value })}
                                         className="cms-input" placeholder="Konum / Tesis..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="cms-label">Kısa Açıklama</label>
+                                    <input
+                                        value={editingEvent?.description || ""}
+                                        onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", type: "egitim", category: "egitim", date: "", time: "14:00", location: "", mandatory: false }), description: e.target.value })}
+                                        className="cms-input" placeholder="Etkinlik detayı..."
                                     />
                                 </div>
                             </div>
@@ -1654,26 +1752,37 @@ export default function KolaySiteDuzenleyici() {
                                     type="checkbox"
                                     id="mandatoryCheck"
                                     checked={editingEvent?.mandatory || false}
-                                    onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", type: "egitim", date: "", location: "" }), mandatory: e.target.checked })}
+                                    onChange={e => setEditingEvent({ ...(editingEvent || { id: "", title: "", type: "egitim", category: "egitim", date: "", time: "14:00", location: "", description: "" }), mandatory: e.target.checked })}
                                     className="w-4 h-4 rounded border-white/20 bg-black/50 text-red-500 focus:ring-red-500 focus:ring-offset-0"
                                 />
                                 <label htmlFor="mandatoryCheck" className="text-sm text-neutral-300">Bu katılım zorunludur (Sarı Uyarı Gösterir)</label>
                             </div>
                             <div className="flex gap-2 pt-2">
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (!editingEvent?.title || !editingEvent?.date) return;
-                                        if (editingEvent.id) {
-                                            setCalendarEvents(calendarEvents.map(e => e.id === editingEvent.id ? editingEvent : e));
-                                        } else {
-                                            setCalendarEvents([{ ...editingEvent, id: Date.now().toString() }, ...calendarEvents]);
-                                        }
+                                        const normalizedEv = {
+                                            ...editingEvent,
+                                            type: editingEvent.type || editingEvent.category || "egitim",
+                                            category: editingEvent.category || editingEvent.type || "egitim",
+                                            time: editingEvent.time || "14:00",
+                                            description: editingEvent.description || "",
+                                        };
+                                        const updated = editingEvent.id
+                                            ? calendarEvents.map(e => e.id === editingEvent.id ? normalizedEv : e)
+                                            : [{ ...normalizedEv, id: Date.now().toString() }, ...calendarEvents];
+                                        setCalendarEvents(updated);
                                         setEditingEvent(null);
+                                        await fetch("/api/settings", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ calendarEvents: updated }),
+                                        });
                                     }}
                                     disabled={!editingEvent?.title || !editingEvent?.date}
                                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
                                 >
-                                    <Plus size={14} /> {editingEvent?.id ? "Güncelle" : "Ekle"}
+                                    <Plus size={14} /> {editingEvent?.id ? "Güncelle & Yayınla" : "Ekle & Yayınla"}
                                 </button>
                                 {editingEvent && (
                                     <button
@@ -1694,11 +1803,19 @@ export default function KolaySiteDuzenleyici() {
                                             <p className="text-white font-bold text-sm flex items-center gap-2">
                                                 {ev.title} {ev.mandatory && <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded uppercase">Zorunlu</span>}
                                             </p>
-                                            <p className="text-neutral-500 text-xs mt-1">{ev.date} • {EVENT_CAT_LABELS[ev.type] || ev.type} • {ev.location}</p>
+                                            <p className="text-neutral-500 text-xs mt-1">{ev.date} {ev.time ? `(${ev.time})` : ""} • {EVENT_CAT_LABELS[ev.type || ev.category] || ev.type || ev.category} • {ev.location}</p>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <button onClick={() => setEditingEvent(ev)} className="p-2 hover:bg-white/10 text-neutral-500 hover:text-blue-400 rounded-lg"><Edit3 size={14} /></button>
-                                            <button onClick={() => setCalendarEvents(calendarEvents.filter(e => e.id !== ev.id))} className="p-2 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 rounded-lg"><Trash2 size={14} /></button>
+                                            <button onClick={async () => {
+                                                const updated = calendarEvents.filter(e => e.id !== ev.id);
+                                                setCalendarEvents(updated);
+                                                await fetch("/api/settings", {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ calendarEvents: updated }),
+                                                });
+                                            }} className="p-2 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 rounded-lg"><Trash2 size={14} /></button>
                                         </div>
                                     </div>
                                 ))}
@@ -1760,34 +1877,54 @@ export default function KolaySiteDuzenleyici() {
                                     <label className="cms-label">Konum / Bölge</label>
                                     <input
                                         value={editingOp?.location || ""}
-                                        onChange={e => setEditingOp({ ...(editingOp || { id: "", title: "", type: "arama-kurtarma", status: "tamamlandi", date: "", summary: "" }), location: e.target.value })}
+                                        onChange={e => setEditingOp({ ...(editingOp || { id: "", title: "", type: "arama-kurtarma", status: "tamamlandi", date: "", summary: "", participants: 15 }), location: e.target.value })}
                                         className="cms-input" placeholder="Bölge / Şehir..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="cms-label">Katılımcı Personel Sayısı</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={editingOp?.participants ?? 15}
+                                        onChange={e => setEditingOp({ ...(editingOp || { id: "", title: "", type: "arama-kurtarma", status: "tamamlandi", date: "", location: "", summary: "" }), participants: parseInt(e.target.value, 10) || 15 })}
+                                        className="cms-input" placeholder="Örn: 22"
                                     />
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="cms-label">Kısa Açıklama</label>
                                     <textarea
-                                        value={editingOp?.summary || ""}
-                                        onChange={e => setEditingOp({ ...(editingOp || { id: "", title: "", type: "arama-kurtarma", status: "tamamlandi", date: "", location: "" }), summary: e.target.value })}
+                                        value={editingOp?.summary || editingOp?.description || ""}
+                                        onChange={e => setEditingOp({ ...(editingOp || { id: "", title: "", type: "arama-kurtarma", status: "tamamlandi", date: "", location: "", participants: 15 }), summary: e.target.value, description: e.target.value })}
                                         className="cms-input" rows={2}
                                     />
                                 </div>
                             </div>
                             <div className="flex gap-2 pt-2">
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (!editingOp?.title || !editingOp?.date) return;
-                                        if (editingOp.id) {
-                                            setOperations(operations.map(o => o.id === editingOp.id ? editingOp : o));
-                                        } else {
-                                            setOperations([{ ...editingOp, id: Date.now().toString() }, ...operations]);
-                                        }
+                                        const normalizedOp = {
+                                            ...editingOp,
+                                            participants: Number(editingOp.participants) || 15,
+                                            summary: editingOp.summary || editingOp.description || "",
+                                            description: editingOp.description || editingOp.summary || "",
+                                        };
+                                        const updated = editingOp.id
+                                            ? operations.map(o => o.id === editingOp.id ? normalizedOp : o)
+                                            : [{ ...normalizedOp, id: Date.now().toString() }, ...operations];
+                                        setOperations(updated);
                                         setEditingOp(null);
+                                        await fetch("/api/settings", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ operations: updated }),
+                                        });
                                     }}
                                     disabled={!editingOp?.title || !editingOp?.date}
                                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
                                 >
-                                    <Plus size={14} /> {editingOp?.id ? "Güncelle" : "Ekle"}
+                                    <Plus size={14} /> {editingOp?.id ? "Güncelle & Yayınla" : "Ekle & Yayınla"}
                                 </button>
                                 {editingOp && (
                                     <button
@@ -1809,11 +1946,19 @@ export default function KolaySiteDuzenleyici() {
                                                 {op.title}
                                                 {op.status === "devam" && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Devam Ediyor" />}
                                             </p>
-                                            <p className="text-neutral-500 text-xs mt-1">{op.date} • {OP_TYPE_LABELS[op.type] || op.type} • {op.location}</p>
+                                            <p className="text-neutral-500 text-xs mt-1">{op.date} • {OP_TYPE_LABELS[op.type] || op.type} • {op.location} • {op.participants || 15} kişi</p>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <button onClick={() => setEditingOp(op)} className="p-2 hover:bg-white/10 text-neutral-500 hover:text-blue-400 rounded-lg"><Edit3 size={14} /></button>
-                                            <button onClick={() => setOperations(operations.filter(o => o.id !== op.id))} className="p-2 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 rounded-lg"><Trash2 size={14} /></button>
+                                            <button onClick={async () => {
+                                                const updated = operations.filter(o => o.id !== op.id);
+                                                setOperations(updated);
+                                                await fetch("/api/settings", {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ operations: updated }),
+                                                });
+                                            }} className="p-2 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 rounded-lg"><Trash2 size={14} /></button>
                                         </div>
                                     </div>
                                 ))}

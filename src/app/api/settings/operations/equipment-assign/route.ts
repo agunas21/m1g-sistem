@@ -89,7 +89,9 @@ export async function POST(req: Request) {
                     assignedToId: targetMemberId
                 },
                 include: {
-                    assignedTo: true
+                    assignedTo: {
+                        select: { id: true, fullName: true, role: true, phone: true }
+                    }
                 }
             });
 

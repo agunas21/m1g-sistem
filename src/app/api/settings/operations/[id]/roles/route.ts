@@ -17,7 +17,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         const roles = await prisma.operationRoleAssignment.findMany({
             where: { operationId: resolvedParams.id },
             include: {
-                member: true
+                member: {
+                    select: { id: true, fullName: true, role: true, phone: true, email: true, bloodType: true, avatar: true }
+                }
             }
         });
 
@@ -86,7 +88,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 roleTitle
             },
             include: {
-                member: true
+                member: {
+                    select: { id: true, fullName: true, role: true, phone: true, email: true, bloodType: true, avatar: true }
+                }
             }
         });
 

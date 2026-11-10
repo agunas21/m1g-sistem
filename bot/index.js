@@ -297,3 +297,4 @@ app.listen(config.serverPort, () => {
     console.log(`📡 M1G Bot HTTP Servisi port ${config.serverPort} üzerinde dinleniyor.`);
     startBot();
 });
+

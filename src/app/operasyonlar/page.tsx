@@ -67,9 +67,20 @@ export default function OperasyonlarPage() {
     useEffect(() => {
         async function load() {
             try {
-                const res = await fetch("/api/settings/operations");
+                const res = await fetch("/api/settings/public", { cache: "no-store" });
                 const data = await res.json();
-                setOperations(data.operations?.length ? data.operations : DEMO_OPERATIONS);
+                if (Array.isArray(data.operations) && data.operations.length > 0) {
+                    const normalized = data.operations.map((o: any) => ({
+                        ...o,
+                        type: o.type || "arama-kurtarma",
+                        status: o.status || "tamamlandi",
+                        participants: Number(o.participants) || 15,
+                        description: o.description || o.summary || "",
+                    }));
+                    setOperations(normalized);
+                } else {
+                    setOperations(DEMO_OPERATIONS);
+                }
             } catch {
                 setOperations(DEMO_OPERATIONS);
             }

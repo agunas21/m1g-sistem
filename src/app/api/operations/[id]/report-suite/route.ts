@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import { verifyJwt } from '@/lib/crypto';
 import { runBackgroundKavkasCheck, KavkasFlag } from '@/lib/kavkas/backgroundCheck';
 
 const IDLE_THRESHOLD_MINUTES = 30;
@@ -27,6 +29,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('m1g_session')?.value;
+    const payload = token ? verifyJwt(token) : null;
+    if (!payload) {
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    }
     const { id: operationId } = await params;
 
     const operation = await prisma.operation.findUnique({
@@ -61,7 +69,7 @@ export async function GET(
       ...(logistics.gaps ?? []),
     ]));
 
-    const durationHours = operation.endTime 
+    const durationHours = operation.endTime
       ? Number(((operation.endTime.getTime() - operation.startTime.getTime()) / (3600 * 1000)).toFixed(1))
       : Number(((Date.now() - operation.startTime.getTime()) / (3600 * 1000)).toFixed(1));
 
@@ -98,11 +106,11 @@ async function buildChronologyData(operationId: string) {
   });
 
   if (events.length === 0) {
-    return { 
-      status: "empty" as const, 
-      timeline: [], 
-      criticalMoments: [], 
-      gaps: ["Operasyon seyir defterine henüz kronolojik olay/müdahale kaydı girilmedi."] 
+    return {
+      status: "empty" as const,
+      timeline: [],
+      criticalMoments: [],
+      gaps: ["Operasyon seyir defterine henüz kronolojik olay/müdahale kaydı girilmedi."]
     };
   }
 
@@ -127,11 +135,11 @@ async function buildChronologyData(operationId: string) {
     })),
     criticalMoments: events
       .filter((e) => e.isDecision)
-      .map((e) => ({ 
-        id: e.id, 
-        timestamp: e.timestamp.toISOString(), 
-        type: e.type, 
-        actorName: e.actor?.fullName ?? "Sistem" 
+      .map((e) => ({
+        id: e.id,
+        timestamp: e.timestamp.toISOString(),
+        type: e.type,
+        actorName: e.actor?.fullName ?? "Sistem"
       })),
     gaps,
   };
@@ -153,10 +161,10 @@ async function buildCoverageData(operationId: string) {
 
   if (gpsEvents.length < 5) {
     gaps.push("Alan kapsama hesaplaması için yetersiz GPS/Konum verisi (min. 5 nokta gerekli).");
-    return { 
-      status: "insufficient" as const, 
+    return {
+      status: "insufficient" as const,
       heatmapGrid: [],
-      gaps 
+      gaps
     };
   }
 
@@ -233,9 +241,9 @@ async function buildPersonnelData(operationId: string) {
     status: "ready" as const,
     personnel: members.map((m) => {
       if (m.events.length === 0) {
-        return { 
-          memberId: m.id, 
-          fullName: m.fullName, 
+        return {
+          memberId: m.id,
+          fullName: m.fullName,
           status: "NO_DATA" as const,
           activeDurationMin: 0,
           idleDurationMin: 0,
@@ -292,12 +300,12 @@ async function buildLogisticsData(operationId: string) {
 
   // 1. Öncelikli sorgu: entityType = "VEHICLE" olan konum ve telemetri kayıtları
   let vehicleEvents = await prisma.operationEvent.findMany({
-    where: { 
-      operationId, 
-      entityType: "VEHICLE", 
+    where: {
+      operationId,
+      entityType: "VEHICLE",
       lat: { not: null },
       lng: { not: null },
-      confidence: { gte: 0.3 } 
+      confidence: { gte: 0.3 }
     },
     orderBy: [{ entityId: "asc" }, { timestamp: "asc" }],
   });
@@ -345,11 +353,11 @@ async function buildLogisticsData(operationId: string) {
 
   gaps.push("Yakıt tüketimi kaydı sistemde tutulmuyor — bu metrik gösterilmiyor.");
 
-  return { 
-    status: "ready" as const, 
-    vehicles, 
-    fuelDataAvailable: false, 
-    gaps 
+  return {
+    status: "ready" as const,
+    vehicles,
+    fuelDataAvailable: false,
+    gaps
   };
 }
 

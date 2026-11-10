@@ -25,7 +25,7 @@ async function getSiteSettings() {
     ...settings,
     siteLogo: images.siteLogo || '',
     heroImages: images.heroImages || [],
-    sponsors: (images.sponsors && images.sponsors.length > 0) ? images.sponsors : (settings.sponsors || []),
+    sponsors: Array.isArray(images.sponsors) ? images.sponsors : (settings.sponsors || []),
   };
 }
 

@@ -87,7 +87,7 @@ export async function GET() {
             siteLogo: imgs.siteLogo || '',
             siteFavicon: imgs.siteFavicon || '',
             heroImages: imgs.heroImages || [],
-            sponsors: (imgs.sponsors && imgs.sponsors.length > 0) ? imgs.sponsors : (data.sponsors || []),
+            sponsors: Array.isArray(imgs.sponsors) ? imgs.sponsors : (data.sponsors || []),
             // Report metadata (fotoğraflar hariç)
             activityReports: [],
             // Dynamic Stats for StatsSection
@@ -100,8 +100,7 @@ export async function GET() {
         };
 
         const res = NextResponse.json(lite);
-        // 2 dakika CDN cache — ana sayfa içeriği sık değişmez
-        res.headers.set('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+        res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
         return res;
     } catch (error) {
         console.error('[public GET]', error);

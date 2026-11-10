@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/mailer';
+import { cookies } from 'next/headers';
+import { verifyJwt } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST() {
+export async function POST(req: Request) {
     try {
+        const authHeader = req.headers.get('authorization');
+        const isCron = process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+        if (!isCron) {
+            const cookieStore = await cookies();
+            const token = cookieStore.get('m1g_session')?.value;
+            const payload = token ? verifyJwt(token) : null;
+            if (!payload || (!payload.isAdmin && !payload.isSuperAdmin)) {
+                return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+            }
+        }
         const members = await prisma.member.findMany({
             where: {
                 status: 'Aktif',

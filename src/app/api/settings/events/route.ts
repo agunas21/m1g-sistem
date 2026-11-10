@@ -7,7 +7,7 @@ export async function GET() {
     try {
         const data = await getSiteSettingsDB();
         return NextResponse.json({ calendarEvents: data.calendarEvents || [] }, {
-            headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' }
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
         });
     } catch {
         return NextResponse.json({ calendarEvents: [] });

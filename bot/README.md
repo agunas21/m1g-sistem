@@ -57,3 +57,4 @@ Terminal ekranında bir QR kod belirecektir:
 ## 📌 Nerede Barındırılabilir?
 - **Dernek Merkezindeki Bilgisayar (Sıfır Maliyet)**: Dernek merkezinde internete bağlı herhangi bir Windows/Linux bilgisayarda PM2 veya terminal üzerinden arka planda çalıştırılabilir.
 - **Bulut Sunucu (Railway / Render / VPS)**: 7/24 kesintisiz çalışması için cüzi/ücretsiz bir bulut servisine yüklenebilir.
+

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import { verifyJwt } from '@/lib/crypto';
 import { runBackgroundKavkasCheck } from '@/lib/kavkas/backgroundCheck';
 
 type ReportType = "KRONOLOJI" | "ALAN_KAPSAMA" | "PERSONEL_FAALIYET" | "LOJISTIK_ARAC";
@@ -9,6 +11,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string; reportType: string }> }
 ) {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('m1g_session')?.value;
+    const payload = token ? verifyJwt(token) : null;
+    if (!payload) {
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    }
     const { id: operationId, reportType } = await params;
 
     const kavkasBackgroundCheck = await runBackgroundKavkasCheck(operationId);

@@ -10,7 +10,7 @@ export async function GET() {
     try {
         const data = await getSiteSettingsDB();
         const res = NextResponse.json(data);
-        res.headers.set('Cache-Control', 'private, s-maxage=120, stale-while-revalidate=300');
+        res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
         return res;
     } catch (error) {
         console.error('[settings GET]', error);

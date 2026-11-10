@@ -19,14 +19,14 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // const token = (await cookies()).get('m1g_session')?.value;
-    // if (!token) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-    // const user = verifyJwt(token);
-    // if (!user || !user.sub) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    const token = (await cookies()).get('m1g_session')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const user = verifyJwt(token);
+    if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const { id: operationId } = await params;
 

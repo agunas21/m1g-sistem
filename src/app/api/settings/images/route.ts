@@ -15,8 +15,7 @@ export async function GET() {
             heroImages: data.heroImages || [],
             sponsors: data.sponsors || [],
         });
-        // Görseller nadiren değişir — 1 dakika CDN cache
-        res.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+        res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
         return res;
     } catch (error) {
         console.error('[images GET]', error);

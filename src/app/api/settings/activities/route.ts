@@ -30,7 +30,7 @@ export async function GET() {
             activityGallery: galleryData.activityGallery || [],
             activityReports: reportsData.activityReports || []
         }, {
-            headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' }
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
         });
     } catch (error) {
         console.error('[activities GET]', error);

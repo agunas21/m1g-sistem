@@ -42,7 +42,9 @@ export async function POST(
                 role
             },
             include: {
-                member: true,
+                member: {
+                    select: { id: true, fullName: true, role: true, phone: true, email: true, bloodType: true, avatar: true }
+                },
                 vehicle: true
             }
         });

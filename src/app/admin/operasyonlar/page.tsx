@@ -623,7 +623,7 @@ export default function Operasyonlar() {
         setShowNewOp(false);
         setSelectedOp(newOp);
 
-            if (newOp.type === "Eğitim" || newOp.type === "Kamp") {
+            if (newOp.location) {
                 fetchWeather(newOp.location);
             }
         } finally {
@@ -694,11 +694,13 @@ export default function Operasyonlar() {
     const handleShareWhatsAppMobilization = () => {
         if (!selectedOp) return;
         const opTime = new Date(selectedOp.startTime || Date.now()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-        const radioInfo = selectedOp.radioChannel ? `\n📻 Telsiz Frekansı: ${selectedOp.radioChannel}` : '';
+        const freq = selectedOp.radioFrequency || (selectedOp as any).radioChannel;
+        const radioInfo = freq ? `\n📻 Telsiz Frekansı: ${freq}` : '';
         const msg = `🚨 *M1G ARAMA KURTARMA - ACİL SEFERBERLİK ÇAĞRISI* 🚨\n\n` +
                     `*Operasyon:* ${selectedOp.name}\n` +
                     `*Tür:* ${selectedOp.type}\n` +
-                    `*Başlangıç:* ${opTime}\n` +
+                    `*Konum:* ${selectedOp.location || 'Saha Koordinasyonu'}\n` +
+                    `*Başlangıç:* ${opTime}` +
                     `${radioInfo}\n\n` +
                     `⚠️ *Tüm personelin ivedilikle aşağıdaki bağlantıya tıklayarak afet durumunu (Geliyorum / Gelemiyorum / İntikaldeyim) bildirmesi ve canlı GPS intikal haritasına katılması zorunludur:*\n\n` +
                     `👉 https://m1g.org.tr/portal\n\n` +
@@ -706,6 +708,52 @@ export default function Operasyonlar() {
         
         const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank');
+    };
+
+    // Tek Tıkla Anlık SitRep (Durum Raporu) Kopyala / Paylaş (INSARAG / AFAD Standart)
+    const handleCopySitRep = () => {
+        if (!selectedOp) return;
+        const activeTeams = selectedOp.teams.filter(t => t.status === "Sahada");
+        const campTeams = selectedOp.teams.filter(t => t.status === "Kampta");
+        const fieldPersonnel = activeTeams.reduce((acc, t) => acc + t.members.length, 0);
+        const campPersonnel = campTeams.reduce((acc, t) => acc + t.members.length, 0) + selectedOp.baseCamp.members.length;
+        const recentLogs = (selectedOp.logs || []).slice(-5).map(l => `• [${l.time.slice(-5)}] ${l.message}`).join('\n');
+
+        const sitrep = `📋 *M1G AFET KOMUTA - ANLIK DURUM RAPORU (SITREP)*\n` +
+                       `━━━━━━━━━━━━━━━━━━━━\n` +
+                       `*Operasyon:* ${selectedOp.name} (${selectedOp.id})\n` +
+                       `*Tür / Durum:* ${selectedOp.type} • ${selectedOp.status}\n` +
+                       `*Bölge / Hava:* ${selectedOp.location || 'Belirtilmedi'} (${selectedOp.temperature || 'Sıcaklık Yok'})\n` +
+                       `*Süre:* ${selectedOp.status === 'Hazırlık' ? '00:00:00' : formatDuration(selectedOp.startTime, selectedOp.endTime)}\n` +
+                       `*Telsiz Kanalı:* ${selectedOp.radioFrequency || 'CH-1'}\n` +
+                       `━━━━━━━━━━━━━━━━━━━━\n` +
+                       `👥 *KUVVET DURUMU (PAR)*\n` +
+                       `• Sahadaki Tim: ${activeTeams.length} Tim (${fieldPersonnel} Personel)\n` +
+                       `• Base Kamptaki Kuvvet: ${campTeams.length} Tim (${campPersonnel} Personel)\n` +
+                       `• Lojistik İkmal: KKD: ${selectedOp.supplies?.ppeCount || 0} | Kumanya: ${selectedOp.supplies?.mealsCount || 0} | İlk Yardım: ${selectedOp.supplies?.firstAidKits || 0}\n` +
+                       `━━━━━━━━━━━━━━━━━━━━\n` +
+                       `📡 *SON TELSİZ & SEYİR KAYITLARI*\n` +
+                       `${recentLogs || '• Kayıt yok'}\n` +
+                       `━━━━━━━━━━━━━━━━━━━━\n` +
+                       `_Rapor Saati: ${new Date().toLocaleString('tr-TR')}_`;
+
+        navigator.clipboard.writeText(sitrep);
+        toast.success("Anlık SitRep (Durum Raporu) panoya kopyalandı! WhatsApp veya AFAD masasına yapıştırabilirsiniz.");
+    };
+
+    // PAR (Personnel Accountability Report) Telsiz Yoklama Kaydı
+    const handleParCheckIn = async () => {
+        if (!selectedOp) return;
+        const activeTeams = selectedOp.teams.filter(t => t.status === "Sahada");
+        const totalField = activeTeams.reduce((acc, t) => acc + t.members.length, 0);
+        const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+        const newLog = {
+            time: nowStr,
+            message: `✅ [PAR TELSİZ YOKLAMASI]: Sahadaki ${activeTeams.length} tim (${totalField} personel) ile telsiz teması kuruldu, durumları güvenli.`
+        };
+        const updated = { ...selectedOp, logs: [...selectedOp.logs, newLog] };
+        await saveOperation(updated);
+        toast.success("PAR Telsiz Yoklaması seyir defterine işlendi.");
     };
 
     // Open closure modal / screen instead of direct archiving
@@ -730,8 +778,9 @@ export default function Operasyonlar() {
 
         // 2. Perform bulk releases & damage updates on inventory items
         for (const eqId of allOpEquipmentIds) {
-            const finalStatus = closureDamagedItems[eqId] || "Depoda";
-            // Mocking updateInventoryStatus logic here
+            const mark = closureDamagedItems[eqId] || "Depoda";
+            const finalStatus = mark === "Hasarlı" ? "Bakımda" : mark;
+            await updateInventoryStatus(eqId, finalStatus, null);
         }
 
         // Save FTR medical logs permanently to members' database profiles
@@ -1651,41 +1700,41 @@ export default function Operasyonlar() {
                                 )}
 
                                 {/* Environmental, Frequency and TICKING Clocks HUD */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     
-                                    {/* Weather conditions (Shown only for Eğitim or Kamp) */}
-                                    {(selectedOp.type === "Eğitim" || selectedOp.type === "Kamp") ? (
-                                        <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 relative">
-                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block mb-1">Eğitim/Kamp Konumu (Hava Durumu)</span>
-                                            <div className="flex items-center gap-2">
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="Konum girin... (Örn: Kemalpaşa)"
-                                                    value={selectedOp.location}
-                                                    disabled={selectedOp.status !== "Aktif" || weatherLoading}
-                                                    onBlur={(e) => fetchWeather(e.target.value)}
-                                                    onKeyDown={(e) => e.key === 'Enter' && fetchWeather((e.target as HTMLInputElement).value)}
-                                                    className="bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-blue-500 font-bold flex-1"
-                                                />
+                                    {/* Weather & Location conditions (Enabled for ALL operation types) */}
+                                    <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 relative">
+                                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Saha Konumu & Canlı Meteoroloji</span>
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Konum girin... (Örn: Bornova)"
+                                                value={selectedOp.location}
+                                                disabled={!['Aktif', 'Hazırlık'].includes(selectedOp.status) || weatherLoading}
+                                                onChange={(e) => setSelectedOp({ ...selectedOp, location: e.target.value })}
+                                                onBlur={(e) => fetchWeather(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && fetchWeather((e.target as HTMLInputElement).value)}
+                                                className="bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-blue-500 font-bold flex-1 min-w-0"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => fetchWeather(selectedOp.location)}
+                                                disabled={weatherLoading}
+                                                title="Hava Durumunu Güncelle"
+                                                className="px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded text-blue-300 text-xs font-bold font-mono shrink-0 flex items-center gap-1"
+                                            >
                                                 {weatherLoading ? (
-                                                    <RefreshCw size={12} className="animate-spin text-neutral-400" />
+                                                    <RefreshCw size={12} className="animate-spin text-blue-400" />
                                                 ) : (
-                                                    <span className="text-white text-xs font-bold font-mono">{selectedOp.temperature || "Bulunamadı"}</span>
+                                                    <span>{selectedOp.temperature || "🌡️ Ölç"}</span>
                                                 )}
-                                            </div>
+                                            </button>
                                         </div>
-                                    ) : (
-                                        <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 flex items-center justify-between">
-                                            <div>
-                                                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Faaliyet Lokasyonu</span>
-                                                <span className="text-white text-xs font-semibold">{selectedOp.location || "Saha Koordinasyonu"}</span>
-                                            </div>
-                                        </div>
-                                    )}
+                                    </div>
 
                                     {/* Radio Frequency & Radio Code */}
                                     <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 flex flex-col justify-center">
-                                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Telsiz Frekansı / Kodu (Operasyon Esnasında Değiştirilebilir)</span>
+                                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Telsiz Frekansı / Kodu</span>
                                         <input 
                                             type="text"
                                             placeholder="Örn: CH-1 / 446.00625 MHz"
@@ -1700,10 +1749,37 @@ export default function Operasyonlar() {
 
                                     {/* TICKING clock for entire active duration */}
                                     <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 flex flex-col justify-center text-center">
-                                        <span className="text-[9px] font-bold text-red-500 uppercase tracking-widest block mb-0.5">Operasyon Süresi (Tıklıyor)</span>
+                                        <span className="text-[9px] font-bold text-red-500 uppercase tracking-widest block mb-0.5">Operasyon Süresi (Canlı)</span>
                                         <span className="text-lg font-black font-mono tracking-wider text-red-400">
                                             {selectedOp.status === 'Hazırlık' ? "00:00:00" : formatDuration(selectedOp.startTime, selectedOp.endTime)}
                                         </span>
+                                    </div>
+
+                                    {/* INSARAG Golden 72h & PAR Quick Actions */}
+                                    <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 flex flex-col justify-between gap-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">Taktik Komuta & SitRep</span>
+                                            <span className="text-[9px] font-mono text-amber-400 font-bold">ALTIN 72 SAAT</span>
+                                        </div>
+                                        <div className="flex gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={handleParCheckIn}
+                                                disabled={!['Aktif', 'Hazırlık'].includes(selectedOp.status)}
+                                                className="flex-1 py-1.5 px-2 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors disabled:opacity-40"
+                                                title="Sahadaki timlerle telsiz yoklaması (PAR) alındı olarak kaydet"
+                                            >
+                                                📻 PAR Yoklama
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleCopySitRep}
+                                                className="flex-1 py-1.5 px-2 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors"
+                                                title="AFAD ve Kriz Masası için Anlık Durum Raporunu (SitRep) Kopyala"
+                                            >
+                                                📋 SitRep Kopyala
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1761,6 +1837,31 @@ export default function Operasyonlar() {
                                             </button>
                                         )}
                                     </div>
+
+                                    {/* INSARAG / FEMA USAR Vardiya & Yorgunluk Radarı (4 Saat Kesintisiz Görev Sınırı) */}
+                                    {(() => {
+                                        const fatiguedTeams = selectedOp.teams.filter(t => {
+                                            const hrs = Number(calculateTeamWorkingHours(t));
+                                            const lastDep = t.deployments?.[t.deployments.length - 1];
+                                            return (t.status === "Sahada" && hrs >= 4) || lastDep?.pulse === "Kırmızı" || lastDep?.pulse === "Sarı";
+                                        });
+                                        if (fatiguedTeams.length === 0) return null;
+                                        return (
+                                            <div className="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                <div className="flex items-start gap-2.5">
+                                                    <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+                                                    <div>
+                                                        <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">
+                                                            INSARAG Vardiya & Yorgunluk Uyarısı ({fatiguedTeams.length} Tim)
+                                                        </span>
+                                                        <p className="text-[11px] text-neutral-300 mt-0.5">
+                                                            {fatiguedTeams.map(t => `${t.name} (${calculateTeamWorkingHours(t)} sa)`).join(", ")} için rotasyon / dinlenme süresi öneriliyor.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     <TeamListPanel selectedOp={selectedOp} membersData={membersData} inventoryData={inventoryData} isAdmin={isAdmin} setShowAddTeamModal={setShowAddTeamModal} calculateTeamWorkingHours={calculateTeamWorkingHours} formatDuration={formatDuration} initiateReturnToCamp={initiateReturnToCamp} setDeployTeamIdForTarget={setDeployTeamIdForTarget} setDeployTargetLocation={setDeployTargetLocation} handleRemoveTeam={handleRemoveTeam} handleHardDeleteTeam={handleHardDeleteTeam} removeMemberFromTeam={removeMemberFromTeam} setTeamLeader={setTeamLeader} assignMemberToTeam={assignMemberToTeam} removeEquipmentFromTeam={removeEquipmentFromTeam} assignEquipmentToTeam={assignEquipmentToTeam} />
                                 </div>
@@ -1878,33 +1979,83 @@ export default function Operasyonlar() {
                                     <LojistikZimmetPanel operationId={selectedOp.id} membersData={membersData} isAdmin={isAdmin} isActive={['Aktif', 'Hazırlık'].includes(selectedOp.status)} mounted={mounted} />
                                 </div>
 
-                                {/* Supply tracking & dynamically updating slip */}
-                                <div className="xl:col-span-1 bg-[#050B14] border border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
-                                    <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-3">
-                                        <Package className="text-amber-500" size={16} /> Lojistik Çıkış & Sarfiyat
-                                    </h3>
-                                    
-                                    {renderSupplySlipSuggestions()}
+                                {/* Supply tracking & Live Radio Logbook */}
+                                <div className="xl:col-span-1 space-y-6">
+                                    <div className="bg-[#050B14] border border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
+                                        <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-3">
+                                            <Package className="text-amber-500" size={16} /> Lojistik Çıkış & Sarfiyat
+                                        </h3>
+                                        
+                                        {renderSupplySlipSuggestions()}
 
-                                    <div className="grid grid-cols-2 gap-3 text-xs">
-                                        {[
-                                            { key: "ppeCount" as const, label: "KKD Donanımı (Adet)" },
-                                            { key: "mealsCount" as const, label: "Kumanya (Öğün)" },
-                                            { key: "firstAidKits" as const, label: "İlk Yardım Seti (Adet)" }
-                                        ].map(item => (
-                                            <div key={item.key} className="bg-white/5 border border-white/5 rounded-xl p-3.5 flex justify-between items-center">
-                                                <div>
-                                                    <span className="text-neutral-400 text-[10px] uppercase font-bold block">{item.label}</span>
-                                                    <span className="text-white text-sm font-black font-mono">{selectedOp.supplies[item.key] || 0}</span>
-                                                </div>
-                                                {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
-                                                    <div className="flex gap-1.5">
-                                                        <button onClick={() => handleQuickSupply(item.key, -5)} className="px-2 py-1 bg-black/40 text-neutral-400 border border-white/10 rounded font-bold hover:text-white">-5</button>
-                                                        <button onClick={() => handleQuickSupply(item.key, 5)} className="px-2 py-1 bg-black/40 text-neutral-400 border border-white/10 rounded font-bold hover:text-white">+5</button>
+                                        <div className="grid grid-cols-2 gap-3 text-xs">
+                                            {[
+                                                { key: "ppeCount" as const, label: "KKD Donanımı (Adet)" },
+                                                { key: "mealsCount" as const, label: "Kumanya (Öğün)" },
+                                                { key: "firstAidKits" as const, label: "İlk Yardım Seti (Adet)" }
+                                            ].map(item => (
+                                                <div key={item.key} className="bg-white/5 border border-white/5 rounded-xl p-3.5 flex justify-between items-center">
+                                                    <div>
+                                                        <span className="text-neutral-400 text-[10px] uppercase font-bold block">{item.label}</span>
+                                                        <span className="text-white text-sm font-black font-mono">{selectedOp.supplies[item.key] || 0}</span>
                                                     </div>
-                                                )}
+                                                    {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
+                                                        <div className="flex gap-1.5">
+                                                            <button onClick={() => handleQuickSupply(item.key, -5)} className="px-2 py-1 bg-black/40 text-neutral-400 border border-white/10 rounded font-bold hover:text-white">-5</button>
+                                                            <button onClick={() => handleQuickSupply(item.key, 5)} className="px-2 py-1 bg-black/40 text-neutral-400 border border-white/10 rounded font-bold hover:text-white">+5</button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* CANLI TELSİZ & OPERASYON SEYİR DEFTERİ (LOGBOOK) */}
+                                    <div className="bg-[#050B14] border border-white/5 rounded-3xl p-6 shadow-2xl space-y-4">
+                                        <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                                            <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                                <Radio className="text-red-500 animate-pulse" size={16} /> Canlı Telsiz & Seyir Defteri ({selectedOp.logs?.length || 0})
+                                            </h3>
+                                            <button
+                                                type="button"
+                                                onClick={handleCopySitRep}
+                                                className="text-[10px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-wider"
+                                            >
+                                                SitRep Kopyala
+                                            </button>
+                                        </div>
+
+                                        {['Aktif', 'Hazırlık'].includes(selectedOp.status) && (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Telsiz anonsu veya saha notu girin..."
+                                                    value={manualLogText}
+                                                    onChange={(e) => setManualLogText(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && addManualLog()}
+                                                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-red-500"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={addManualLog}
+                                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors"
+                                                >
+                                                    Kaydet
+                                                </button>
                                             </div>
-                                        ))}
+                                        )}
+
+                                        <div className="space-y-2 max-h-60 overflow-y-auto pr-1 font-mono text-xs">
+                                            {(selectedOp.logs || []).slice().reverse().map((log, i) => (
+                                                <div key={i} className="bg-white/5 border border-white/5 rounded-xl p-2.5 flex items-start gap-2">
+                                                    <span className="text-[10px] text-neutral-500 shrink-0">{log.time?.slice(-5) || log.time}</span>
+                                                    <span className="text-neutral-200 text-[11px] leading-snug break-words">{log.message}</span>
+                                                </div>
+                                            ))}
+                                            {(!selectedOp.logs || selectedOp.logs.length === 0) && (
+                                                <p className="text-neutral-600 text-xs italic text-center py-4">Henüz seyir kaydı bulunmuyor.</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -2283,9 +2434,9 @@ export default function Operasyonlar() {
                                                             </div>
                                                             <div className="flex gap-1.5 shrink-0">
                                                                 {[
-                                                                    { val: "Depoda" as const, label: "Sağlam", color: "emerald" },
-                                                                    { val: "Kayıp" as const, label: "Kayıp", color: "amber" },
-                                                                    { val: "Hasarlı" as const, label: "Hasarlı 📷", color: "red" }
+                                                                    { val: "Depoda" as const, label: "Sağlam", activeClass: "bg-emerald-600 text-white border-emerald-500", idleClass: "bg-black/30 border-white/5 text-neutral-400 hover:border-emerald-500/30 hover:text-emerald-400" },
+                                                                    { val: "Kayıp" as const, label: "Kayıp", activeClass: "bg-amber-600 text-white border-amber-500", idleClass: "bg-black/30 border-white/5 text-neutral-400 hover:border-amber-500/30 hover:text-amber-400" },
+                                                                    { val: "Hasarlı" as const, label: "Hasarlı 📷", activeClass: "bg-red-600 text-white border-red-500", idleClass: "bg-black/30 border-white/5 text-neutral-400 hover:border-red-500/30 hover:text-red-400" }
                                                                 ].map(opt => (
                                                                     <button
                                                                         key={opt.val}
@@ -2297,9 +2448,7 @@ export default function Operasyonlar() {
                                                                             }
                                                                         }}
                                                                         className={`px-2.5 py-1.5 rounded-lg border text-[9px] font-bold uppercase transition-all ${
-                                                                            currentMark === opt.val
-                                                                            ? `bg-${opt.color}-600 text-white border-${opt.color}-500`
-                                                                            : `bg-black/30 border-white/5 text-neutral-400 hover:border-${opt.color}-500/30 hover:text-${opt.color}-400`
+                                                                            currentMark === opt.val ? opt.activeClass : opt.idleClass
                                                                         }`}
                                                                     >
                                                                         {opt.label}

@@ -2,19 +2,26 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Newspaper, Megaphone, GlobeLock, Send, ImagePlus, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Newspaper, GlobeLock, Send, ImagePlus, ShieldAlert, Loader2, Trash2 } from "lucide-react";
+import { compressImage } from "@/lib/imageUtils";
+import { uploadDirect } from "@/lib/uploadDirect";
 
 export default function IcerikYonetimi() {
     const [redCodeActive, setRedCodeActive] = useState(false);
     const [newsTitle, setNewsTitle] = useState("");
     const [newsContent, setNewsContent] = useState("");
+    const [newsImage, setNewsImage] = useState("");
+    const [uploading, setUploading] = useState(false);
+    const [publishing, setPublishing] = useState(false);
+    const [announcements, setAnnouncements] = useState<any[]>([]);
 
     // Ayarları yükle — useEffect ile doğru side-effect pattern
     useEffect(() => {
-        fetch("/api/settings")
+        fetch("/api/settings", { cache: "no-store" })
             .then(res => res.json())
             .then(data => {
                 if (data.redCodeActive !== undefined) setRedCodeActive(data.redCodeActive);
+                if (Array.isArray(data.announcements)) setAnnouncements(data.announcements);
             })
             .catch(console.error);
     }, []);
@@ -33,6 +40,7 @@ export default function IcerikYonetimi() {
             try {
                 await fetch("/api/settings", {
                     method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ redCodeActive: newState })
                 });
             } catch (error) {
@@ -41,11 +49,56 @@ export default function IcerikYonetimi() {
         }
     };
 
-    const handlePublishNews = (e: React.FormEvent) => {
+    const handleNewsPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const compressed = await compressImage(file, 1200, 0.75);
+            const res = await uploadDirect(compressed);
+            if (res && res.url) {
+                setNewsImage(res.url);
+            } else {
+                alert("Görsel yüklenemedi.");
+            }
+        } catch (err: any) {
+            alert("Görsel yükleme hatası: " + (err?.message || String(err)));
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
+    };
+
+    const handlePublishNews = async (e: React.FormEvent) => {
         e.preventDefault();
-        alert(`" ${newsTitle} " başlıklı sahadan haberiniz başarıyla yayınlandı ve M1G Dünyası modülüne eklendi!`);
-        setNewsTitle("");
-        setNewsContent("");
+        if (!newsTitle.trim() || !newsContent.trim()) return;
+        setPublishing(true);
+        try {
+            const newAnn = {
+                id: Date.now().toString(),
+                title: newsTitle.trim(),
+                summary: newsContent.trim(),
+                category: "Operasyon",
+                date: new Date().toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" }),
+                image: newsImage || ""
+            };
+            const updated = [newAnn, ...announcements];
+            const res = await fetch("/api/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ announcements: updated })
+            });
+            if (!res.ok) throw new Error("Sunucu hatası");
+            setAnnouncements(updated);
+            alert(`"${newsTitle}" başlıklı sahadan haberiniz başarıyla yayınlandı ve Anasayfa Haber Karuseline eklendi!`);
+            setNewsTitle("");
+            setNewsContent("");
+            setNewsImage("");
+        } catch (err) {
+            alert("Haber kaydedilemedi: " + String(err));
+        } finally {
+            setPublishing(false);
+        }
     };
 
     return (
@@ -158,16 +211,37 @@ export default function IcerikYonetimi() {
                             </div>
 
                             <div className="pt-2">
-                                <div className="border-2 border-dashed border-white/10 rounded-xl p-4 text-center cursor-pointer hover:bg-white/5 hover:border-white/20 transition-all mb-6">
-                                    <ImagePlus className="mx-auto block text-neutral-500 mb-2" size={24} />
-                                    <span className="text-sm font-bold text-neutral-400">Operasyon Fotoğrafı Yükle</span>
-                                </div>
+                                <label className="block border-2 border-dashed border-white/10 rounded-xl p-4 text-center cursor-pointer hover:bg-white/5 hover:border-white/20 transition-all mb-4">
+                                    {uploading ? (
+                                        <Loader2 className="mx-auto block text-blue-400 animate-spin mb-2" size={24} />
+                                    ) : (
+                                        <ImagePlus className="mx-auto block text-neutral-500 mb-2" size={24} />
+                                    )}
+                                    <span className="text-sm font-bold text-neutral-400">
+                                        {uploading ? "Fotoğraf Yükleniyor..." : "Operasyon Fotoğrafı Yükle"}
+                                    </span>
+                                    <input type="file" accept="image/*" onChange={handleNewsPhotoUpload} className="hidden" />
+                                </label>
+
+                                {newsImage && (
+                                    <div className="flex items-center justify-between bg-black/40 border border-white/10 rounded-xl p-2.5 mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <img src={newsImage} alt="Önizleme" className="w-16 h-12 object-cover rounded-lg border border-white/10" />
+                                            <span className="text-xs font-bold text-emerald-400">✓ Görsel Hazır</span>
+                                        </div>
+                                        <button type="button" onClick={() => setNewsImage("")} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg">
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                )}
 
                                 <button
                                     type="submit"
-                                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest rounded-xl transition-colors shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2"
+                                    disabled={publishing || uploading}
+                                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-sm uppercase tracking-widest rounded-xl transition-colors shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2"
                                 >
-                                    <Send size={18} /> Haberi Anasayfada Paylaş
+                                    {publishing ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                                    {publishing ? "Yayınlanıyor..." : "Haberi Anasayfada Paylaş"}
                                 </button>
                             </div>
                         </form>

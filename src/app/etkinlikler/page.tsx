@@ -48,9 +48,15 @@ export default function EtkinlikTakvimiPage() {
     useEffect(() => {
         async function load() {
             try {
-                const res = await fetch("/api/settings/events");
+                const res = await fetch("/api/settings/events", { cache: "no-store" });
                 const data = await res.json();
-                setEvents(data.calendarEvents || []);
+                const normalized = (data.calendarEvents || []).map((e: any) => ({
+                    ...e,
+                    category: e.category || e.type || "egitim",
+                    time: e.time || "Tüm Gün",
+                    description: e.description || (e.mandatory ? "Zorunlu katılım etkinliği" : ""),
+                }));
+                setEvents(normalized);
             } catch { }
             setLoading(false);
         }
@@ -136,13 +142,16 @@ export default function EtkinlikTakvimiPage() {
                                             <span className={`text-xs font-bold ${isToday ? "text-red-400" : "text-neutral-400"}`}>{day}</span>
                                             {dayEvents.length > 0 && (
                                                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                                                    {dayEvents.slice(0, 3).map((e, j) => (
-                                                        <div key={j} className={`w-1.5 h-1.5 rounded-full ${CATEGORY_STYLES[e.category]?.bg || "bg-white/20"}`}
-                                                            style={{ backgroundColor: CATEGORY_STYLES[e.category]?.color.replace("text-", "").includes("red") ? "#f87171" :
-                                                                CATEGORY_STYLES[e.category]?.color.includes("blue") ? "#60a5fa" :
-                                                                CATEGORY_STYLES[e.category]?.color.includes("amber") ? "#fbbf24" :
-                                                                CATEGORY_STYLES[e.category]?.color.includes("purple") ? "#a78bfa" : "#34d399" }} />
-                                                    ))}
+                                                    {dayEvents.slice(0, 3).map((e, j) => {
+                                                        const st = CATEGORY_STYLES[e.category] || CATEGORY_STYLES.egitim;
+                                                        return (
+                                                            <div key={j} className={`w-1.5 h-1.5 rounded-full ${st.bg}`}
+                                                                style={{ backgroundColor: st.color.includes("red") ? "#f87171" :
+                                                                    st.color.includes("blue") ? "#60a5fa" :
+                                                                    st.color.includes("amber") ? "#fbbf24" :
+                                                                    st.color.includes("purple") ? "#a78bfa" : "#34d399" }} />
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </button>
@@ -195,21 +204,24 @@ export default function EtkinlikTakvimiPage() {
                             {upcomingEvents.length === 0 && (
                                 <p className="text-neutral-600 text-xs text-center py-8">Planlanmış etkinlik bulunmuyor.</p>
                             )}
-                            {upcomingEvents.map(ev => (
+                            {upcomingEvents.map(ev => {
+                                const st = CATEGORY_STYLES[ev.category] || CATEGORY_STYLES.egitim;
+                                return (
                                 <div key={ev.id} className="py-3 border-b border-white/5 last:border-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${CATEGORY_STYLES[ev.category]?.bg} ${CATEGORY_STYLES[ev.category]?.color}`}>
-                                            {CATEGORY_STYLES[ev.category]?.label}
+                                        <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${st.bg} ${st.color}`}>
+                                            {st.label}
                                         </span>
                                         <span className="text-neutral-600 text-[10px]">{ev.date}</span>
                                     </div>
                                     <h4 className="text-white text-sm font-bold">{ev.title}</h4>
                                     <div className="flex gap-3 mt-1 text-[10px] text-neutral-600">
-                                        <span className="flex items-center gap-0.5"><Clock size={9} /> {ev.time}</span>
+                                        <span className="flex items-center gap-0.5"><Clock size={9} /> {ev.time || "Tüm Gün"}</span>
                                         <span className="flex items-center gap-0.5"><MapPin size={9} /> {ev.location}</span>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         {/* Category Legend */}
