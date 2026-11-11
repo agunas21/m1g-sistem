@@ -3186,7 +3186,7 @@ export default function OperasyonHaritasi({
       </div>
 
       {/* ── ASR-1 / ASR-2 Sektör Oluşturma Modalı ─── */}
-      {showSectorModal && mounted && createPortal(
+      {showSectorModal && mounted && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-amber-500/50 rounded-2xl p-5 shadow-2xl text-left">
           <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
@@ -3362,7 +3362,7 @@ export default function OperasyonHaritasi({
       )}
 
       {/* ── ASR-3/4/5 INSARAG Enkaz Triyaj Modalı ─── */}
-      {showWorksiteModal && mounted && createPortal(
+      {showWorksiteModal && mounted && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className={`relative w-full max-w-lg max-h-[92%] overflow-y-auto bg-[#0f172a] border ${editingWorksiteId ? 'border-amber-500/50' : 'border-emerald-500/50'} rounded-2xl p-5 shadow-2xl text-left transition-all`}>
           <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
@@ -3677,7 +3677,7 @@ export default function OperasyonHaritasi({
       )}
 
       {/* ── INSARAG ASR-3/4/5 Vardiya & Durum Tarihçesi Modal ─── */}
-      {showWorksiteHistoryModal && selectedWorksite && mounted && createPortal(
+      {showWorksiteHistoryModal && selectedWorksite && mounted && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-lg max-h-[90%] bg-[#0b1329] border border-sky-500/30 rounded-2xl p-6 shadow-2xl flex flex-col text-left">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4 shrink-0">
@@ -3756,7 +3756,7 @@ export default function OperasyonHaritasi({
       )}
 
       {/* ── START TRİYAJ & KAZAZEDE ÇIKARMA KARTI MODAL ─── */}
-      {showExtricationModal && selectedWorksite && mounted && createPortal(
+      {showExtricationModal && selectedWorksite && mounted && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-rose-500/40 rounded-2xl p-5 shadow-2xl text-left">
             <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
@@ -3844,7 +3844,7 @@ export default function OperasyonHaritasi({
       )}
 
       {/* ── DOĞA ARAMA KURTARMA: LKP (SON GÖRÜLME NOKTASI) & OLASILIK ÇEMBERİ MODAL ── */}
-      {showLkpModal && mounted && createPortal(
+      {showLkpModal && mounted && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-purple-500/40 rounded-2xl p-5 shadow-2xl text-left">
             <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
@@ -3979,7 +3979,7 @@ export default function OperasyonHaritasi({
     </div>
   );
 
-  if (isFullscreen && mounted) {
+  if (isFullscreen && mounted && typeof document !== 'undefined') {
     return createPortal(renderMapContent(), document.body);
   }
 

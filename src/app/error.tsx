@@ -22,7 +22,13 @@ export default function GlobalError({
       <h2 className="text-xl font-black text-white uppercase tracking-widest mb-2">Sayfa Yüklenirken Bir Hata Oluştu</h2>
       <p className="text-neutral-400 text-xs font-mono max-w-md mb-6 bg-black/50 p-3 rounded-xl border border-white/10 break-all">
         {error?.message || "Beklenmeyen bir istemci hatası meydana geldi."}
+        {error?.digest ? ` (Digest: ${error.digest})` : ""}
       </p>
+      {error?.stack && (
+        <pre className="text-left text-[10px] text-rose-300 font-mono max-w-2xl max-h-40 overflow-auto bg-black/70 p-3 rounded-lg border border-red-500/20 mb-4 whitespace-pre-wrap">
+          {error.stack}
+        </pre>
+      )}
       <button
         onClick={() => reset()}
         className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs uppercase tracking-widest flex items-center gap-2 transition-colors shadow-lg shadow-red-600/30"
