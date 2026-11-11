@@ -574,6 +574,10 @@ export default function OperasyonHaritasi({
     updateNote: ''
   })
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showToolsMenu, setShowToolsMenu] = useState(false)
+  const [showQuickGuide, setShowQuickGuide] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [isMobileScreen, setIsMobileScreen] = useState(false)
 
