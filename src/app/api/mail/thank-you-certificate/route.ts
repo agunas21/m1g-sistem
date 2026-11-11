@@ -1,9 +1,55 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import path from 'path';
+import sharp from 'sharp';
 import { cookies } from 'next/headers';
 import { verifyJwt } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
+
+async function renderServerCertificateBuffer(
+  type: 'operasyon' | 'destekci',
+  fullName: string
+): Promise<Buffer> {
+  const isOp = type === 'operasyon';
+  const filePath = path.join(
+    process.cwd(),
+    'public',
+    'certificates',
+    isOp ? 'operasyon-tesekkur.jpg' : 'destekci-tesekkur.jpg'
+  );
+  const meta = await sharp(filePath).metadata();
+  const w = meta.width || 1000;
+  const h = meta.height || 707;
+  const yRatio = isOp ? 0.506 : 0.532;
+  const yPos = Math.round(h * yRatio);
+  const cleanName = (fullName || 'DEĞERLİ GÖNÜLLÜMÜZ')
+    .trim()
+    .toLocaleUpperCase('tr-TR')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const fontSize = Math.round(w * 0.028);
+
+  const svgOverlay = Buffer.from(`
+    <svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+      <style>
+        .recipient {
+          fill: #111827;
+          font-size: ${fontSize}px;
+          font-weight: 700;
+          font-family: Georgia, "Times New Roman", serif;
+        }
+      </style>
+      <text x="${Math.round(w / 2)}" y="${yPos}" text-anchor="middle" dominant-baseline="middle" class="recipient">${cleanName}</text>
+    </svg>
+  `);
+
+  return sharp(filePath)
+    .composite([{ input: svgOverlay, top: 0, left: 0 }])
+    .jpeg({ quality: 95 })
+    .toBuffer();
+}
 
 function createTransporter() {
   const pass = (process.env.SMTP_PASS || '').replace(/^["']|["']$/g, '');
@@ -163,22 +209,28 @@ export async function POST(req: Request) {
         const attachments: any[] = [];
         let hasCidImage = false;
 
+        let imgBuffer: Buffer | null = null;
         if (rec.certificateDataUrl && rec.certificateDataUrl.startsWith('data:image/')) {
           const base64Part = rec.certificateDataUrl.split(',')[1];
           if (base64Part) {
-            const safeName = rec.fullName
-              .trim()
-              .replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s-]/g, '')
-              .replace(/\s+/g, '-');
-            const imgBuffer = Buffer.from(base64Part, 'base64');
-            attachments.push({
-              filename: `M1G-Tesekkur-Belgesi-${safeName}.jpg`,
-              content: imgBuffer,
-              contentType: 'image/jpeg',
-              cid: 'm1g_certificate_img'
-            });
-            hasCidImage = true;
+            imgBuffer = Buffer.from(base64Part, 'base64');
           }
+        } else {
+          imgBuffer = await renderServerCertificateBuffer(type, rec.fullName);
+        }
+
+        if (imgBuffer) {
+          const safeName = rec.fullName
+            .trim()
+            .replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s-]/g, '')
+            .replace(/\s+/g, '-');
+          attachments.push({
+            filename: `M1G-Tesekkur-Belgesi-${safeName}.jpg`,
+            content: imgBuffer,
+            contentType: 'image/jpeg',
+            cid: 'm1g_certificate_img'
+          });
+          hasCidImage = true;
         }
 
         const html = buildCertificateEmailHtml({
