@@ -264,7 +264,8 @@ function makeSectorLabelIcon(
   sector: ASR1Sector,
   activePersonnelCount = 0,
   trailPointsCount = 0,
-  inInner50Count = 0
+  inInner50Count = 0,
+  isSelected = false
 ) {
   if (typeof window === 'undefined') return undefined;
   const L = require('leaflet');
@@ -282,8 +283,88 @@ function makeSectorLabelIcon(
     sector.sectorType === 'ASR-2' ? 'ASR-2' :
     sector.sectorType === 'WSAR-GRID' ? 'GRID SAR' : 'ASR-1';
 
+  // 1) KOMPAKT YUVARLAK MOD (Varsayılan - Haritada yer kaplamaz, tıklandığında açılır)
+  if (!isSelected) {
+    const isLkp = sector.sectorType === 'LKP';
+    const centerDisplay = isLkp ? '🧭' : (sector.code || 'S');
+    const badgeCount = isLkp && inInner50Count > 0 
+      ? inInner50Count 
+      : activePersonnelCount > 0 
+      ? activePersonnelCount 
+      : null;
+
+    const pulseGlow = hasGpsReaction 
+      ? `box-shadow: 0 0 16px rgba(34,197,94,0.95), 0 3px 8px rgba(0,0,0,0.7);` 
+      : `box-shadow: 0 3px 10px rgba(0,0,0,0.65);`;
+
+    return L.divIcon({
+      className: 'asr1-sector-circle-marker',
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      html: `
+        <div style="
+          position: relative;
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: rgba(15, 23, 42, 0.94);
+          border: 2.5px solid ${color};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          user-select: none;
+          backdrop-filter: blur(4px);
+          transition: transform 0.15s ease-out;
+          ${pulseGlow}
+        " title="${typePrefix} ${sector.code} - ${sector.name} (Detayları görmek için tıklayın)">
+          <span style="
+            font-size: ${isLkp ? '15px' : '14px'};
+            font-weight: 900;
+            color: ${color};
+            line-height: 1;
+            letter-spacing: -0.5px;
+            text-align: center;
+          ">${centerDisplay}</span>
+          ${badgeCount !== null ? `
+            <div style="
+              position: absolute;
+              top: -5px;
+              right: -5px;
+              min-width: 17px;
+              height: 17px;
+              padding: 0 3px;
+              background: #22c55e;
+              border: 1.5px solid #0f172a;
+              border-radius: 9999px;
+              color: #ffffff;
+              font-size: 9px;
+              font-weight: 900;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 0 8px rgba(34,197,94,0.9);
+            ">${badgeCount}</div>
+          ` : (trailPointsCount > 0 ? `
+            <div style="
+              position: absolute;
+              bottom: -3px;
+              right: -3px;
+              width: 10px;
+              height: 10px;
+              background: #86efac;
+              border: 1.5px solid #0f172a;
+              border-radius: 50%;
+            "></div>
+          ` : '')}
+        </div>
+      `
+    });
+  }
+
+  // 2) GENİŞLETİLMİŞ AÇIK KART (Üzerine tıklandığında açılır)
   const gpsReactionBadge = hasGpsReaction
-    ? `<div style="font-size: 9px; font-weight: 800; color: #fff; background: #16a34a; border-radius: 4px; padding: 1px 5px; margin-top: 3px; box-shadow: 0 0 10px rgba(34,197,94,0.8);">
+    ? `<div style="font-size: 9px; font-weight: 800; color: #fff; background: #16a34a; border-radius: 4px; padding: 2px 6px; margin-top: 3px; box-shadow: 0 0 10px rgba(34,197,94,0.8);">
          🟢 ${sector.sectorType === 'LKP' && inInner50Count > 0 ? `%50 HALKADA: ${inInner50Count} Kişi` : `SAHADA: ${activePersonnelCount} Kişi`}${trailPointsCount > 0 ? ` • ${trailPointsCount} İz` : ''}
        </div>`
     : trailPointsCount > 0
@@ -293,26 +374,31 @@ function makeSectorLabelIcon(
     : '';
 
   return L.divIcon({
-    className: 'asr1-sector-label-marker',
-    iconSize: [160, hasGpsReaction || trailPointsCount > 0 ? 68 : 52],
-    iconAnchor: [80, hasGpsReaction || trailPointsCount > 0 ? 34 : 26],
+    className: 'asr1-sector-label-marker-expanded',
+    iconSize: [160, hasGpsReaction || trailPointsCount > 0 ? 76 : 58],
+    iconAnchor: [80, hasGpsReaction || trailPointsCount > 0 ? 38 : 29],
     html: `
       <div style="
-        background: rgba(15, 23, 42, 0.95);
-        border: 2px solid ${color};
-        border-radius: 8px;
-        padding: 4px 8px;
+        background: rgba(15, 23, 42, 0.96);
+        border: 2.5px solid ${color};
+        border-radius: 9px;
+        padding: 4px 7px;
         color: #fff;
         text-align: center;
-        box-shadow: ${hasGpsReaction ? '0 0 18px rgba(34,197,94,0.85)' : '0 4px 14px rgba(0,0,0,0.7)'};
+        box-shadow: 0 0 18px ${hasGpsReaction ? 'rgba(34,197,94,0.85)' : 'rgba(59,130,246,0.6)'}, 0 6px 16px rgba(0,0,0,0.85);
         cursor: pointer;
         user-select: none;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(6px);
       ">
-        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: ${color}; text-transform: uppercase;">
-          ${typePrefix} ${sector.code}
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 2px; margin-bottom: 3px;">
+          <span style="font-size: 9.5px; font-weight: 800; letter-spacing: 0.6px; color: ${color}; text-transform: uppercase;">
+            ${typePrefix} ${sector.code}
+          </span>
+          <span style="font-size: 8.5px; font-weight: 700; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px;">
+            ✕ Kapat
+          </span>
         </div>
-        <div style="font-size: 11px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
+        <div style="font-size: 11px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 144px;">
           ${sector.name}
         </div>
         ${sector.assignedTeamName ? `
@@ -326,7 +412,7 @@ function makeSectorLabelIcon(
   });
 }
 
-function makeWorksiteIcon(ws: INSARAGWorksite) {
+function makeWorksiteIcon(ws: INSARAGWorksite, isSelected = false) {
   if (typeof window === 'undefined') return undefined;
   const L = require('leaflet');
 
@@ -340,6 +426,57 @@ function makeWorksiteIcon(ws: INSARAGWorksite) {
     ? 'box-shadow: 0 0 15px rgba(239, 68, 68, 0.85); animation: pulse 1.5s infinite;'
     : 'box-shadow: 0 4px 12px rgba(0,0,0,0.6);';
 
+  // 1) KOMPAKT MOD (Tıklanmadığında haritada az yer kaplar)
+  if (!isSelected) {
+    const liveCount = ws.victims?.liveExtracted || 0;
+    return L.divIcon({
+      className: 'insarag-worksite-circle-marker',
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      html: `
+        <div style="
+          position: relative;
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          background: rgba(15, 23, 42, 0.94);
+          border: 2px solid ${statusColor};
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          user-select: none;
+          backdrop-filter: blur(4px);
+          ${pulseEffect}
+        " title="${ws.asrLevel || 'ASR-3'} [${ws.code}] ${ws.name} (Detaylar için tıklayın)">
+          <span style="font-size: 9.5px; font-weight: 900; color: ${statusColor}; line-height: 1;">${ws.code}</span>
+          <span style="font-size: 7.5px; font-weight: 700; color: #94a3b8; line-height: 1; margin-top: 1px;">${ws.asrLevel || 'ASR-3'}</span>
+          ${liveCount > 0 ? `
+            <div style="
+              position: absolute;
+              top: -4px;
+              right: -4px;
+              background: #22c55e;
+              border: 1.5px solid #0f172a;
+              border-radius: 9999px;
+              color: #fff;
+              font-size: 8px;
+              font-weight: 900;
+              padding: 0 3px;
+              min-width: 14px;
+              height: 14px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">${liveCount}L</div>
+          ` : ''}
+        </div>
+      `
+    });
+  }
+
+  // 2) GENİŞLETİLMİŞ INSARAG TRİYAJ KARTI (Tıklandığında açılır)
   const hazardBadge = ws.hazards && ws.hazards.length > 0 
     ? `<div style="background:#dc2626; color:#fff; font-size:8px; font-weight:800; padding:1px 4px; border-radius:3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">⚠️ ${ws.hazards[0]}</div>`
     : '';
@@ -347,12 +484,12 @@ function makeWorksiteIcon(ws: INSARAGWorksite) {
   const levelLabel = ws.asrLevel || 'ASR-3';
 
   return L.divIcon({
-    className: 'insarag-worksite-marker',
-    iconSize: [116, 64],
-    iconAnchor: [58, 32],
+    className: 'insarag-worksite-marker-expanded',
+    iconSize: [118, 66],
+    iconAnchor: [59, 33],
     html: `
       <div style="
-        background: rgba(15, 23, 42, 0.95);
+        background: rgba(15, 23, 42, 0.96);
         border: 2px solid ${statusColor};
         border-radius: 8px;
         padding: 4px 6px;
@@ -366,7 +503,7 @@ function makeWorksiteIcon(ws: INSARAGWorksite) {
       ">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:2px; margin-bottom:2px;">
           <span style="font-size:9px; font-weight:900; color:${statusColor}; letter-spacing:0.5px;">${levelLabel} [${ws.code}]</span>
-          <span style="font-size:8px; font-weight:700; color:#94a3b8;">TUR-M1G</span>
+          <span style="font-size:8px; font-weight:700; color:#94a3b8;">✕ Kapat</span>
         </div>
         <div style="font-size:10px; font-weight:700; color:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
           ${ws.name}
@@ -2310,7 +2447,7 @@ export default function OperasyonHaritasi({
 
               const hasGpsReaction = insidePersonnel.length > 0;
               const activeOuterColor = hasGpsReaction ? '#22c55e' : sec.color;
-              const icon = makeSectorLabelIcon(sec, insidePersonnel.length, trailPointsInside, inInner50Personnel.length);
+              const icon = makeSectorLabelIcon(sec, insidePersonnel.length, trailPointsInside, inInner50Personnel.length, isSecSelected);
 
               return (
                 <Fragment key={sec.id}>
@@ -2319,20 +2456,24 @@ export default function OperasyonHaritasi({
                     pathOptions={{
                       color: activeOuterColor,
                       fillColor: activeOuterColor,
-                      fillOpacity: isSecSelected ? 0.34 : hasGpsReaction ? 0.24 : 0.14,
-                      weight: isSecSelected ? 4 : hasGpsReaction ? 3.5 : 2.5,
-                      dashArray: (sec.status === 'Değerlendirme' || sec.sectorType === 'LKP') && !hasGpsReaction ? '6, 6' : undefined
+                      fillOpacity: isSecSelected ? 0.32 : hasGpsReaction ? 0.20 : 0.12,
+                      weight: isSecSelected ? 3.5 : 2.5,
+                      dashArray: '7, 6' // Sektör sınırını belli eden kesikli çizgi hem masaüstü hem mobilde daima kalır
                     }}
                     eventHandlers={{
                       click: (e) => {
                         L.DomEvent.stopPropagation(e);
-                        setSelectedSector(sec);
-                        setSelectedWorksite(null);
-                        setSelected(null);
+                        if (selectedSector?.id === sec.id) {
+                          setSelectedSector(null);
+                        } else {
+                          setSelectedSector(sec);
+                          setSelectedWorksite(null);
+                          setSelected(null);
+                        }
                       }
                     }}
                   />
-                  {/* Eğer LKP Kayıp Arama Çemberi ise %50 İç Olasılık Halkasını da Çiz (Personel girince parlar) */}
+                  {/* LKP Kayıp Arama Çemberi ise %50 İç Olasılık Halkasını Kesikli Çizgiyle Çiz */}
                   {sec.sectorType === 'LKP' && sec.lkpMeta && (
                     <Circle
                       center={sec.lkpMeta.center}
@@ -2340,9 +2481,21 @@ export default function OperasyonHaritasi({
                       pathOptions={{
                         color: inInner50Personnel.length > 0 ? '#4ade80' : '#22c55e',
                         fillColor: inInner50Personnel.length > 0 ? '#22c55e' : '#22c55e',
-                        fillOpacity: inInner50Personnel.length > 0 ? 0.32 : 0.16,
-                        weight: inInner50Personnel.length > 0 ? 4 : 2.5,
-                        dashArray: inInner50Personnel.length > 0 ? undefined : '4, 4'
+                        fillOpacity: inInner50Personnel.length > 0 ? 0.30 : 0.14,
+                        weight: inInner50Personnel.length > 0 ? 3.5 : 2.2,
+                        dashArray: '5, 5' // Sektörün iç kesikli çizgisi daima kalır
+                      }}
+                      eventHandlers={{
+                        click: (e) => {
+                          L.DomEvent.stopPropagation(e);
+                          if (selectedSector?.id === sec.id) {
+                            setSelectedSector(null);
+                          } else {
+                            setSelectedSector(sec);
+                            setSelectedWorksite(null);
+                            setSelected(null);
+                          }
+                        }
                       }}
                     />
                   )}
@@ -2353,9 +2506,13 @@ export default function OperasyonHaritasi({
                       eventHandlers={{
                         click: (e) => {
                           L.DomEvent.stopPropagation(e);
-                          setSelectedSector(sec);
-                          setSelectedWorksite(null);
-                          setSelected(null);
+                          if (selectedSector?.id === sec.id) {
+                            setSelectedSector(null);
+                          } else {
+                            setSelectedSector(sec);
+                            setSelectedWorksite(null);
+                            setSelected(null);
+                          }
                         }
                       }}
                     />
@@ -2411,20 +2568,28 @@ export default function OperasyonHaritasi({
             ))}
 
             {/* ASR-3/4/5 INSARAG Enkazları */}
-            {worksites.map((ws) => (
-              <Marker
-                key={ws.id}
-                position={ws.location}
-                icon={makeWorksiteIcon(ws)}
-                eventHandlers={{
-                  click: () => {
-                    setSelectedWorksite(ws);
-                    setSelectedSector(null);
-                    setSelected(null);
-                  }
-                }}
-              />
-            ))}
+            {worksites.map((ws) => {
+              const isWsSelected = selectedWorksite?.id === ws.id;
+              return (
+                <Marker
+                  key={ws.id}
+                  position={ws.location}
+                  icon={makeWorksiteIcon(ws, isWsSelected)}
+                  eventHandlers={{
+                    click: (e) => {
+                      L.DomEvent.stopPropagation(e);
+                      if (selectedWorksite?.id === ws.id) {
+                        setSelectedWorksite(null);
+                      } else {
+                        setSelectedWorksite(ws);
+                        setSelectedSector(null);
+                        setSelected(null);
+                      }
+                    }
+                  }}
+                />
+              );
+            })}
 
             {myPos && (
               <Marker position={myPos} icon={myLocationIcon}>
