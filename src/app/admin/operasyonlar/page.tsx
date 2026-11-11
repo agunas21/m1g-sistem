@@ -1785,7 +1785,7 @@ export default function Operasyonlar() {
                             </div>
 
                             {/* ADVANCED LIVE TRACKING MAP */}
-                            <div className="h-[500px] md:h-[600px] mb-6 rounded-2xl overflow-hidden border border-white/10 relative z-0">
+                            <div className="h-[500px] md:h-[600px] mb-6 rounded-2xl overflow-hidden border border-white/10 relative">
                                 <OperasyonHaritasi 
                                     operationId={selectedOp.id} 
                                     userId={user?.uid}

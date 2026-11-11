@@ -391,11 +391,19 @@ function getInitials(name: string): string {
 }
 
 // ── Harita kamera kontrolü (hook) ──────────────────────────────────────────
-function MapController({ flyTo }: { flyTo: [number, number] | null }) {
+function MapController({ flyTo, isFullscreen }: { flyTo: [number, number] | null; isFullscreen?: boolean }) {
   const map = useMap()
   useEffect(() => {
     if (flyTo) map.flyTo(flyTo, 17, { duration: 1.2 })
   }, [flyTo, map])
+  useEffect(() => {
+    const t1 = setTimeout(() => map.invalidateSize(), 60)
+    const t2 = setTimeout(() => map.invalidateSize(), 260)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [isFullscreen, map])
   return null
 }
 
@@ -479,8 +487,20 @@ export default function OperasyonHaritasi({
   })
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const lastPingRef = useRef<number>(0)
   const channelRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (!isFullscreen) return
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !showSectorModal && !showWorksiteModal && !showWorksiteHistoryModal) {
+        setIsFullscreen(false)
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [isFullscreen, showSectorModal, showWorksiteModal, showWorksiteHistoryModal])
 
   // ── İlk yükleme ve API eşleşmesi ──────────────────────────────────────────
   useEffect(() => {
@@ -1052,6 +1072,8 @@ export default function OperasyonHaritasi({
     mapCont: { flex:1, position:'relative' as const },
     dpPanel: (open: boolean) => ({
       position:'absolute' as const, bottom:0, left:0, right:0,
+      maxHeight: isFullscreen ? '55vh' : '56%',
+      overflowY: 'auto' as const,
       background:'rgba(17,24,39,.97)', borderTop:'0.5px solid rgba(255,255,255,.1)',
       padding:'16px 20px', zIndex:1000,
       transform: open ? 'translateY(0)' : 'translateY(100%)',
@@ -1060,7 +1082,11 @@ export default function OperasyonHaritasi({
   }
 
   return (
-    <div className="relative flex w-full h-full bg-[#1a1f2e] font-sans rounded-2xl overflow-hidden">
+    <div className={
+      isFullscreen
+        ? "fixed inset-0 z-[9990] flex w-screen h-screen bg-[#1a1f2e] font-sans rounded-none overflow-hidden"
+        : "relative flex w-full h-full bg-[#1a1f2e] font-sans rounded-2xl overflow-hidden"
+    }>
       {/* ── Sol panel ────────────────────────────────────────── */}
       <div className={`
         absolute z-[1100]
@@ -1222,7 +1248,21 @@ export default function OperasyonHaritasi({
 
           <span style={{ width:'1px', height:18, background:'#374151' }} className="mx-2 hidden sm:inline" />
           <span style={S.tbStat} className="hidden sm:inline">Aktif: <span style={S.tbVal}>{onlineN}</span></span>
-          <span style={S.tbStat} className="ml-auto">Toplam: <span style={S.tbVal}>{people.length}</span></span>
+          <span style={S.tbStat} className="ml-auto mr-2">Toplam: <span style={S.tbVal}>{people.length}</span></span>
+
+          {/* Tam Boy / Tam Ekran Harita Butonu */}
+          <button
+            onClick={() => setIsFullscreen(prev => !prev)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
+              isFullscreen
+                ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300'
+                : 'bg-slate-800 hover:bg-slate-700 border border-slate-600/60 text-white'
+            }`}
+            title={isFullscreen ? 'Tam Ekrandan Çık (ESC)' : 'Haritayı Tam Boy / Tam Ekran Yap'}
+          >
+            <span>{isFullscreen ? '🗗' : '⛶'}</span>
+            <span className="hidden sm:inline">{isFullscreen ? 'Küçült (ESC)' : 'Tam Boy'}</span>
+          </button>
         </div>
 
         {/* Leaflet harita */}
@@ -1338,7 +1378,7 @@ export default function OperasyonHaritasi({
               </LayersControl.BaseLayer>
             </LayersControl>
 
-            {mapReady && <MapController flyTo={flyTo} />}
+            {mapReady && <MapController flyTo={flyTo} isFullscreen={isFullscreen} />}
             <MapEventHandler onClick={handleMapClick} />
             {onMapClick && !isDrawingSector && !isAddingWorksite && <CenterPinButton onClick={onMapClick} />}
             {onMapClick && !isDrawingSector && !isAddingWorksite && <CenterCrosshair />}
