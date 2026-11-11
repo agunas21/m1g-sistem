@@ -1784,6 +1784,36 @@ export default function Operasyonlar() {
                                 </div>
                             </div>
 
+                            {/* INSARAG 72-SAATLİK ALTIN SAAT (GOLDEN HOUR) HAYATTA KALMA EĞRİSİ GÖSTERGESİ */}
+                            {selectedOp.status === 'Aktif' && selectedOp.startTime && (() => {
+                                const elapsedHours = Math.max(0, (Date.now() - new Date(selectedOp.startTime).getTime()) / (1000 * 60 * 60));
+                                const goldenPct = Math.min(100, Math.round((elapsedHours / 72) * 100));
+                                const phaseLabel = elapsedHours < 24
+                                    ? 'EVRE 1: İLK 24 SAAT (Maksimum Sağ Kalım Penceresi ~%90)'
+                                    : elapsedHours < 48
+                                    ? 'EVRE 2: 24-48 SAAT (Kritik Kurtarma Penceresi ~%50-60)'
+                                    : elapsedHours < 72
+                                    ? 'EVRE 3: 48-72 SAAT (Altın Saat Son Viraj — Termal/Akustik Öncelikli)'
+                                    : 'EVRE 4: +72 SAAT SONRASI (Uzamış Operasyon — ASR-4 Derin Nokta Odaklı)';
+                                const barColor = elapsedHours < 24 ? 'bg-emerald-500' : elapsedHours < 48 ? 'bg-amber-500' : 'bg-red-500';
+                                return (
+                                    <div className="mb-4 bg-[#0B1220] border border-white/10 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <span className="text-amber-400 font-black uppercase tracking-wider">⏳ 72 Saatlik Altın Saat Radarı:</span>
+                                            <span className="text-neutral-200 font-bold">{phaseLabel}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 min-w-[200px]">
+                                            <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                                <div className={`h-full ${barColor} transition-all`} style={{ width: `${goldenPct}%` }} />
+                                            </div>
+                                            <span className="text-[11px] font-mono font-bold text-neutral-400 whitespace-nowrap">
+                                                {elapsedHours.toFixed(1)} / 72s
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             {/* ADVANCED LIVE TRACKING MAP */}
                             <div className="h-[500px] md:h-[600px] mb-6 rounded-2xl overflow-hidden border border-white/10 relative">
                                 <OperasyonHaritasi 

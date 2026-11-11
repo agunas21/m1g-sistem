@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { X, Printer, Users, Clock, MapPin, Activity } from "lucide-react";
 
@@ -9,11 +10,30 @@ interface OperationSummaryModalProps {
 }
 
 export default function OperationSummaryModal({ operation, onClose }: OperationSummaryModalProps) {
+    const [sectors, setSectors] = useState<any[]>(operation?.sectors || []);
+    const [worksites, setWorksites] = useState<any[]>(operation?.worksites || []);
+
+    useEffect(() => {
+        if (!operation?.id) return;
+        fetch(`/api/settings/operations/active/sectors?operationId=${operation.id}`, { cache: 'no-store' })
+            .then(r => r.json())
+            .then(d => { if (Array.isArray(d.sectors) && d.sectors.length > 0) setSectors(d.sectors); })
+            .catch(() => {});
+        fetch(`/api/settings/operations/active/worksites?operationId=${operation.id}`, { cache: 'no-store' })
+            .then(r => r.json())
+            .then(d => { if (Array.isArray(d.worksites) && d.worksites.length > 0) setWorksites(d.worksites); })
+            .catch(() => {});
+    }, [operation?.id]);
+
     if (!operation) return null;
 
     const handlePrint = () => {
         window.print();
     };
+
+    const totalLiveExtracted = worksites.reduce((sum, w) => sum + (w.victims?.liveExtracted || 0), 0);
+    const totalDeceasedExtracted = worksites.reduce((sum, w) => sum + (w.victims?.deceasedExtracted || 0), 0);
+    const allExtrications = worksites.flatMap(w => (w.extrications || []).map((e: any) => ({ ...e, worksiteCode: w.code, worksiteName: w.name })));
 
     // Calculate total hours
     const start = new Date(operation.startTime).getTime();
@@ -112,6 +132,130 @@ export default function OperationSummaryModal({ operation, onClose }: OperationS
                             </table>
                         </div>
                     </section>
+
+                    {/* INSARAG ASR-1 / LKP Sektör Özeti */}
+                    {sectors.length > 0 && (
+                        <section className="print:break-inside-avoid">
+                            <h2 className="text-lg font-black text-neutral-800 border-b border-neutral-200 pb-2 mb-3 uppercase tracking-wider">
+                                INSARAG ASR-1 & Saha Sektörleme Özeti ({sectors.length} Sektör)
+                            </h2>
+                            <div className="overflow-hidden border border-neutral-200 rounded-lg">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-neutral-100 text-neutral-600 font-bold uppercase">
+                                        <tr>
+                                            <th className="px-3 py-2.5">Sektör Kodu</th>
+                                            <th className="px-3 py-2.5">Bölge / Tanım</th>
+                                            <th className="px-3 py-2.5">Görevli Tim</th>
+                                            <th className="px-3 py-2.5">Durum & Öncelik</th>
+                                            <th className="px-3 py-2.5">Tehlike / Notlar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-neutral-200 font-medium text-neutral-800">
+                                        {sectors.map((sec: any) => (
+                                            <tr key={sec.id} className="bg-white">
+                                                <td className="px-3 py-2 font-mono font-bold">{sec.sectorType === 'LKP' ? `[LKP] ${sec.code}` : sec.code}</td>
+                                                <td className="px-3 py-2 font-bold">{sec.name}</td>
+                                                <td className="px-3 py-2">{sec.assignedTeamName || '-'}</td>
+                                                <td className="px-3 py-2">{sec.status} ({sec.priority})</td>
+                                                <td className="px-3 py-2 text-neutral-600">{sec.hazards || '-'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* INSARAG ASR-3/4/5 Enkaz & Arama Kurtarma Bilançosu */}
+                    {worksites.length > 0 && (
+                        <section className="print:break-inside-avoid">
+                            <h2 className="text-lg font-black text-neutral-800 border-b border-neutral-200 pb-2 mb-3 uppercase tracking-wider">
+                                INSARAG ASR-3/4/5 Enkaz & Arama Kurtarma Bilançosu
+                            </h2>
+                            <div className="grid grid-cols-3 gap-4 mb-4">
+                                <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-200 text-center">
+                                    <span className="block text-neutral-500 text-[11px] font-bold uppercase">Çalışılan Enkaz</span>
+                                    <span className="block text-2xl font-black text-neutral-900">{worksites.length}</span>
+                                </div>
+                                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-center">
+                                    <span className="block text-emerald-700 text-[11px] font-bold uppercase">Canlı Çıkarılan (L)</span>
+                                    <span className="block text-2xl font-black text-emerald-700">{totalLiveExtracted}</span>
+                                </div>
+                                <div className="bg-red-50 p-3 rounded-xl border border-red-200 text-center">
+                                    <span className="block text-red-700 text-[11px] font-bold uppercase">Çıkarılan Vefat (D)</span>
+                                    <span className="block text-2xl font-black text-red-700">{totalDeceasedExtracted}</span>
+                                </div>
+                            </div>
+                            <div className="overflow-hidden border border-neutral-200 rounded-lg">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-neutral-100 text-neutral-600 font-bold uppercase">
+                                        <tr>
+                                            <th className="px-3 py-2.5">Kademe / Kod</th>
+                                            <th className="px-3 py-2.5">Enkaz / Yapı</th>
+                                            <th className="px-3 py-2.5">Görevli Tim</th>
+                                            <th className="px-3 py-2.5">Teknik Arama (K9/Akustik)</th>
+                                            <th className="px-3 py-2.5">Canlı / Vefat</th>
+                                            <th className="px-3 py-2.5">Son Durum</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-neutral-200 font-medium text-neutral-800">
+                                        {worksites.map((ws: any) => (
+                                            <tr key={ws.id} className="bg-white">
+                                                <td className="px-3 py-2 font-mono font-bold">{ws.asrLevel || 'ASR-3'} [{ws.code}]</td>
+                                                <td className="px-3 py-2">
+                                                    <div className="font-bold">{ws.name}</div>
+                                                    <div className="text-[10px] text-neutral-500">{ws.structureType} / {ws.collapseType}</div>
+                                                </td>
+                                                <td className="px-3 py-2">{ws.assignedTeamName || '-'}</td>
+                                                <td className="px-3 py-2 text-[11px]">
+                                                    K9: {ws.techSearch?.k9 || '-'} | Akustik: {ws.techSearch?.acoustic || '-'}
+                                                </td>
+                                                <td className="px-3 py-2 font-bold">
+                                                    <span className="text-emerald-700">L:{ws.victims?.liveExtracted || 0}</span> / <span className="text-red-700">D:{ws.victims?.deceasedExtracted || 0}</span>
+                                                </td>
+                                                <td className="px-3 py-2 font-bold">{ws.status}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* START Triyaj & Çıkarılan Kazazede Teslim Listesi */}
+                    {allExtrications.length > 0 && (
+                        <section className="print:break-inside-avoid">
+                            <h2 className="text-lg font-black text-neutral-800 border-b border-neutral-200 pb-2 mb-3 uppercase tracking-wider">
+                                START Triyaj & Çıkarılan Kazazede Teslim Tutanak Özeti ({allExtrications.length} Kayıt)
+                            </h2>
+                            <div className="overflow-hidden border border-neutral-200 rounded-lg">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-neutral-100 text-neutral-600 font-bold uppercase">
+                                        <tr>
+                                            <th className="px-3 py-2">Saat</th>
+                                            <th className="px-3 py-2">Enkaz</th>
+                                            <th className="px-3 py-2">START Triyaj</th>
+                                            <th className="px-3 py-2">Kazazede Bilgisi</th>
+                                            <th className="px-3 py-2">Çıkarıldığı Nokta</th>
+                                            <th className="px-3 py-2">Teslim Alan Sağlık Birimi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-neutral-200 font-medium text-neutral-800">
+                                        {allExtrications.map((ext: any) => (
+                                            <tr key={ext.id} className="bg-white">
+                                                <td className="px-3 py-2 font-mono">{ext.timeString}</td>
+                                                <td className="px-3 py-2 font-bold">[{ext.worksiteCode}] {ext.worksiteName}</td>
+                                                <td className="px-3 py-2 font-bold">{ext.triage}</td>
+                                                <td className="px-3 py-2">{ext.victimInfo}</td>
+                                                <td className="px-3 py-2">{ext.locationInRubble}</td>
+                                                <td className="px-3 py-2 font-bold">{ext.handedOverTo}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    )}
 
                     <section className="print:break-inside-avoid">
                         <h2 className="text-lg font-black text-neutral-800 border-b border-neutral-200 pb-2 mb-3 uppercase tracking-wider">Değerlendirme & Kapanış Notları</h2>

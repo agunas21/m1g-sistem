@@ -26,9 +26,29 @@ export async function GET() {
         if (!payload) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
 
         const data = await readOperations();
+        // Her operasyonun bağımsız sektör ve enkaz kayıtlarını da senkronize et
+        for (let i = 0; i < data.length; i++) {
+            const opId = data[i]?.id;
+            if (!opId) continue;
+            const [secBackup, wsBackup] = await Promise.all([
+                getCollectionDB(`global_sectors_${opId}`),
+                getCollectionDB(`global_worksites_${opId}`)
+            ]);
+            if (Array.isArray(secBackup) && secBackup.length > 0) {
+                const secMap = new Map<string, any>();
+                for (const s of (data[i].sectors || [])) { if (s?.id) secMap.set(s.id, s); }
+                for (const s of secBackup) { if (s?.id) secMap.set(s.id, s); }
+                data[i].sectors = Array.from(secMap.values());
+            }
+            if (Array.isArray(wsBackup) && wsBackup.length > 0) {
+                const wsMap = new Map<string, any>();
+                for (const w of (data[i].worksites || [])) { if (w?.id) wsMap.set(w.id, w); }
+                for (const w of wsBackup) { if (w?.id) wsMap.set(w.id, w); }
+                data[i].worksites = Array.from(wsMap.values());
+            }
+        }
         const res = NextResponse.json(data);
-        // private cache, 15 sn (tarayıcı bazlı önbellek, CDN cache kapalı)
-        res.headers.set('Cache-Control', 'private, max-age=15, stale-while-revalidate=30');
+        res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         return res;
     } catch (error) {
         console.error('[active-operations GET]', error);
@@ -54,9 +74,29 @@ export async function POST(req: Request) {
 
         const idx = operations.findIndex((o: any) => o.id === body.id);
         if (idx !== -1) {
-            // Güncelleme
+            // Güncelleme — Harita üzerinde bağımsız API ile kaydedilen sectors, worksites ve pins verilerinin ezilmesini önle
             const oldOp = operations[idx];
-            operations[idx] = { ...oldOp, ...body };
+            const [secBackup, wsBackup] = await Promise.all([
+                getCollectionDB(`global_sectors_${body.id}`),
+                getCollectionDB(`global_worksites_${body.id}`)
+            ]);
+            const preservedSectors = (Array.isArray(secBackup) && secBackup.length > 0)
+                ? secBackup
+                : (Array.isArray(oldOp.sectors) && oldOp.sectors.length > 0 ? oldOp.sectors : (body.sectors || []));
+            const preservedWorksites = (Array.isArray(wsBackup) && wsBackup.length > 0)
+                ? wsBackup
+                : (Array.isArray(oldOp.worksites) && oldOp.worksites.length > 0 ? oldOp.worksites : (body.worksites || []));
+            const preservedPins = (Array.isArray(oldOp.pins) && oldOp.pins.length > (body.pins?.length || 0))
+                ? oldOp.pins
+                : (body.pins || oldOp.pins || []);
+
+            operations[idx] = {
+                ...oldOp,
+                ...body,
+                sectors: preservedSectors,
+                worksites: preservedWorksites,
+                pins: preservedPins
+            };
             await writeOperations(operations);
             await writeLog("INFO", payload.fullName || "Admin", `Operasyon Güncellendi: ${body.name || oldOp.name}`, body.id);
 
