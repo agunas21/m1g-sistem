@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MaskedField } from "@/components/MaskedField";
+import ThankYouCertificateModal from "@/components/modals/ThankYouCertificateModal";
 
 export default function UyeYonetimi() {
     const [search, setSearch] = useState("");
@@ -34,6 +35,12 @@ export default function UyeYonetimi() {
     const [mailSubject, setMailSubject] = useState("");
     const [mailMessage, setMailMessage] = useState("");
     const [mailLoading, setMailLoading] = useState(false);
+
+    // Teşekkür Belgesi Modal States
+    const [showCertificateModal, setShowCertificateModal] = useState(false);
+    const [certInitialName, setCertInitialName] = useState("");
+    const [certInitialEmail, setCertInitialEmail] = useState("");
+    const [certDefaultType, setCertDefaultType] = useState<"destekci" | "operasyon">("destekci");
 
     useEffect(() => {
         setMounted(true);
@@ -508,6 +515,17 @@ export default function UyeYonetimi() {
                                             <button onClick={() => toggleMemberStatus(selectedMember.id)}
                                                 className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-lg text-[10px] uppercase font-bold flex items-center gap-1 transition-colors">
                                                 <RefreshCw size={11} /> Durum Değiştir
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setCertInitialName(selectedMember.name || "");
+                                                    setCertInitialEmail(selectedMember.email || "");
+                                                    setCertDefaultType("destekci");
+                                                    setShowCertificateModal(true);
+                                                }}
+                                                className="px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-lg text-[10px] uppercase font-bold flex items-center gap-1 transition-colors"
+                                            >
+                                                <Award size={11} /> Teşekkür Belgesi Gönder
                                             </button>
                                             <button onClick={handleDeleteMember}
                                                 className="px-3 py-1.5 bg-red-600/25 hover:bg-red-600/45 text-red-400 border border-red-500/35 rounded-lg text-[10px] uppercase font-bold flex items-center gap-1 transition-colors">
@@ -1117,6 +1135,25 @@ export default function UyeYonetimi() {
                             <p className="text-[10px] text-purple-500/60 truncate max-w-[150px]">Tüm kartları baskıya gönder.</p>
                         </div>
                     </Link>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setCertInitialName("");
+                            setCertInitialEmail("");
+                            setCertDefaultType("destekci");
+                            setShowCertificateModal(true);
+                        }}
+                        className="bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/30 p-4 rounded-xl flex items-center gap-4 transition-all group"
+                    >
+                        <div className="bg-rose-600 p-3 rounded-lg text-white group-hover:scale-110 shadow-[0_0_15px_rgba(225,29,72,0.4)] transition-transform">
+                            <span className="text-xl leading-none">🎖️</span>
+                        </div>
+                        <div className="text-left">
+                            <h3 className="text-rose-400 font-bold uppercase tracking-wider text-xs md:text-sm">Destekçi Teşekkür Belgesi</h3>
+                            <p className="text-[10px] text-rose-300/70">Ad Soyad & E-Posta yazıp belge gönder.</p>
+                        </div>
+                    </button>
                 </div>
             </div>
 
@@ -1137,6 +1174,18 @@ export default function UyeYonetimi() {
                         </div>
                         <button onClick={() => setShowNewMember(true)} className="w-full md:w-auto px-6 py-2.5 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white transition-colors">
                             <UserPlus size={16} /> Yeni Personel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setCertInitialName("");
+                                setCertInitialEmail("");
+                                setCertDefaultType("destekci");
+                                setShowCertificateModal(true);
+                            }}
+                            className="w-full md:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-rose-600/25 transition-colors"
+                        >
+                            <span>🎖️</span> Destekçi Teşekkür Belgesi Gönder
                         </button>
                         <button onClick={exportToExcel} disabled={mailLoading} className="w-full md:w-auto px-6 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 border border-emerald-500/20 font-bold uppercase tracking-widest text-xs rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
                             <FileText size={16} /> Excel İndir
@@ -1579,6 +1628,15 @@ export default function UyeYonetimi() {
                 </div>,
                 document.body
             )}
+
+            <ThankYouCertificateModal
+                isOpen={showCertificateModal}
+                onClose={() => setShowCertificateModal(false)}
+                defaultType={certDefaultType}
+                initialFullName={certInitialName}
+                initialEmail={certInitialEmail}
+                members={members.map(m => ({ id: m.id, fullName: m.name, email: m.email }))}
+            />
 
         </div>
     );

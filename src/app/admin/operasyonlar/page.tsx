@@ -25,6 +25,9 @@ import SlashCommandConsole from "@/components/operations/SlashCommandConsole";
 import AfadComplianceWidget from "@/components/operations/AfadComplianceWidget";
 import FieldMovementReportPanel from "@/components/operations/reports/FieldMovementReportPanel";
 import ReportSuiteViewer from "@/components/operations/reports/ReportSuiteViewer";
+import EmergencyDirectoryModal from "@/components/operations/EmergencyDirectoryModal";
+import { TURKEY_81_PROVINCES, detectProvinceAndDistrict } from "@/data/turkeyEmergencyDirectory";
+import { generateCertificateDataUrl } from "@/lib/certificateGenerator";
 
 const ReportExportModal = dynamic(() => import("@/components/operations/reports/ReportExportModal"), { ssr: false });
 
@@ -144,11 +147,14 @@ export default function Operasyonlar() {
     const [newOpData, setNewOpData] = useState({
         name: "",
         type: "Deprem" as "Deprem" | "Yangın" | "Doğada Arama" | "Eğitim" | "Kamp",
-        location: "",
+        location: "İzmir, Karşıyaka",
         radioFrequency: "145.550",
         personnelCount: 10,
         description: ""
     });
+    const [newOpProvince, setNewOpProvince] = useState("İzmir");
+    const [newOpDistrict, setNewOpDistrict] = useState("Karşıyaka");
+    const [showEmergencyDirModal, setShowEmergencyDirModal] = useState(false);
 
     // Unified command bar input
     const [commandInput, setCommandInput] = useState("");
@@ -837,7 +843,49 @@ export default function Operasyonlar() {
         });
 
         if (res.ok) {
-            alert("Operasyon başarıyla kapatıldı ve arşive kaldırıldı!");
+            // Operasyona katılan tüm personellere otomatik Operasyon Teşekkür Belgesi e-postası gönder
+            try {
+                const participantIds = new Set<string>();
+                selectedOp.teams.forEach(t => t.members.forEach(m => participantIds.add(m.id)));
+                selectedOp.baseCamp.members.forEach(id => participantIds.add(id));
+
+                const recipientsWithCerts: Array<{ email: string; fullName: string; certificateDataUrl: string }> = [];
+
+                for (const mId of Array.from(participantIds)) {
+                    const mem = membersData.find(m => m.id === mId);
+                    if (mem && mem.email && mem.email.includes('@') && mem.fullName) {
+                        const certDataUrl = await generateCertificateDataUrl('operasyon', mem.fullName);
+                        recipientsWithCerts.push({
+                            email: mem.email,
+                            fullName: mem.fullName,
+                            certificateDataUrl: certDataUrl
+                        });
+                    }
+                }
+
+                if (recipientsWithCerts.length > 0) {
+                    const mailRes = await fetch('/api/mail/thank-you-certificate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'operasyon',
+                            operationName: selectedOp.name,
+                            recipients: recipientsWithCerts
+                        })
+                    });
+                    if (mailRes.ok) {
+                        const mailData = await mailRes.json();
+                        toast.success(
+                            `🎖️ Operasyona katılan ${mailData.sentCount || recipientsWithCerts.length} personele ismine özel Teşekkür Belgesi otomatik e-posta olarak gönderildi!`,
+                            { duration: 6000 }
+                        );
+                    }
+                }
+            } catch (certErr) {
+                console.error("Otomatik teşekkür belgesi gönderimi hatası:", certErr);
+            }
+
+            alert("Operasyon başarıyla kapatıldı, katılımcılara Teşekkür Belgeleri gönderildi ve arşive kaldırıldı!");
             setFinishedOperation(updated);
             setShowClosureModal(false);
             setShowSummaryModal(true);
@@ -1511,7 +1559,15 @@ export default function Operasyonlar() {
                     </div>
                     <p className="text-neutral-500 text-sm font-light italic">Toplum yararına hızlı, makro sevk ve hiyerarşi yönetim ekranı.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setShowEmergencyDirModal(true)}
+                        className="px-4 py-3 bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 border border-amber-500/30 transition-all"
+                        title="Türkiye 81 İl ve İlçe AFAD, Kriz Masası, İtfaiye ve Muhtarlık Rehberi (%100 Çevrimdışı Çalışır)"
+                    >
+                        <span>☎️</span> 81 İl Acil & Muhtar Rehberi
+                    </button>
                     <button 
                         onClick={handlePanicStart}
                         className="px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_30px_rgba(239,68,68,0.5)] border border-red-500/20 "
@@ -1664,6 +1720,14 @@ export default function Operasyonlar() {
                                                 Kalıcı Olarak Sil
                                             </button>
                                         )}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowEmergencyDirModal(true)}
+                                            className="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all border border-amber-500/40 shadow-md"
+                                            title="Seçili İl ve İlçedeki AFAD, Kaymakamlık, İtfaiye, Gaz/Elektrik ve Mahalle Muhtarları Rehberi (%100 Offline)"
+                                        >
+                                            <span>☎️</span> Acil Kurum & Muhtarlar (Offline)
+                                        </button>
                                         <button onClick={() => setIsReportModalOpen(true)} className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 border border-white/10 transition-colors">
                                             <FileText size={14} /> KAVKAS PDF Çıktı Merkezi
                                         </button>
@@ -1703,12 +1767,22 @@ export default function Operasyonlar() {
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     
                                     {/* Weather & Location conditions (Enabled for ALL operation types) */}
-                                    <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 relative">
-                                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Saha Konumu & Canlı Meteoroloji</span>
+                                    <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 relative space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block">Saha Konumu & Canlı Meteoroloji</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowEmergencyDirModal(true)}
+                                                className="text-[10px] font-black text-amber-400 hover:text-amber-300 flex items-center gap-1 underline"
+                                                title="Bu konumdaki AFAD, Kaymakamlık ve Muhtar numaralarını aç"
+                                            >
+                                                ☎️ Bölge Rehberi
+                                            </button>
+                                        </div>
                                         <div className="flex items-center gap-2">
                                             <input 
                                                 type="text" 
-                                                placeholder="Konum girin... (Örn: Bornova)"
+                                                placeholder="Konum girin... (Örn: İzmir, Karşıyaka)"
                                                 value={selectedOp.location}
                                                 disabled={!['Aktif', 'Hazırlık'].includes(selectedOp.status) || weatherLoading}
                                                 onChange={(e) => setSelectedOp({ ...selectedOp, location: e.target.value })}
@@ -1730,6 +1804,23 @@ export default function Operasyonlar() {
                                                 )}
                                             </button>
                                         </div>
+                                        {(() => {
+                                            const det = detectProvinceAndDistrict(selectedOp.location);
+                                            return (
+                                                <div className="flex items-center justify-between text-[10px] bg-black/40 border border-white/5 rounded-lg px-2 py-1">
+                                                    <span className="text-slate-300 font-bold truncate">
+                                                        📍 {det.province.name} / {det.district}
+                                                    </span>
+                                                    <a
+                                                        href={`tel:${det.province.afadPhone.replace(/\s+/g, '')}`}
+                                                        className="text-emerald-400 font-mono font-bold hover:underline shrink-0 ml-2"
+                                                        title={`${det.province.name} AFAD İl Müdürlüğü Doğrudan Hat`}
+                                                    >
+                                                        AFAD: {det.province.afadPhone}
+                                                    </a>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
 
                                     {/* Radio Frequency & Radio Code */}
@@ -2155,10 +2246,48 @@ export default function Operasyonlar() {
                                 />
                             </div>
 
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <div className="space-y-1">
+                                    <label className="block text-neutral-400 font-bold uppercase tracking-wider text-[9px]">Operasyon İli (81 İl)</label>
+                                    <select
+                                        value={newOpProvince}
+                                        onChange={(e) => {
+                                            const provName = e.target.value;
+                                            setNewOpProvince(provName);
+                                            const found = TURKEY_81_PROVINCES.find(p => p.name === provName);
+                                            const firstDist = found?.districts[0] || "Merkez";
+                                            setNewOpDistrict(firstDist);
+                                            setNewOpData({ ...newOpData, location: `${provName}, ${firstDist}` });
+                                        }}
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2.5 text-white outline-none focus:border-red-500"
+                                    >
+                                        {TURKEY_81_PROVINCES.map(p => (
+                                            <option key={p.plate} value={p.name}>{p.plate} - {p.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="block text-neutral-400 font-bold uppercase tracking-wider text-[9px]">Operasyon İlçesi</label>
+                                    <select
+                                        value={newOpDistrict}
+                                        onChange={(e) => {
+                                            const distName = e.target.value;
+                                            setNewOpDistrict(distName);
+                                            setNewOpData({ ...newOpData, location: `${newOpProvince}, ${distName}` });
+                                        }}
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2.5 text-white outline-none focus:border-red-500"
+                                    >
+                                        {(TURKEY_81_PROVINCES.find(p => p.name === newOpProvince)?.districts || ["Merkez"]).map(d => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
                             <div className="space-y-1">
-                                <label className="block text-neutral-400 font-bold uppercase tracking-wider text-[9px]">Konum / Merkez</label>
+                                <label className="block text-neutral-400 font-bold uppercase tracking-wider text-[9px]">Açık Konum / Mahalle Detayı</label>
                                 <input 
-                                    type="text" required placeholder="Örn: Kemalpaşa Ormanlık Alan"
+                                    type="text" required placeholder="Örn: İzmir, Karşıyaka - Bahçelievler Mah."
                                     value={newOpData.location} onChange={(e) => setNewOpData({ ...newOpData, location: e.target.value })}
                                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500"
                                 />
@@ -2711,6 +2840,18 @@ export default function Operasyonlar() {
                     operation={selectedOp} 
                 />
             )}
+
+            <EmergencyDirectoryModal
+                isOpen={showEmergencyDirModal}
+                onClose={() => setShowEmergencyDirModal(false)}
+                operationLocation={selectedOp?.location || `${newOpProvince}, ${newOpDistrict}`}
+                onUpdateOperationLocation={selectedOp ? (newLoc: string) => {
+                    const updated = { ...selectedOp, location: newLoc };
+                    setSelectedOp(updated);
+                    saveOperation(updated);
+                    fetchWeather(newLoc);
+                } : undefined}
+            />
         </div>
     );
 }

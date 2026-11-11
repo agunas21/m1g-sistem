@@ -543,6 +543,8 @@ export default function OperasyonHaritasi({
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showToolsMenu, setShowToolsMenu] = useState(false)
+  const [showQuickGuide, setShowQuickGuide] = useState(true)
   const lastPingRef = useRef<number>(0)
   const channelRef = useRef<any>(null)
 
@@ -1483,145 +1485,229 @@ export default function OperasyonHaritasi({
 
       {/* ── Harita alanı ─────────────────────────────────────── */}
       <div className="flex-1 relative flex flex-col min-w-0">
-        {/* Üst bar */}
-        <div style={S.topbar}>
-          <button 
-            className="mr-3 text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-600/50 p-2 rounded-lg backdrop-blur shadow-lg transition-colors"
-            onClick={() => setIsSidebarOpen(true)}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-          </button>
-          <span style={{ fontSize:16, color:'#4ade80' }}>●</span>
-          <span style={{ fontSize:15, fontWeight:600, color:'#e2e8f0' }} className="ml-1">Operasyon izleme</span>
-
-          {/* ASR-1 Sektör Butonu */}
-          <button
-            onClick={startSectorDrawing}
-            disabled={isDrawingSector}
-            className={`ml-3 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
-              isDrawingSector 
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
-                : 'bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 text-white'
-            }`}
-            title="INSARAG ASR-1 Geniş Alan Sektör Çizimi"
-          >
-            <span>📐</span>
-            <span className="hidden sm:inline">ASR-1 Sektör Çiz</span>
-          </button>
-
-          {sectors.length > 0 && (
-            <span 
-              className="ml-2 px-2.5 py-1 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold cursor-pointer hover:bg-amber-500/25 transition-colors hidden sm:inline-flex items-center gap-1"
-              onClick={() => {
-                if (selectedSector) setSelectedSector(null);
-                else {
-                  setSelectedSector(sectors[0]);
-                  setFlyTo(getPolygonCenter(sectors[0].polygon));
-                }
-              }}
-              title="Kayıtlı ASR-1 Sektörleri"
+        {/* Üst Komuta & Hızlı İşlem Çubuğu (İlk kez kullananlar için sadeleştirilmiş tasarım) */}
+        <div className="min-h-[56px] bg-[#0f172a] border-b border-slate-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-[1000]">
+          {/* Sol Grup: Personel Listesi & Özet Sayaçlar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setIsSidebarOpen(prev => !prev)}
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600/70 text-white text-xs font-bold flex items-center gap-2 whitespace-nowrap shadow-sm transition-all"
+              title="Sahadaki personellerin canlı konum, batarya ve durum listesini aç/kapat"
             >
-              <span>🏷️</span> {sectors.length} Sektör
-            </span>
-          )}
+              <span>👥</span>
+              <span>Personel Listesi</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-black">
+                {onlineN}/{people.length} Aktif
+              </span>
+            </button>
 
-          {/* ASR-3 INSARAG Enkaz Butonu */}
-          <button
-            onClick={() => {
-              setIsAddingWorksite(prev => !prev);
-              setIsDrawingSector(false);
-              setSelected(null);
-              setSelectedSector(null);
-              setSelectedWorksite(null);
-            }}
-            className={`ml-2 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
-              isAddingWorksite 
-                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse'
-                : 'bg-emerald-600/80 hover:bg-emerald-600 border border-emerald-400/30 text-white'
-            }`}
-            title="INSARAG ASR-3 Enkaz Değerlendirme & Triyaj İşareti Ekle"
-          >
-            <span>🏗️</span>
-            <span className="hidden sm:inline">{isAddingWorksite ? 'Haritaya Tıkla' : 'ASR-3 Enkaz Ekle'}</span>
-          </button>
+            {sectors.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedSector) setSelectedSector(null);
+                  else {
+                    setSelectedSector(sectors[0]);
+                    setFlyTo(getPolygonCenter(sectors[0].polygon));
+                  }
+                }}
+                className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                title="Çizilmiş arama bölgelerine (sektörlere) odaklanmak için tıklayın"
+              >
+                <span>📐</span>
+                <span>{sectors.length} Bölge/Sektör</span>
+              </button>
+            )}
 
-          {worksites.length > 0 && (
-            <span 
-              className="ml-2 px-2.5 py-1 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold cursor-pointer hover:bg-emerald-500/25 transition-colors hidden sm:inline-flex items-center gap-1"
-              onClick={() => {
-                if (selectedWorksite) setSelectedWorksite(null);
-                else {
-                  setSelectedWorksite(worksites[0]);
-                  setFlyTo(worksites[0].location);
-                }
-              }}
-              title="Kayıtlı ASR-3 Enkazları"
+            {worksites.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedWorksite) setSelectedWorksite(null);
+                  else {
+                    setSelectedWorksite(worksites[0]);
+                    setFlyTo(worksites[0].location);
+                  }
+                }}
+                className="px-2.5 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                title="İşaretlenmiş bina/enkaz noktalarına odaklanmak için tıklayın"
+              >
+                <span>🏢</span>
+                <span>{worksites.length} Enkaz/Nokta</span>
+              </button>
+            )}
+          </div>
+
+          {/* Sağ Grup: Adım Adım Saha İşaretleme Butonları & Araçlar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* 1. Adım: Alan / Sektör Çiz */}
+            <button
+              type="button"
+              onClick={startSectorDrawing}
+              disabled={isDrawingSector}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
+                isDrawingSector
+                  ? 'bg-amber-500/25 text-amber-300 border border-amber-400 animate-pulse'
+                  : 'bg-blue-600 hover:bg-blue-500 border border-blue-400/40 text-white'
+              }`}
+              title="1. Adım: Harita üzerinde arama yapılacak mahalleyi/bölgeyi köşe noktalarına tıklayarak çerçeveleyin (INSARAG ASR-1)"
             >
-              <span>🏢</span> {worksites.length} Enkaz
-            </span>
-          )}
+              <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">1</span>
+              <span>📐 {isDrawingSector ? 'Köşeleri Seçin...' : 'Alan / Sektör Çiz'}</span>
+            </button>
 
-          {/* Doğa Arama Kurtarma: LKP (Son Görülme Noktası) & Koester Olasılık Çemberi Butonu */}
-          <button
-            onClick={() => {
-              setIsAddingLkp(prev => !prev);
-              setIsDrawingSector(false);
-              setIsAddingWorksite(false);
-              setSelected(null);
-              setSelectedSector(null);
-              setSelectedWorksite(null);
-            }}
-            className={`ml-2 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
-              isAddingLkp
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
-                : 'bg-purple-600/80 hover:bg-purple-600 border border-purple-400/30 text-white'
-            }`}
-            title="Doğa Arama (WSAR): Son Görülme Noktası (LKP) & %50/%95 Kayıp Bulunma Olasılık Çemberi Ekle"
-          >
-            <span>🧭</span>
-            <span className="hidden md:inline">{isAddingLkp ? 'LKP Noktası Seç' : 'LKP Çemberi'}</span>
-          </button>
+            {/* 2. Adım: Enkaz / Bina Ekle */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsAddingWorksite(prev => !prev);
+                setIsDrawingSector(false);
+                setIsAddingLkp(false);
+                setSelected(null);
+                setSelectedSector(null);
+                setSelectedWorksite(null);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
+                isAddingWorksite
+                  ? 'bg-rose-500/25 text-rose-300 border border-rose-400 animate-pulse'
+                  : 'bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/40 text-white'
+              }`}
+              title="2. Adım: Yıkık bina, enkaz veya kritik müdahale noktasını haritaya tıklayarak işaretleyin (INSARAG ASR-3/4/5)"
+            >
+              <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">2</span>
+              <span>🏗️ {isAddingWorksite ? 'Haritada Noktaya Tıklayın' : 'Enkaz / Bina Ekle'}</span>
+            </button>
 
-          {/* GPX Dışa Aktarma Butonu */}
-          <button
-            onClick={handleExportGPX}
-            className="ml-2 px-2.5 py-1.5 bg-sky-600/20 hover:bg-sky-600/35 border border-sky-500/30 text-sky-300 rounded-xl text-xs font-bold flex items-center gap-1 transition-all"
-            title="Tüm personel GPS izlerini, ASR-1 sektörlerini ve ASR-3 enkazlarını Garmin/Google Earth/AFAD uyumlu .GPX olarak indir"
-          >
-            <span>📥</span>
-            <span className="hidden xl:inline">GPX İndir</span>
-          </button>
+            {/* 3. Adım: Doğa Arama Kayıp Çemberi */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsAddingLkp(prev => !prev);
+                setIsDrawingSector(false);
+                setIsAddingWorksite(false);
+                setSelected(null);
+                setSelectedSector(null);
+                setSelectedWorksite(null);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
+                isAddingLkp
+                  ? 'bg-amber-500/25 text-amber-300 border border-amber-400 animate-pulse'
+                  : 'bg-purple-600 hover:bg-purple-500 border border-purple-400/40 text-white'
+              }`}
+              title="3. Adım: Doğada kaybolan kişinin son görüldüğü noktayı (LKP) işaretleyip %50 ve %95 bulunma çemberi oluşturun"
+            >
+              <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">3</span>
+              <span>🧭 {isAddingLkp ? 'Son Görülme Noktasına Tıklayın' : 'Kayıp Çemberi'}</span>
+            </button>
 
-          {/* Eski GPS Temizleme Butonu */}
-          <button
-            onClick={handleClearOperationGPS}
-            className="ml-2 px-2.5 py-1.5 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-300 rounded-xl text-xs font-bold flex items-center gap-1 transition-all"
-            title="Önceki tatbikatlardan kalan eski GPS verilerini ve rotaları sıfırla"
-          >
-            <span>🧹</span>
-            <span className="hidden xl:inline">Eski GPS'i Sıfırla</span>
-          </button>
+            {/* Yardım / Hızlı Rehber Butonu */}
+            <button
+              type="button"
+              onClick={() => setShowQuickGuide(prev => !prev)}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 whitespace-nowrap border transition-all ${
+                showQuickGuide
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                  : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+              }`}
+              title="Harita kullanım rehberini göster/gizle"
+            >
+              <span>💡</span>
+              <span className="hidden md:inline">Nasıl Kullanılır?</span>
+            </button>
 
-          <span style={{ width:'1px', height:18, background:'#374151' }} className="mx-2 hidden sm:inline" />
-          <span style={S.tbStat} className="hidden sm:inline">Aktif: <span style={S.tbVal}>{onlineN}</span></span>
-          <span style={S.tbStat} className="ml-auto mr-2">Toplam: <span style={S.tbVal}>{people.length}</span></span>
+            {/* Araçlar Açılır Menüsü (GPX İndir & GPS Sıfırla kalabalık yapmasın diye tek menüde) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowToolsMenu(prev => !prev)}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all"
+                title="GPX Harita İndirme ve GPS Geçmişi Sıfırlama Araçları"
+              >
+                <span>⚙️</span>
+                <span className="hidden sm:inline">Araçlar</span>
+                <span className="text-[10px] opacity-70">▾</span>
+              </button>
 
-          {/* Tam Boy / Tam Ekran Harita Butonu */}
-          <button
-            onClick={() => setIsFullscreen(prev => !prev)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
-              isFullscreen
-                ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300'
-                : 'bg-slate-800 hover:bg-slate-700 border border-slate-600/60 text-white'
-            }`}
-            title={isFullscreen ? 'Tam Ekrandan Çık (ESC)' : 'Haritayı Tam Boy / Tam Ekran Yap'}
-          >
-            <span>{isFullscreen ? '🗗' : '⛶'}</span>
-            <span className="hidden sm:inline">{isFullscreen ? 'Küçült (ESC)' : 'Tam Boy'}</span>
-          </button>
+              {showToolsMenu && (
+                <div className="absolute right-0 mt-2 w-60 bg-[#0f172a] border border-slate-700 rounded-xl shadow-2xl p-1.5 z-[2000] space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsMenu(false);
+                      handleExportGPX();
+                    }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-sky-500/15 text-left text-xs font-bold text-sky-300 flex items-center gap-2 transition-colors"
+                  >
+                    <span>📥</span>
+                    <div>
+                      <div>Harita Verisini İndir (.GPX)</div>
+                      <div className="text-[10px] font-normal text-slate-400">Garmin, Google Earth & AFAD uyumlu</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsMenu(false);
+                      handleClearOperationGPS();
+                    }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-rose-500/15 text-left text-xs font-bold text-rose-300 flex items-center gap-2 transition-colors"
+                  >
+                    <span>🧹</span>
+                    <div>
+                      <div>Eski GPS İzlerini Sıfırla</div>
+                      <div className="text-[10px] font-normal text-slate-400">Önceki tatbikat konumlarını temizler</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Tam Ekran / Tam Boy Butonu */}
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(prev => !prev)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
+                isFullscreen
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black'
+                  : 'bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white'
+              }`}
+              title={isFullscreen ? 'Tam Ekrandan Çık (ESC)' : 'Haritayı Tam Ekran Yap'}
+            >
+              <span>{isFullscreen ? '🗗' : '⛶'}</span>
+              <span>{isFullscreen ? 'Küçült (ESC)' : 'Tam Ekran'}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Leaflet harita */}
+        {/* İlk Kez Kullananlar İçin Adım Adım Hızlı Rehber Şeridi */}
+        {showQuickGuide && (
+          <div className="bg-slate-900/95 border-b border-slate-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300 z-[999]">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="font-bold text-amber-400 flex items-center gap-1">
+                <span>💡</span> Hızlı Kullanım Rehberi:
+              </span>
+              <span>
+                <strong className="text-blue-400">1. Alan/Sektör Çiz:</strong> Haritada 3+ köşeye tıklayıp arama bölgesini çerçeveleyin.
+              </span>
+              <span>
+                <strong className="text-emerald-400">2. Enkaz/Bina Ekle:</strong> Yıkık binaya tıklayıp kazazede ve çalışma seviyesini (ASR-3/4/5) girin.
+              </span>
+              <span>
+                <strong className="text-purple-400">3. Kayıp Çemberi:</strong> Doğada kaybolan kişinin son görüldüğü yere tıklayın.
+              </span>
+              <span className="text-slate-400 italic">
+                (Haritadaki herhangi bir sektöre veya enkaza tıklayarak bilgileri güncelleyebilirsiniz.)
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowQuickGuide(false)}
+              className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px] font-bold whitespace-nowrap"
+            >
+              Gizle ✕
+            </button>
+          </div>
+        )}
         <div style={S.mapCont}>
           {/* ASR-1 Çizim Yüzen Kontrol Çubuğu */}
           {isDrawingSector && (
