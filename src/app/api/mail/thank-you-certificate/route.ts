@@ -29,16 +29,17 @@ async function renderServerCertificateBuffer(
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-  const fontSize = Math.round(w * 0.028);
+  const fontSize = Math.round(w * 0.027);
 
   const svgOverlay = Buffer.from(`
     <svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
       <style>
         .recipient {
-          fill: #111827;
+          fill: #0f172a;
           font-size: ${fontSize}px;
-          font-weight: 700;
-          font-family: Georgia, "Times New Roman", serif;
+          font-weight: 800;
+          letter-spacing: 2.5px;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
       </style>
       <text x="${Math.round(w / 2)}" y="${yPos}" text-anchor="middle" dominant-baseline="middle" class="recipient">${cleanName}</text>
@@ -95,55 +96,142 @@ function buildCertificateEmailHtml(params: {
   const { fullName, type, operationName, customNote, hasCidImage } = params;
   const isOp = type === 'operasyon';
   const cleanUpperName = (fullName || 'DEĞERLİ GÖNÜLLÜMÜZ').toLocaleUpperCase('tr-TR');
+  const todayFormatted = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const docRef = `M1G-TB/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`;
 
-  const subtitle = isOp
-    ? operationName
-      ? `${operationName} — Operasyon Teşekkür Belgesi`
-      : 'Arama & Kurtarma Operasyonu Teşekkür Belgesi'
-    : 'M1G Arama ve Kurtarma Derneği — Destekçi Teşekkür Belgesi';
+  const docTitle = isOp ? 'OPERASYON TEŞEKKÜR BELGESİ' : 'KURUMSAL DESTEKÇİ TEŞEKKÜR BELGESİ';
+  const docContext = isOp
+    ? (operationName ? `${operationName.toLocaleUpperCase('tr-TR')} OPERASYONU` : 'ARAMA KURTARMA OPERASYONU')
+    : 'İNSANİ YARDIM VE AFET DESTEK PROTOKOLÜ';
 
-  const bodyText = isOp
-    ? `Son gerçekleştirdiğimiz <strong>${operationName || 'arama kurtarma'}</strong> operasyonunda ekibimizin bir parçası olarak sahada bizimle omuz omuza görev aldığınız için size en içten teşekkürlerimizi sunarız.<br/><br/>Arama kurtarma faaliyetleri; fiziksel gücün ötesinde büyük bir inanç, merhamet ve takım ruhu gerektirir. Siz, bu zorlu süreçte elinizi taşın altına koyarak bir cana umut, bir aileye teselli olmak için zamanınızı ve emeğinizi karşılıksız sundunuz. İyi ki varsınız.`
-    : `Dayanışma, umudu büyütür.<br/><br/><strong>M1G Arama ve Kurtarma Derneği</strong>'nin yanında olarak, hem bizlere güç verdiniz hem de nice canlara umut oldunuz. Desteğiniz için kalpten teşekkür ederiz.`;
+  const bodyParagraphs = isOp
+    ? `
+      <p style="margin: 0 0 16px 0; color: #1e293b; font-size: 15px; line-height: 1.8; text-align: justify;">
+        M1G Arama ve Kurtarma Derneği bünyesinde icra edilen <strong>${operationName || 'Arama Kurtarma'}</strong> operasyonunda ekibimizin bir parçası olarak sahada fedakârca görev alarak hayat kurtarma mücadelemize sunduğunuz paha biçilemez katkılar vesilesiyle bu teşekkür belgesi tarafınıza takdim edilmiştir.
+      </p>
+      <p style="margin: 0 0 16px 0; color: #334155; font-size: 14.5px; line-height: 1.8; text-align: justify;">
+        Arama kurtarma faaliyetleri; fiziki kabiliyetin ötesinde sarsılmaz bir vicdan, yüksek disiplin ve ekip ruhu gerektirir. Bu zorlu süreçte canla başla ortaya koyduğunuz özverili emek ve azim için şahsım, yönetim kurulumuz ve derneğimiz adına en derin şükranlarımı sunarım.
+      </p>
+    `
+    : `
+      <p style="margin: 0 0 16px 0; color: #1e293b; font-size: 15px; line-height: 1.8; text-align: justify;">
+        M1G Arama ve Kurtarma Derneği&rsquo;nin afet müdahale, teknik hazırlık ve insani yardım hedeflerine duyduğunuz inanç ve sağladığınız kıymetli destekler vesilesiyle bu kurumsal teşekkür belgesi tarafınıza takdim edilmiştir.
+      </p>
+      <p style="margin: 0 0 16px 0; color: #334155; font-size: 14.5px; line-height: 1.8; text-align: justify;">
+        Dayanışma ve karşılıksız destek, afet sahasında nice hayata uzanan umut zincirinin en sağlam halkasıdır. Yanımızda durarak gücümüze güç kattığınız ve insan hayatına değer verdiğiniz için yönetim kurulumuz ve tüm gönüllülerimiz adına kalpten teşekkür ederiz.
+      </p>
+    `;
 
   return `
-    <div style="font-family: Arial, Helvetica, sans-serif; max-width: 680px; margin: 0 auto; background-color: #050b14; color: #ffffff; padding: 28px; border-radius: 16px; border: 1px solid #1e293b;">
-      <div style="text-align: center; padding-bottom: 18px; border-bottom: 1px solid #1e293b; margin-bottom: 22px;">
-        <h1 style="color: #ef4444; margin: 0; font-size: 22px; letter-spacing: 2px;">M1G ARAMA VE KURTARMA DERNEĞİ</h1>
-        <p style="color: #94a3b8; font-size: 11px; letter-spacing: 2px; margin: 6px 0 0; text-transform: uppercase;">${subtitle}</p>
+    <!DOCTYPE html>
+    <html lang="tr">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${docTitle}</title>
+    </head>
+    <body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+      <div style="max-width: 660px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);">
+        
+        <!-- Üst Kurumsal Kırmızı & Lacivert Çift Şerit -->
+        <div style="height: 6px; background: linear-gradient(90deg, #991b1b 0%, #dc2626 40%, #0f172a 100%);"></div>
+
+        <!-- Başlık & Kurum Bilgisi Anteti -->
+        <div style="padding: 28px 36px 20px 36px; border-bottom: 1px solid #f1f5f9;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="middle" align="left" style="width: 70%;">
+                <div style="font-size: 15px; font-weight: 900; letter-spacing: 1.2px; color: #0f172a; text-transform: uppercase;">
+                  M1G ARAMA VE KURTARMA DERNEĞİ
+                </div>
+                <div style="font-size: 11px; font-weight: 700; color: #991b1b; letter-spacing: 1.5px; margin-top: 3px; text-transform: uppercase;">
+                  GENEL MERKEZ YÖNETİM KURULU BAŞKANLIĞI
+                </div>
+                <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                  ${docContext}
+                </div>
+              </td>
+              <td valign="middle" align="right" style="width: 30%; font-size: 11px; color: #64748b; line-height: 1.5; font-family: monospace;">
+                <div><strong>Tarih:</strong> ${todayFormatted}</div>
+                <div><strong>Sayı:</strong> ${docRef}</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Mektup Gövdesi -->
+        <div style="padding: 32px 36px 24px 36px;">
+          
+          <div style="margin-bottom: 24px;">
+            <div style="font-size: 12px; font-weight: 800; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase;">
+              Sayın
+            </div>
+            <div style="font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: 0.5px; margin-top: 4px; padding-bottom: 8px; border-bottom: 2px solid #0f172a; display: inline-block;">
+              ${cleanUpperName}
+            </div>
+          </div>
+
+          ${bodyParagraphs}
+
+          ${
+            customNote
+              ? `
+              <div style="margin: 20px 0; padding: 14px 18px; background-color: #f8fafc; border-left: 3px solid #991b1b; border-radius: 4px; color: #334155; font-size: 13.5px; line-height: 1.7; font-style: italic;">
+                ${customNote.replace(/\n/g, '<br/>')}
+              </div>
+              `
+              : ''
+          }
+
+          <!-- Belge Görseli Çerçevesi (Temiz & Şık) -->
+          ${
+            hasCidImage
+              ? `
+              <div style="margin: 28px 0 20px 0; padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center;">
+                <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 10px; letter-spacing: 0.5px;">
+                  RESMİ DİJİTAL BELGE ASLI:
+                </div>
+                <img src="cid:m1g_certificate_img" alt="M1G Teşekkür Belgesi - ${cleanUpperName}" style="display: block; width: 100%; max-width: 580px; height: auto; margin: 0 auto; border: 1px solid #cbd5e1; border-radius: 4px; box-shadow: 0 4px 14px rgba(0,0,0,0.06);" />
+                <div style="font-size: 11px; color: #64748b; margin-top: 8px;">
+                  (Belgenizin yüksek çözünürlüklü baskı kopyası işbu e-postanın ekinde de yer almaktadır.)
+                </div>
+              </div>
+              `
+              : ''
+          }
+
+          <!-- İmza Bloğu (Kurumsal Sağ Hizalama) -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+            <tr>
+              <td style="width: 50%;"></td>
+              <td align="center" style="width: 50%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <div style="font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase;">
+                  M1G ARAMA VE KURTARMA DERNEĞİ
+                </div>
+                <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-top: 2px;">
+                  YÖNETİM KURULU BAŞKANI
+                </div>
+                <div style="font-size: 16px; font-weight: 900; color: #991b1b; letter-spacing: 1px; margin-top: 8px;">
+                  CEM GÖRGÜL
+                </div>
+              </td>
+            </tr>
+          </table>
+
+        </div>
+
+        <!-- Alt Bilgi / Kurumsal Footer -->
+        <div style="padding: 18px 36px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b; text-align: center; line-height: 1.6;">
+          <div>M1G Arama ve Kurtarma Derneği Genel Merkezi • İzmir / TÜRKİYE</div>
+          <div>Web: <a href="https://m1g.org.tr" style="color: #991b1b; text-decoration: none; font-weight: 600;">m1g.org.tr</a> • E-Posta: <a href="mailto:info@m1g.org.tr" style="color: #0f172a; text-decoration: none;">info@m1g.org.tr</a></div>
+          <div style="margin-top: 4px; font-size: 10px; color: #94a3b8;">
+            Bu belge resmi bildirim niteliğinde olup sistem tarafından oluşturulmuştur.
+          </div>
+        </div>
+
       </div>
-
-      <h2 style="color: #f8fafc; font-size: 18px; text-align: center; margin-bottom: 14px;">
-        SAYIN <span style="color: #ef4444;">${cleanUpperName}</span>,
-      </h2>
-
-      <p style="color: #cbd5e1; line-height: 1.75; font-size: 14px; text-align: center; margin: 0 12px 20px;">
-        ${bodyText}
-      </p>
-
-      ${
-        customNote
-          ? `<div style="background-color: #0f172a; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 8px; margin: 16px 0 22px; color: #e2e8f0; font-size: 13px; line-height: 1.6;">
-              ${customNote.replace(/\n/g, '<br/>')}
-            </div>`
-          : ''
-      }
-
-      ${
-        hasCidImage
-          ? `<div style="text-align: center; margin: 22px 0;">
-              <p style="color: #94a3b8; font-size: 12px; margin-bottom: 10px;">🎖️ <strong>İsminize Özel Hazırlanan Teşekkür Belgeniz:</strong> (Ekte yüksek çözünürlüklü olarak da yer almaktadır)</p>
-              <img src="cid:m1g_certificate_img" alt="M1G Teşekkür Belgesi - ${cleanUpperName}" style="max-width: 100%; height: auto; border-radius: 10px; border: 2px solid #ef4444; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
-            </div>`
-          : ''
-      }
-
-      <div style="text-align: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid #1e293b;">
-        <p style="color: #f8fafc; font-size: 13px; font-weight: bold; margin: 0;">M1G ARAMA VE KURTARMA DERNEĞİ BAŞKANI</p>
-        <p style="color: #ef4444; font-size: 15px; font-weight: bold; margin: 4px 0 14px; letter-spacing: 1px;">CEM GÖRGÜL</p>
-        <p style="color: #64748b; font-size: 11px; margin: 0;">© M1G Arama ve Kurtarma Derneği • Resmi Teşekkür Belgesi Bildirimi</p>
-      </div>
-    </div>
+    </body>
+    </html>
   `;
 }
 

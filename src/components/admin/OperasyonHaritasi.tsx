@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef, Fragment } from 'react'
+import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 import { getMovementMode, getRoadSegment, snapFullTrail, calculateDistanceKm, MovementInfo } from '@/lib/routing'
@@ -573,10 +574,35 @@ export default function OperasyonHaritasi({
     updateNote: ''
   })
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [showToolsMenu, setShowToolsMenu] = useState(false)
-  const [showQuickGuide, setShowQuickGuide] = useState(true)
+  const [mounted, setMounted] = useState(false)
+  const [isMobileScreen, setIsMobileScreen] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768
+      setIsMobileScreen(isMobile)
+      if (isMobile) {
+        setShowQuickGuide(false)
+      }
+      const handleResize = () => {
+        setIsMobileScreen(window.innerWidth < 768)
+      }
+      window.addEventListener('resize', handleResize)
+      return () => window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (isFullscreen) {
+      const prevOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prevOverflow
+      }
+    }
+  }, [isFullscreen])
   const [isOnline, setIsOnline] = useState(true)
   const [offlineQueueCount, setOfflineQueueCount] = useState(0)
   const [isSyncingOffline, setIsSyncingOffline] = useState(false)
@@ -1779,19 +1805,20 @@ export default function OperasyonHaritasi({
     mapCont: { flex:1, position:'relative' as const },
     dpPanel: (open: boolean) => ({
       position:'absolute' as const, bottom:0, left:0, right:0,
-      maxHeight: isFullscreen ? '55vh' : '56%',
+      maxHeight: isFullscreen ? '78vh' : isMobileScreen ? '72%' : '56%',
       overflowY: 'auto' as const,
-      background:'rgba(17,24,39,.97)', borderTop:'0.5px solid rgba(255,255,255,.1)',
-      padding:'16px 20px', zIndex:1000,
+      background:'rgba(15,23,42,0.98)', borderTop:'1px solid rgba(255,255,255,0.12)',
+      padding: isMobileScreen ? '12px 14px' : '16px 20px', zIndex:1000,
       transform: open ? 'translateY(0)' : 'translateY(100%)',
       transition:'transform .25s ease',
+      boxShadow: '0 -8px 30px rgba(0,0,0,0.7)'
     }),
   }
 
-  return (
+  const renderMapContent = () => (
     <div className={
       isFullscreen
-        ? "fixed inset-0 z-[9990] flex w-screen h-screen bg-[#1a1f2e] font-sans rounded-none overflow-hidden"
+        ? "fixed inset-0 z-[99990] flex w-screen h-[100dvh] bg-[#0f172a] font-sans rounded-none overflow-hidden"
         : "relative flex w-full h-full bg-[#1a1f2e] font-sans rounded-2xl overflow-hidden"
     }>
       {/* ── Sol panel ────────────────────────────────────────── */}
@@ -1866,18 +1893,18 @@ export default function OperasyonHaritasi({
       {/* ── Harita alanı ─────────────────────────────────────── */}
       <div className="flex-1 relative flex flex-col min-w-0">
         {/* Üst Komuta & Hızlı İşlem Çubuğu (İlk kez kullananlar için sadeleştirilmiş tasarım) */}
-        <div className="min-h-[56px] bg-[#0f172a] border-b border-slate-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-[1000]">
+        <div className="min-h-[50px] sm:min-h-[56px] bg-[#0f172a] border-b border-slate-800 px-2 sm:px-3 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 z-[1000]">
           {/* Sol Grup: Personel Listesi & Özet Sayaçlar */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <button
               onClick={() => setIsSidebarOpen(prev => !prev)}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600/70 text-white text-xs font-bold flex items-center gap-2 whitespace-nowrap shadow-sm transition-all"
+              className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600/70 text-white text-[11px] sm:text-xs font-bold flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-all"
               title="Sahadaki personellerin canlı konum, batarya ve durum listesini aç/kapat"
             >
               <span>👥</span>
-              <span>Personel Listesi</span>
-              <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-black">
-                {onlineN}/{people.length} Aktif
+              <span className="hidden xs:inline">Personel</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] sm:text-[11px] font-black">
+                {onlineN}/{people.length}
               </span>
             </button>
 
@@ -1891,11 +1918,11 @@ export default function OperasyonHaritasi({
                     setFlyTo(getPolygonCenter(sectors[0].polygon));
                   }
                 }}
-                className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                className="px-2 sm:px-2.5 py-1 sm:py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-[11px] sm:text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap transition-colors"
                 title="Çizilmiş arama bölgelerine (sektörlere) odaklanmak için tıklayın"
               >
                 <span>📐</span>
-                <span>{sectors.length} Bölge/Sektör</span>
+                <span>{sectors.length} Sektör</span>
               </button>
             )}
 
@@ -1909,11 +1936,11 @@ export default function OperasyonHaritasi({
                     setFlyTo(worksites[0].location);
                   }
                 }}
-                className="px-2.5 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                className="px-2 sm:px-2.5 py-1 sm:py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-xl text-[11px] sm:text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap transition-colors"
                 title="İşaretlenmiş bina/enkaz noktalarına odaklanmak için tıklayın"
               >
                 <span>🏢</span>
-                <span>{worksites.length} Enkaz/Nokta</span>
+                <span>{worksites.length} Enkaz</span>
               </button>
             )}
 
@@ -1923,7 +1950,7 @@ export default function OperasyonHaritasi({
                 type="button"
                 onClick={() => flushOfflineQueue()}
                 disabled={!isOnline || isSyncingOffline}
-                className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap border transition-all ${
+                className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold inline-flex items-center gap-1 whitespace-nowrap border transition-all ${
                   !isOnline
                     ? 'bg-rose-500/20 border-rose-500/40 text-rose-300 animate-pulse'
                     : 'bg-sky-500/20 hover:bg-sky-500/30 border-sky-500/40 text-sky-300 cursor-pointer'
@@ -1933,31 +1960,31 @@ export default function OperasyonHaritasi({
                 <span>{!isOnline ? '📴' : '🔄'}</span>
                 <span>
                   {!isOnline
-                    ? `Offline Mod (${offlineQueueCount} Bekleyen Veri)`
+                    ? `Offline (${offlineQueueCount})`
                     : isSyncingOffline
-                    ? 'Senkronize Ediliyor...'
-                    : `${offlineQueueCount} Offline Veri — Şimdi Aktar`}
+                    ? 'Senkron...'
+                    : `${offlineQueueCount} Veri Aktar`}
                 </span>
               </button>
             )}
           </div>
 
           {/* Sağ Grup: Adım Adım Saha İşaretleme Butonları & Araçlar */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* 1. Adım: Alan / Sektör Çiz */}
             <button
               type="button"
               onClick={startSectorDrawing}
               disabled={isDrawingSector}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap transition-all shadow-sm ${
                 isDrawingSector
                   ? 'bg-amber-500/25 text-amber-300 border border-amber-400 animate-pulse'
                   : 'bg-blue-600 hover:bg-blue-500 border border-blue-400/40 text-white'
               }`}
               title="1. Adım: Harita üzerinde arama yapılacak mahalleyi/bölgeyi köşe noktalarına tıklayarak çerçeveleyin (INSARAG ASR-1 Geniş Alan & ASR-2 Sektör Değerlendirme)"
             >
-              <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">1</span>
-              <span>📐 {isDrawingSector ? 'Köşeleri Seçin...' : 'ASR-1/2 Alan & Sektör Çiz'}</span>
+              <span className="px-1 py-0.2 bg-black/30 rounded text-[9px] font-black">1</span>
+              <span>📐 {isDrawingSector ? 'Köşeleri Seçin...' : isMobileScreen ? 'Sektör' : 'ASR-1/2 Sektör'}</span>
             </button>
 
             {/* 2. Adım: Enkaz / Bina Ekle */}
@@ -1971,15 +1998,15 @@ export default function OperasyonHaritasi({
                 setSelectedSector(null);
                 setSelectedWorksite(null);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap transition-all shadow-sm ${
                 isAddingWorksite
                   ? 'bg-rose-500/25 text-rose-300 border border-rose-400 animate-pulse'
                   : 'bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/40 text-white'
               }`}
               title="2. Adım: Yıkık bina, enkaz veya kritik müdahale noktasını haritaya tıklayarak işaretleyin (INSARAG ASR-3 Hızlı SAR, ASR-4 Derin Kurtarma, ASR-5 Temizlik/Devir)"
             >
-              <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">2</span>
-              <span>🏗️ {isAddingWorksite ? 'Haritada Noktaya Tıklayın' : 'ASR-3/4/5 Enkaz Ekle'}</span>
+              <span className="px-1 py-0.2 bg-black/30 rounded text-[9px] font-black">2</span>
+              <span>🏗️ {isAddingWorksite ? 'Noktaya Tıklayın' : isMobileScreen ? 'Enkaz' : 'ASR-3/4/5 Enkaz'}</span>
             </button>
 
             {/* 3. Adım: Doğa Arama Kayıp Çemberi */}
@@ -1993,22 +2020,22 @@ export default function OperasyonHaritasi({
                 setSelectedSector(null);
                 setSelectedWorksite(null);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap transition-all shadow-sm ${
                 isAddingLkp
                   ? 'bg-amber-500/25 text-amber-300 border border-amber-400 animate-pulse'
                   : 'bg-purple-600 hover:bg-purple-500 border border-purple-400/40 text-white'
               }`}
               title="3. Adım: Doğada kaybolan kişinin son görüldüğü noktayı (LKP) işaretleyip Koester %50 ve %95 bulunma çemberi oluşturun (WSAR)"
             >
-              <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">3</span>
-              <span>🧭 {isAddingLkp ? 'Son Görülme Noktasına Tıklayın' : 'Doğa LKP Çemberi'}</span>
+              <span className="px-1 py-0.2 bg-black/30 rounded text-[9px] font-black">3</span>
+              <span>🧭 {isAddingLkp ? 'LKP Tıklayın' : isMobileScreen ? 'Doğa LKP' : 'Doğa LKP Çemberi'}</span>
             </button>
 
             {/* Yardım / Hızlı Rehber Butonu */}
             <button
               type="button"
               onClick={() => setShowQuickGuide(prev => !prev)}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 whitespace-nowrap border transition-all ${
+              className={`px-2 py-1 sm:py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 whitespace-nowrap border transition-all ${
                 showQuickGuide
                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
                   : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
@@ -2019,12 +2046,12 @@ export default function OperasyonHaritasi({
               <span className="hidden md:inline">Nasıl Kullanılır?</span>
             </button>
 
-            {/* Araçlar Açılır Menüsü (GPX İndir & GPS Sıfırla kalabalık yapmasın diye tek menüde) */}
+            {/* Araçlar Açılır Menüsü */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowToolsMenu(prev => !prev)}
-                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all"
+                className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1 whitespace-nowrap transition-all"
                 title="GPX Harita İndirme ve GPS Geçmişi Sıfırlama Araçları"
               >
                 <span>⚙️</span>
@@ -2070,7 +2097,7 @@ export default function OperasyonHaritasi({
             <button
               type="button"
               onClick={() => setIsFullscreen(prev => !prev)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all shadow-sm ${
                 isFullscreen
                   ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black'
                   : 'bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white'
@@ -2078,7 +2105,7 @@ export default function OperasyonHaritasi({
               title={isFullscreen ? 'Tam Ekrandan Çık (ESC)' : 'Haritayı Tam Ekran Yap'}
             >
               <span>{isFullscreen ? '🗗' : '⛶'}</span>
-              <span>{isFullscreen ? 'Küçült (ESC)' : 'Tam Ekran'}</span>
+              <span>{isFullscreen ? 'Küçült' : 'Tam Ekran'}</span>
             </button>
           </div>
         </div>
@@ -2116,14 +2143,14 @@ export default function OperasyonHaritasi({
           {/* ASR-1 Çizim Yüzen Kontrol Çubuğu */}
           {isDrawingSector && (
             <div style={{
-              position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
-              zIndex: 1100, display: 'flex', alignItems: 'center', gap: 10,
-              background: 'rgba(15, 23, 42, 0.95)', border: '1px solid #f59e0b',
-              padding: '8px 16px', borderRadius: 30, boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(8px)'
+              position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 6,
+              background: 'rgba(15, 23, 42, 0.96)', border: '1.5px solid #f59e0b',
+              padding: '6px 12px', borderRadius: 24, boxShadow: '0 8px 30px rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(8px)', maxWidth: '94%', width: 'max-content'
             }}>
-              <span style={{ fontSize: 13, color: '#f59e0b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span>📐</span> ASR-1 Çizim: <span style={{ color: '#fff' }}>{drawPoints.length} köşe</span>
+              <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span>📐</span> ASR-1: <span style={{ color: '#fff' }}>{drawPoints.length} köşe</span>
               </span>
               
               <button
@@ -2131,20 +2158,20 @@ export default function OperasyonHaritasi({
                 disabled={drawPoints.length < 3}
                 style={{
                   background: drawPoints.length >= 3 ? '#16a34a' : '#334155',
-                  color: '#fff', border: 'none', padding: '6px 14px', borderRadius: 20,
-                  fontSize: 11, fontWeight: 700, cursor: drawPoints.length >= 3 ? 'pointer' : 'not-allowed',
+                  color: '#fff', border: 'none', padding: '5px 12px', borderRadius: 16,
+                  fontSize: 11, fontWeight: 800, cursor: drawPoints.length >= 3 ? 'pointer' : 'not-allowed',
                   display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.2s'
                 }}
               >
-                ✓ Sektörü Tamamla
+                ✓ Tamamla
               </button>
 
               <button
                 onClick={handleUndoDrawingPoint}
                 disabled={drawPoints.length === 0}
                 style={{
-                  background: '#374151', color: '#e2e8f0', border: 'none', padding: '6px 12px',
-                  borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: drawPoints.length > 0 ? 'pointer' : 'not-allowed'
+                  background: '#374151', color: '#e2e8f0', border: 'none', padding: '5px 10px',
+                  borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: drawPoints.length > 0 ? 'pointer' : 'not-allowed'
                 }}
                 title="Son noktayı geri al"
               >
@@ -2154,8 +2181,8 @@ export default function OperasyonHaritasi({
               <button
                 onClick={handleCancelDrawing}
                 style={{
-                  background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px',
-                  borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                  background: '#ef4444', color: '#fff', border: 'none', padding: '5px 10px',
+                  borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer'
                 }}
               >
                 ✕ İptal
@@ -2166,18 +2193,18 @@ export default function OperasyonHaritasi({
           {isAddingWorksite && (
             <div style={{
               position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-              zIndex: 1000, background: 'rgba(15,23,42,0.92)', border: '1.5px solid #10b981',
-              borderRadius: 30, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)'
+              zIndex: 1100, background: 'rgba(15,23,42,0.96)', border: '1.5px solid #10b981',
+              borderRadius: 24, padding: '6px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', maxWidth: '94%', width: 'max-content'
             }}>
-              <span style={{ fontSize: 13, color: '#34d399', fontWeight: 700 }}>
-                📍 ASR-3/4/5: Haritada enkazın / binanın konumuna tıklayın
+              <span style={{ fontSize: 12, color: '#34d399', fontWeight: 800 }}>
+                📍 {isMobileScreen ? 'Enkaz noktasına dokunun' : 'ASR-3/4/5: Haritada enkaz/bina noktasına tıklayın'}
               </span>
               <button
                 onClick={() => setIsAddingWorksite(false)}
                 style={{
                   background: '#ef4444', color: '#fff', border: 'none', padding: '4px 10px',
-                  borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer'
+                  borderRadius: 14, fontSize: 11, fontWeight: 800, cursor: 'pointer'
                 }}
               >
                 ✕ İptal
@@ -2188,18 +2215,18 @@ export default function OperasyonHaritasi({
           {isAddingLkp && (
             <div style={{
               position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-              zIndex: 1000, background: 'rgba(15,23,42,0.94)', border: '1.5px solid #a855f7',
-              borderRadius: 30, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)'
+              zIndex: 1100, background: 'rgba(15,23,42,0.96)', border: '1.5px solid #a855f7',
+              borderRadius: 24, padding: '6px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', maxWidth: '94%', width: 'max-content'
             }}>
-              <span style={{ fontSize: 13, color: '#d8b4fe', fontWeight: 700 }}>
-                🧭 LKP (Doğa Arama): Kayıp şahsın son görüldüğü noktaya tıklayın
+              <span style={{ fontSize: 12, color: '#d8b4fe', fontWeight: 800 }}>
+                🧭 {isMobileScreen ? 'LKP noktasına dokunun' : 'LKP: Kayıp şahsın son görüldüğü noktaya tıklayın'}
               </span>
               <button
                 onClick={() => setIsAddingLkp(false)}
                 style={{
                   background: '#ef4444', color: '#fff', border: 'none', padding: '4px 10px',
-                  borderRadius: 16, fontSize: 11, fontWeight: 700, cursor: 'pointer'
+                  borderRadius: 14, fontSize: 11, fontWeight: 800, cursor: 'pointer'
                 }}
               >
                 ✕ İptal
@@ -2928,27 +2955,27 @@ export default function OperasyonHaritasi({
                 </div>
 
                 {/* ASR-2 Sektör İçi Otomatik Enkaz & Kurtarma Analizi */}
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:10 }}>
+                <div style={{ display:'grid', gridTemplateColumns: isMobileScreen ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:6, marginBottom:10 }}>
                   <div style={{ background:'#1f2937', borderRadius:8, padding:'8px 6px', textAlign:'center' }}>
-                    <div style={{ fontSize:14, fontWeight:800, color:'#38bdf8' }}>
+                    <div style={{ fontSize:13, fontWeight:800, color:'#38bdf8' }}>
                       {formatPolygonArea(selectedSector.polygon).primary}
                     </div>
                     <div style={{ fontSize:10, color:'#94a3b8', marginTop:2 }}>Sektör Alanı</div>
                   </div>
                   <div style={{ background:'#1f2937', borderRadius:8, padding:'8px 6px', textAlign:'center' }}>
-                    <div style={{ fontSize:14, fontWeight:800, color:'#fbbf24' }}>
+                    <div style={{ fontSize:13, fontWeight:800, color:'#fbbf24' }}>
                       {sectorWorksites.length} Enkaz
                     </div>
                     <div style={{ fontSize:10, color:'#94a3b8', marginTop:2 }}>Temiz: {cleanedCount}/{sectorWorksites.length}</div>
                   </div>
                   <div style={{ background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)', borderRadius:8, padding:'8px 6px', textAlign:'center' }}>
-                    <div style={{ fontSize:14, fontWeight:800, color:'#4ade80' }}>
+                    <div style={{ fontSize:13, fontWeight:800, color:'#4ade80' }}>
                       {sectorLive} Canlı
                     </div>
                     <div style={{ fontSize:10, color:'#86efac', marginTop:2 }}>Çıkarılan (L)</div>
                   </div>
                   <div style={{ background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:8, padding:'8px 6px', textAlign:'center' }}>
-                    <div style={{ fontSize:14, fontWeight:800, color:'#f87171' }}>
+                    <div style={{ fontSize:13, fontWeight:800, color:'#f87171' }}>
                       {sectorDeceased} Vefat
                     </div>
                     <div style={{ fontSize:10, color:'#fca5a5', marginTop:2 }}>Çıkarılan (D)</div>
@@ -3158,9 +3185,9 @@ export default function OperasyonHaritasi({
         </div>
       </div>
 
-      {/* ── ASR-1 / ASR-2 Sektör Oluşturma Modalı (Doğrudan Harita Kutusunun Ortasında Açılır) ─── */}
-      {showSectorModal && (
-        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm">
+      {/* ── ASR-1 / ASR-2 Sektör Oluşturma Modalı ─── */}
+      {showSectorModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-amber-500/50 rounded-2xl p-5 shadow-2xl text-left">
           <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
             <div className="flex items-center gap-2.5">
@@ -3330,12 +3357,13 @@ export default function OperasyonHaritasi({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ── ASR-3/4/5 INSARAG Enkaz Triyaj Modalı (Doğrudan Harita Kutusunun Ortasında Açılır) ─── */}
-      {showWorksiteModal && (
-        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm">
+      {/* ── ASR-3/4/5 INSARAG Enkaz Triyaj Modalı ─── */}
+      {showWorksiteModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className={`relative w-full max-w-lg max-h-[92%] overflow-y-auto bg-[#0f172a] border ${editingWorksiteId ? 'border-amber-500/50' : 'border-emerald-500/50'} rounded-2xl p-5 shadow-2xl text-left transition-all`}>
           <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
             <div className="flex items-center gap-2.5">
@@ -3644,12 +3672,13 @@ export default function OperasyonHaritasi({
             </div>
           </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ── INSARAG ASR-3/4/5 Vardiya & Durum Tarihçesi Modal (Harita İçinde Açılır) ─── */}
-      {showWorksiteHistoryModal && selectedWorksite && (
-        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
+      {/* ── INSARAG ASR-3/4/5 Vardiya & Durum Tarihçesi Modal ─── */}
+      {showWorksiteHistoryModal && selectedWorksite && mounted && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-lg max-h-[90%] bg-[#0b1329] border border-sky-500/30 rounded-2xl p-6 shadow-2xl flex flex-col text-left">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4 shrink-0">
               <div className="flex items-center gap-3">
@@ -3722,12 +3751,13 @@ export default function OperasyonHaritasi({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ── START TRİYAJ & KAZAZEDE ÇIKARMA KARTI MODAL (Harita İçinde Açılır) ─── */}
-      {showExtricationModal && selectedWorksite && (
-        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
+      {/* ── START TRİYAJ & KAZAZEDE ÇIKARMA KARTI MODAL ─── */}
+      {showExtricationModal && selectedWorksite && mounted && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-rose-500/40 rounded-2xl p-5 shadow-2xl text-left">
             <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
               <div className="flex items-center gap-2.5">
@@ -3813,9 +3843,9 @@ export default function OperasyonHaritasi({
         </div>
       )}
 
-      {/* ── DOĞA ARAMA KURTARMA: LKP (SON GÖRÜLME NOKTASI) & OLASILIK ÇEMBERİ MODAL (Harita İçinde Açılır) ── */}
-      {showLkpModal && (
-        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
+      {/* ── DOĞA ARAMA KURTARMA: LKP (SON GÖRÜLME NOKTASI) & OLASILIK ÇEMBERİ MODAL ── */}
+      {showLkpModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-purple-500/40 rounded-2xl p-5 shadow-2xl text-left">
             <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
               <div className="flex items-center gap-2.5">
@@ -3943,8 +3973,15 @@ export default function OperasyonHaritasi({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
-  )
+  );
+
+  if (isFullscreen && mounted) {
+    return createPortal(renderMapContent(), document.body);
+  }
+
+  return renderMapContent();
 }

@@ -52,14 +52,16 @@ export async function generateCertificateDataUrl(
         ctx.drawImage(img, 0, 0, w, h);
 
         // 2. SAYIN yazısının hemen altındaki boşluğa (diğer yazıları ezmeden) ismi yerleştir
-        const baseFontSize = Math.round(w * 0.028); // 1000px genişlikte ~28px
-        const maxTextWidth = w * 0.58; // Kenar süslerine ve çizgi dışına taşmasın
+        const baseFontSize = Math.round(w * 0.027); // 1000px genişlikte ~27px
+        const maxTextWidth = w * 0.60; // Kenar süslerine ve çizgi dışına taşmasın
+
+        const fontStack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
         let fontSize = baseFontSize;
-        ctx.font = `700 ${fontSize}px Georgia, "Times New Roman", serif`;
+        ctx.font = `800 ${fontSize}px ${fontStack}`;
         while (ctx.measureText(cleanName).width > maxTextWidth && fontSize > 14) {
           fontSize -= 1;
-          ctx.font = `700 ${fontSize}px Georgia, "Times New Roman", serif`;
+          ctx.font = `800 ${fontSize}px ${fontStack}`;
         }
 
         const x = w / 2;
@@ -67,7 +69,10 @@ export async function generateCertificateDataUrl(
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#111827';
+        ctx.fillStyle = '#0f172a';
+        if (typeof (ctx as any).letterSpacing !== 'undefined') {
+          (ctx as any).letterSpacing = '2px';
+        }
         ctx.fillText(cleanName, x, y);
 
         resolve(canvas.toDataURL('image/jpeg', 0.95));
