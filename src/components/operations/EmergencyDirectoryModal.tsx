@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   TURKEY_81_PROVINCES,
   detectProvinceAndDistrict,
@@ -136,9 +137,9 @@ export default function EmergencyDirectoryModal({
     toast.success("Muhtar kaydı silindi.");
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9995] bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
       <div className="bg-[#0b1120] border border-slate-700/80 rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Üst Başlık */}
@@ -506,7 +507,8 @@ export default function EmergencyDirectoryModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

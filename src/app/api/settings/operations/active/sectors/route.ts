@@ -20,7 +20,7 @@ export interface ASR1Sector {
     radioChannel?: string;      // örn: "CH-1 / 446.00625 MHz"
     notes?: string;
     color: string;              // hex kod
-    sectorType?: 'ASR-1' | 'LKP'; // ASR-1 Poligon veya Doğa Arama LKP Çemberi
+    sectorType?: 'ASR-1' | 'ASR-2' | 'WSAR-GRID' | 'LKP'; // ASR-1 Geniş Alan, ASR-2 Sektör Değerlendirme, WSAR-GRID Doğa Kutu Tarama, LKP Çemberi
     lkpMeta?: {
         center: [number, number];
         profileName: string;

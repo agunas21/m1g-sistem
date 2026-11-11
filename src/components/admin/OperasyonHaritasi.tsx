@@ -259,21 +259,42 @@ function formatPolygonArea(rawCoords: any[]): {
   }
 }
 
-function makeSectorLabelIcon(sector: ASR1Sector) {
+function makeSectorLabelIcon(
+  sector: ASR1Sector,
+  activePersonnelCount = 0,
+  trailPointsCount = 0,
+  inInner50Count = 0
+) {
   if (typeof window === 'undefined') return undefined;
   const L = require('leaflet');
   
+  const hasGpsReaction = activePersonnelCount > 0;
   const statusColor = 
+    hasGpsReaction ? '#22c55e' :
     sector.status === 'Aktif Arama' ? '#22c55e' :
     sector.status === 'Yüksek Risk' ? '#ef4444' :
     sector.status === 'Tamamlandı' ? '#94a3b8' : '#eab308';
 
-  const color = sector.color || statusColor;
+  const color = hasGpsReaction ? '#22c55e' : (sector.color || statusColor);
+  const typePrefix =
+    sector.sectorType === 'LKP' ? 'WSAR LKP' :
+    sector.sectorType === 'ASR-2' ? 'ASR-2' :
+    sector.sectorType === 'WSAR-GRID' ? 'GRID SAR' : 'ASR-1';
+
+  const gpsReactionBadge = hasGpsReaction
+    ? `<div style="font-size: 9px; font-weight: 800; color: #fff; background: #16a34a; border-radius: 4px; padding: 1px 5px; margin-top: 3px; box-shadow: 0 0 10px rgba(34,197,94,0.8);">
+         🟢 ${sector.sectorType === 'LKP' && inInner50Count > 0 ? `%50 HALKADA: ${inInner50Count} Kişi` : `SAHADA: ${activePersonnelCount} Kişi`}${trailPointsCount > 0 ? ` • ${trailPointsCount} İz` : ''}
+       </div>`
+    : trailPointsCount > 0
+    ? `<div style="font-size: 8.5px; font-weight: 700; color: #86efac; background: rgba(22,163,74,0.25); border: 1px solid rgba(34,197,94,0.4); border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
+         📡 ${trailPointsCount} GPS Tarama İzi
+       </div>`
+    : '';
 
   return L.divIcon({
     className: 'asr1-sector-label-marker',
-    iconSize: [140, 50],
-    iconAnchor: [70, 25],
+    iconSize: [160, hasGpsReaction || trailPointsCount > 0 ? 68 : 52],
+    iconAnchor: [80, hasGpsReaction || trailPointsCount > 0 ? 34 : 26],
     html: `
       <div style="
         background: rgba(15, 23, 42, 0.95);
@@ -282,15 +303,15 @@ function makeSectorLabelIcon(sector: ASR1Sector) {
         padding: 4px 8px;
         color: #fff;
         text-align: center;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+        box-shadow: ${hasGpsReaction ? '0 0 18px rgba(34,197,94,0.85)' : '0 4px 14px rgba(0,0,0,0.7)'};
         cursor: pointer;
         user-select: none;
         backdrop-filter: blur(4px);
       ">
-        <div style="font-size: 10px; font-weight: 800; letter-spacing: 1px; color: ${color}; text-transform: uppercase;">
-          ASR-1 ${sector.code}
+        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: ${color}; text-transform: uppercase;">
+          ${typePrefix} ${sector.code}
         </div>
-        <div style="font-size: 11px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">
+        <div style="font-size: 11px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
           ${sector.name}
         </div>
         ${sector.assignedTeamName ? `
@@ -298,6 +319,7 @@ function makeSectorLabelIcon(sector: ASR1Sector) {
             🚩 ${sector.assignedTeamName}
           </div>
         ` : ''}
+        ${gpsReactionBadge}
       </div>
     `
   });
@@ -321,10 +343,12 @@ function makeWorksiteIcon(ws: INSARAGWorksite) {
     ? `<div style="background:#dc2626; color:#fff; font-size:8px; font-weight:800; padding:1px 4px; border-radius:3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">⚠️ ${ws.hazards[0]}</div>`
     : '';
 
+  const levelLabel = ws.asrLevel || 'ASR-3';
+
   return L.divIcon({
     className: 'insarag-worksite-marker',
-    iconSize: [110, 64],
-    iconAnchor: [55, 32],
+    iconSize: [116, 64],
+    iconAnchor: [58, 32],
     html: `
       <div style="
         background: rgba(15, 23, 42, 0.95);
@@ -340,7 +364,7 @@ function makeWorksiteIcon(ws: INSARAGWorksite) {
         ${pulseEffect}
       ">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:2px; margin-bottom:2px;">
-          <span style="font-size:9px; font-weight:900; color:${statusColor}; letter-spacing:0.5px;">ASR-3 [${ws.code}]</span>
+          <span style="font-size:9px; font-weight:900; color:${statusColor}; letter-spacing:0.5px;">${levelLabel} [${ws.code}]</span>
           <span style="font-size:8px; font-weight:700; color:#94a3b8;">TUR-M1G</span>
         </div>
         <div style="font-size:10px; font-weight:700; color:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
@@ -480,6 +504,7 @@ export default function OperasyonHaritasi({
   const [newSectorForm, setNewSectorForm] = useState({
     code: 'Sektör A',
     name: 'Kuzey Afet Sektörü',
+    sectorType: 'ASR-1' as 'ASR-1' | 'ASR-2' | 'WSAR-GRID' | 'LKP',
     status: 'Değerlendirme' as 'Değerlendirme' | 'Aktif Arama' | 'Tamamlandı' | 'Yüksek Risk',
     priority: 'Orta' as 'Kritik' | 'Orta' | 'Düşük',
     assignedTeamId: '',
@@ -495,7 +520,14 @@ export default function OperasyonHaritasi({
   const [showLkpModal, setShowLkpModal] = useState(false)
   const [lkpForm, setLkpForm] = useState({
     missingPersonName: 'Kayıp Şahıs',
-    profileName: 'Doğa Yürüyüşçüsü (Hiker)' as 'Çocuk (1-6 Yaş)' | 'Demans / Alzheimer Yaşlı' | 'Doğa Yürüyüşçüsü (Hiker)' | 'Avcı / Mantar Toplayıcı',
+    profileName: 'Doğa Yürüyüşçüsü (Hiker)' as
+      | 'Doğa Yürüyüşçüsü (Hiker)'
+      | 'Demans / Alzheimer Yaşlı'
+      | 'Çocuk (1-6 Yaş)'
+      | 'Çocuk / Genç (7-15 Yaş)'
+      | 'Avcı / Mantar Toplayıcı'
+      | 'Psikolojik / Depresif Vaka'
+      | 'Araç / ATV / Dağ Bisikleti',
     radius50m: 1500,
     radius95m: 5000,
     lastSeenTime: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
@@ -545,8 +577,126 @@ export default function OperasyonHaritasi({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showToolsMenu, setShowToolsMenu] = useState(false)
   const [showQuickGuide, setShowQuickGuide] = useState(true)
+  const [isOnline, setIsOnline] = useState(true)
+  const [offlineQueueCount, setOfflineQueueCount] = useState(0)
+  const [isSyncingOffline, setIsSyncingOffline] = useState(false)
   const lastPingRef = useRef<number>(0)
   const channelRef = useRef<any>(null)
+
+  const offlineCacheKey = `m1g_map_cache_${operationId}`
+  const offlineQueueKey = `m1g_map_offline_queue_${operationId}`
+
+  const saveLocalMapCache = useCallback((nextSectors: ASR1Sector[], nextWorksites: INSARAGWorksite[]) => {
+    try {
+      if (typeof window === 'undefined') return
+      localStorage.setItem(offlineCacheKey, JSON.stringify({
+        sectors: nextSectors,
+        worksites: nextWorksites,
+        updatedAt: Date.now()
+      }))
+    } catch {}
+  }, [offlineCacheKey])
+
+  const enqueueOfflineAction = useCallback((item: { url: string; method: string; body?: any; label: string }) => {
+    try {
+      if (typeof window === 'undefined') return
+      const raw = localStorage.getItem(offlineQueueKey)
+      const list = raw ? JSON.parse(raw) : []
+      list.push({ ...item, id: `Q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, timestamp: Date.now() })
+      localStorage.setItem(offlineQueueKey, JSON.stringify(list))
+      setOfflineQueueCount(list.length)
+    } catch {}
+  }, [offlineQueueKey])
+
+  const flushOfflineQueue = useCallback(async () => {
+    if (typeof window === 'undefined' || !navigator.onLine) return
+    try {
+      const raw = localStorage.getItem(offlineQueueKey)
+      if (!raw) {
+        setOfflineQueueCount(0)
+        return
+      }
+      const list: Array<{ id: string; url: string; method: string; body?: any; label: string }> = JSON.parse(raw)
+      if (!Array.isArray(list) || list.length === 0) {
+        setOfflineQueueCount(0)
+        return
+      }
+
+      setIsSyncingOffline(true)
+      const remaining: typeof list = []
+
+      for (const action of list) {
+        try {
+          const res = await fetch(action.url, {
+            method: action.method,
+            headers: action.body ? { 'Content-Type': 'application/json' } : undefined,
+            body: action.body ? JSON.stringify(action.body) : undefined
+          })
+          if (!res.ok && res.status >= 500) {
+            remaining.push(action)
+          } else if (res.ok) {
+            const data = await res.json().catch(() => ({}))
+            if (data.sector) {
+              setSectors(prev => {
+                const updated = [...prev.filter(s => s.id !== data.sector.id && s.code !== data.sector.code), data.sector]
+                return updated
+              })
+            }
+            if (data.worksite) {
+              setWorksites(prev => {
+                const updated = [...prev.filter(w => w.id !== data.worksite.id && w.code !== data.worksite.code), data.worksite]
+                return updated
+              })
+            }
+          }
+        } catch {
+          remaining.push(action)
+        }
+      }
+
+      if (remaining.length > 0) {
+        localStorage.setItem(offlineQueueKey, JSON.stringify(remaining))
+      } else {
+        localStorage.removeItem(offlineQueueKey)
+      }
+      setOfflineQueueCount(remaining.length)
+    } catch (e) {
+      console.error('Offline queue sync error', e)
+    } finally {
+      setIsSyncingOffline(false)
+    }
+  }, [offlineQueueKey])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setIsOnline(navigator.onLine)
+    try {
+      const rawQ = localStorage.getItem(offlineQueueKey)
+      if (rawQ) {
+        const parsed = JSON.parse(rawQ)
+        if (Array.isArray(parsed)) setOfflineQueueCount(parsed.length)
+      }
+    } catch {}
+
+    const handleOnline = () => {
+      setIsOnline(true)
+      flushOfflineQueue()
+    }
+    const handleOffline = () => setIsOnline(false)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [offlineQueueKey, flushOfflineQueue])
+
+  useEffect(() => {
+    if (sectors.length > 0 || worksites.length > 0) {
+      saveLocalMapCache(sectors, worksites)
+    }
+  }, [sectors, worksites, saveLocalMapCache])
 
   useEffect(() => {
     if (!isFullscreen) return
@@ -562,6 +712,18 @@ export default function OperasyonHaritasi({
   // ── İlk yükleme ve API eşleşmesi ──────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
+      // Önce yerel offline önbellekten hızlıca yükle (İnternet kesik olsa bile anında ekrana gelsin)
+      try {
+        if (typeof window !== 'undefined') {
+          const cachedRaw = localStorage.getItem(offlineCacheKey)
+          if (cachedRaw) {
+            const cached = JSON.parse(cachedRaw)
+            if (Array.isArray(cached.sectors) && cached.sectors.length > 0) setSectors(cached.sectors)
+            if (Array.isArray(cached.worksites) && cached.worksites.length > 0) setWorksites(cached.worksites)
+          }
+        }
+      } catch {}
+
       try {
         // Bağımsız olarak önce sektör ve enkazları önbelleksiz (no-store) çek
         const [secRes, wsRes, resOp] = await Promise.all([
@@ -816,6 +978,7 @@ export default function OperasyonHaritasi({
     setNewSectorForm({
       code: defaultCode,
       name: `${defaultCode} Afet Sahası`,
+      sectorType: 'ASR-1',
       status: 'Değerlendirme',
       priority: 'Orta',
       assignedTeamId: teamsList[0]?.id || '',
@@ -833,6 +996,7 @@ export default function OperasyonHaritasi({
     setNewSectorForm({
       code: sec.code,
       name: sec.name,
+      sectorType: (sec.sectorType as any) || 'ASR-1',
       status: sec.status,
       priority: sec.priority,
       assignedTeamId: sec.assignedTeamId || '',
@@ -844,11 +1008,51 @@ export default function OperasyonHaritasi({
     setShowSectorModal(true);
   };
 
+  const handleQuickSectorStatus = async (sec: ASR1Sector, nextStatus: ASR1Sector['status']) => {
+    const updatedSec: ASR1Sector = {
+      ...sec,
+      status: nextStatus,
+      color: nextStatus === 'Aktif Arama' ? '#22c55e' : nextStatus === 'Tamamlandı' ? '#94a3b8' : sec.color,
+      updatedAt: Date.now()
+    };
+    setSectors(prev => prev.map(s => s.id === sec.id ? updatedSec : s));
+    setSelectedSector(updatedSec);
+
+    const payload = {
+      operationId,
+      ...updatedSec
+    };
+
+    try {
+      const res = await fetch('/api/settings/operations/active/sectors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        enqueueOfflineAction({
+          url: '/api/settings/operations/active/sectors',
+          method: 'POST',
+          body: payload,
+          label: `Sektör Durumu: ${sec.code} -> ${nextStatus}`
+        });
+      }
+    } catch {
+      enqueueOfflineAction({
+        url: '/api/settings/operations/active/sectors',
+        method: 'POST',
+        body: payload,
+        label: `Sektör Durumu: ${sec.code} -> ${nextStatus}`
+      });
+    }
+  };
+
   const handleSaveSector = async (e: React.FormEvent) => {
     e.preventDefault();
     const polyToSave = editingSectorId ? (selectedSector?.polygon || drawPoints) : drawPoints;
     if (!polyToSave || polyToSave.length < 3) return;
 
+    const tempId = editingSectorId || `SEC-LOCAL-${Date.now().toString(36).toUpperCase()}`;
     const payload = {
       operationId,
       id: editingSectorId || undefined,
@@ -862,8 +1066,26 @@ export default function OperasyonHaritasi({
       hazards: newSectorForm.hazards,
       radioChannel: newSectorForm.radioChannel,
       color: newSectorForm.color,
-      sectorType: selectedSector?.sectorType || 'ASR-1',
+      sectorType: selectedSector?.sectorType === 'LKP' ? 'LKP' : newSectorForm.sectorType || 'ASR-1',
       lkpMeta: selectedSector?.lkpMeta
+    };
+
+    const optimisticSector: ASR1Sector = {
+      id: tempId,
+      code: payload.code,
+      name: payload.name,
+      polygon: payload.polygon,
+      assignedTeamId: payload.assignedTeamId,
+      assignedTeamName: payload.assignedTeamName,
+      status: payload.status,
+      priority: payload.priority,
+      hazards: payload.hazards,
+      radioChannel: payload.radioChannel,
+      color: payload.color,
+      sectorType: payload.sectorType as any,
+      lkpMeta: payload.lkpMeta,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     };
 
     try {
@@ -875,16 +1097,29 @@ export default function OperasyonHaritasi({
       if (res.ok) {
         const data = await res.json();
         if (data.sector) {
-          setSectors(prev => [...prev.filter(s => s.id !== data.sector.id), data.sector]);
+          setSectors(prev => [...prev.filter(s => s.id !== data.sector.id && s.id !== tempId), data.sector]);
           setSelectedSector(data.sector);
         }
       } else {
-        const errData = await res.json().catch(() => ({}));
-        alert(`Sektör kaydedilemedi: ${errData.error || res.statusText}`);
+        setSectors(prev => [...prev.filter(s => s.id !== tempId), optimisticSector]);
+        setSelectedSector(optimisticSector);
+        enqueueOfflineAction({
+          url: '/api/settings/operations/active/sectors',
+          method: 'POST',
+          body: { ...payload, id: tempId },
+          label: `Sektör Kayıt: ${payload.code}`
+        });
       }
     } catch (err) {
-      console.error("Sektör kaydedilemedi", err);
-      alert("Sektör kaydedilirken bağlantı hatası oluştu.");
+      console.warn("Offline sektör kaydı kuyruğa alındı", err);
+      setSectors(prev => [...prev.filter(s => s.id !== tempId), optimisticSector]);
+      setSelectedSector(optimisticSector);
+      enqueueOfflineAction({
+        url: '/api/settings/operations/active/sectors',
+        method: 'POST',
+        body: { ...payload, id: tempId },
+        label: `Sektör Kayıt: ${payload.code}`
+      });
     } finally {
       setIsDrawingSector(false);
       setEditingSectorId(null);
@@ -900,19 +1135,21 @@ export default function OperasyonHaritasi({
 
     const poly95 = createGeoCirclePolygon(lkpClickPos, lkpForm.radius95m, 36);
     const lkpCount = sectors.filter(s => s.sectorType === 'LKP').length + 1;
+    const tempId = `LKP-LOCAL-${Date.now().toString(36).toUpperCase()}`;
 
     const payload = {
       operationId,
+      id: tempId,
       code: `LKP-${lkpCount}`,
       name: `${lkpForm.missingPersonName} (${lkpForm.profileName})`,
       polygon: poly95,
       assignedTeamName: lkpForm.assignedTeamName,
-      status: 'Aktif Arama',
-      priority: 'Kritik',
+      status: 'Aktif Arama' as const,
+      priority: 'Kritik' as const,
       hazards: `Son Görülme: ${lkpForm.lastSeenTime} | %50 Çember: ${lkpForm.radius50m}m | %95 Çember: ${lkpForm.radius95m}m`,
       radioChannel: 'CH-1 / 446.00625 MHz',
       color: '#f59e0b',
-      sectorType: 'LKP',
+      sectorType: 'LKP' as const,
       lkpMeta: {
         center: lkpClickPos,
         profileName: lkpForm.profileName,
@@ -921,6 +1158,12 @@ export default function OperasyonHaritasi({
         missingPersonName: lkpForm.missingPersonName,
         lastSeenTime: lkpForm.lastSeenTime
       }
+    };
+
+    const optimisticLkp: ASR1Sector = {
+      ...payload,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     };
 
     try {
@@ -932,12 +1175,29 @@ export default function OperasyonHaritasi({
       if (res.ok) {
         const data = await res.json();
         if (data.sector) {
-          setSectors(prev => [...prev.filter(s => s.id !== data.sector.id), data.sector]);
+          setSectors(prev => [...prev.filter(s => s.id !== data.sector.id && s.id !== tempId), data.sector]);
           setSelectedSector(data.sector);
         }
+      } else {
+        setSectors(prev => [...prev.filter(s => s.id !== tempId), optimisticLkp]);
+        setSelectedSector(optimisticLkp);
+        enqueueOfflineAction({
+          url: '/api/settings/operations/active/sectors',
+          method: 'POST',
+          body: payload,
+          label: `LKP Çemberi: ${payload.code}`
+        });
       }
     } catch (err) {
-      console.error("LKP çemberi kaydedilemedi", err);
+      console.warn("Offline LKP çemberi kuyruğa alındı", err);
+      setSectors(prev => [...prev.filter(s => s.id !== tempId), optimisticLkp]);
+      setSelectedSector(optimisticLkp);
+      enqueueOfflineAction({
+        url: '/api/settings/operations/active/sectors',
+        method: 'POST',
+        body: payload,
+        label: `LKP Çemberi: ${payload.code}`
+      });
     } finally {
       setIsAddingLkp(false);
       setLkpClickPos(null);
@@ -1003,16 +1263,25 @@ export default function OperasyonHaritasi({
 
   const handleDeleteSector = async (sectorId: string) => {
     if (!confirm("Bu ASR-1 sektörünü / arama çemberini silmek istediğinize emin misiniz?")) return;
+    setSectors(prev => prev.filter(s => s.id !== sectorId));
+    if (selectedSector?.id === sectorId) setSelectedSector(null);
     try {
       const res = await fetch(`/api/settings/operations/active/sectors?operationId=${operationId}&sectorId=${sectorId}`, {
         method: 'DELETE'
       });
-      if (res.ok) {
-        setSectors(prev => prev.filter(s => s.id !== sectorId));
-        if (selectedSector?.id === sectorId) setSelectedSector(null);
+      if (!res.ok) {
+        enqueueOfflineAction({
+          url: `/api/settings/operations/active/sectors?operationId=${operationId}&sectorId=${sectorId}`,
+          method: 'DELETE',
+          label: `Sektör Sil: ${sectorId}`
+        });
       }
-    } catch (err) {
-      console.error("Sektör silinemedi", err);
+    } catch {
+      enqueueOfflineAction({
+        url: `/api/settings/operations/active/sectors?operationId=${operationId}&sectorId=${sectorId}`,
+        method: 'DELETE',
+        label: `Sektör Sil: ${sectorId}`
+      });
     }
   };
 
@@ -1049,16 +1318,26 @@ export default function OperasyonHaritasi({
       ? `${delta > 0 ? '+1' : '-1'} Vefat Kaydı (Toplam: ${updatedVictims.deceasedExtracted})`
       : `${delta > 0 ? '+1' : '-1'} Şüpheli Canlı Tespiti (Toplam: ${updatedVictims.suspectedLive})`;
 
+    const optimisticWs: INSARAGWorksite = {
+      ...targetWs,
+      victims: updatedVictims,
+      updatedAt: Date.now()
+    };
+    setSelectedWorksite(optimisticWs);
+    setWorksites(prev => prev.map(w => w.id === targetWs.id ? optimisticWs : w));
+
+    const reqBody = {
+      operationId,
+      ...targetWs,
+      victims: updatedVictims,
+      logAction: actionMsg
+    };
+
     try {
       const res = await fetch('/api/settings/operations/active/worksites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          operationId,
-          ...targetWs,
-          victims: updatedVictims,
-          logAction: actionMsg
-        })
+        body: JSON.stringify(reqBody)
       });
       if (res.ok) {
         const data = await res.json();
@@ -1066,9 +1345,21 @@ export default function OperasyonHaritasi({
           setSelectedWorksite(data.worksite);
           setWorksites(prev => prev.map(w => w.id === data.worksite.id ? data.worksite : w));
         }
+      } else {
+        enqueueOfflineAction({
+          url: '/api/settings/operations/active/worksites',
+          method: 'POST',
+          body: reqBody,
+          label: `Enkaz Sayaç: ${targetWs.code}`
+        });
       }
-    } catch (err) {
-      console.error("Enkaz kazazede sayısı güncellenemedi", err);
+    } catch {
+      enqueueOfflineAction({
+        url: '/api/settings/operations/active/worksites',
+        method: 'POST',
+        body: reqBody,
+        label: `Enkaz Sayaç: ${targetWs.code}`
+      });
     }
   };
 
@@ -1097,18 +1388,28 @@ export default function OperasyonHaritasi({
     };
 
     const updatedExtrications = [newExt, ...(selectedWorksite.extrications || [])];
+    const optimisticWs: INSARAGWorksite = {
+      ...selectedWorksite,
+      victims: updatedVictims,
+      extrications: updatedExtrications,
+      updatedAt: Date.now()
+    };
+    setSelectedWorksite(optimisticWs);
+    setWorksites(prev => prev.map(w => w.id === selectedWorksite.id ? optimisticWs : w));
+
+    const reqBody = {
+      operationId,
+      ...selectedWorksite,
+      victims: updatedVictims,
+      extrications: updatedExtrications,
+      logAction: `🚑 Kazazede Çıkarıldı [${newExt.triage}]: ${newExt.victimInfo} (${newExt.locationInRubble}) ➔ ${newExt.handedOverTo}`
+    };
 
     try {
       const res = await fetch('/api/settings/operations/active/worksites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          operationId,
-          ...selectedWorksite,
-          victims: updatedVictims,
-          extrications: updatedExtrications,
-          logAction: `🚑 Kazazede Çıkarıldı [${newExt.triage}]: ${newExt.victimInfo} (${newExt.locationInRubble}) ➔ ${newExt.handedOverTo}`
-        })
+        body: JSON.stringify(reqBody)
       });
       if (res.ok) {
         const data = await res.json();
@@ -1116,9 +1417,21 @@ export default function OperasyonHaritasi({
           setSelectedWorksite(data.worksite);
           setWorksites(prev => prev.map(w => w.id === data.worksite.id ? data.worksite : w));
         }
+      } else {
+        enqueueOfflineAction({
+          url: '/api/settings/operations/active/worksites',
+          method: 'POST',
+          body: reqBody,
+          label: `Kazazede Triyaj: ${selectedWorksite.code}`
+        });
       }
-    } catch (err) {
-      console.error("Kazazede triyaj kartı kaydedilemedi", err);
+    } catch {
+      enqueueOfflineAction({
+        url: '/api/settings/operations/active/worksites',
+        method: 'POST',
+        body: reqBody,
+        label: `Kazazede Triyaj: ${selectedWorksite.code}`
+      });
     } finally {
       setShowExtricationModal(false);
       setExtricationForm({
@@ -1163,9 +1476,10 @@ export default function OperasyonHaritasi({
     const loc = editingWorksiteId ? selectedWorksite?.location || worksiteClickPos : worksiteClickPos;
     if (!loc) return;
 
+    const tempId = editingWorksiteId || `WS-LOCAL-${Date.now().toString(36).toUpperCase()}`;
     const payload = {
       operationId,
-      id: editingWorksiteId || undefined,
+      id: editingWorksiteId || tempId,
       code: worksiteForm.code,
       name: worksiteForm.name,
       address: worksiteForm.address,
@@ -1195,6 +1509,14 @@ export default function OperasyonHaritasi({
       markingDate: new Date().toLocaleString('tr-TR')
     };
 
+    const optimisticWs: INSARAGWorksite = {
+      ...payload,
+      id: tempId,
+      history: selectedWorksite?.history || [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+
     try {
       const res = await fetch('/api/settings/operations/active/worksites', {
         method: 'POST',
@@ -1204,12 +1526,28 @@ export default function OperasyonHaritasi({
       if (res.ok) {
         const data = await res.json();
         if (data.worksite) {
-          setWorksites(prev => [...prev.filter(w => w.id !== data.worksite.id), data.worksite]);
+          setWorksites(prev => [...prev.filter(w => w.id !== data.worksite.id && w.id !== tempId), data.worksite]);
           setSelectedWorksite(data.worksite);
         }
+      } else {
+        setWorksites(prev => [...prev.filter(w => w.id !== tempId), optimisticWs]);
+        setSelectedWorksite(optimisticWs);
+        enqueueOfflineAction({
+          url: '/api/settings/operations/active/worksites',
+          method: 'POST',
+          body: payload,
+          label: `Enkaz Kayıt: ${payload.code}`
+        });
       }
-    } catch (err) {
-      console.error("Enkaz kaydedilemedi", err);
+    } catch {
+      setWorksites(prev => [...prev.filter(w => w.id !== tempId), optimisticWs]);
+      setSelectedWorksite(optimisticWs);
+      enqueueOfflineAction({
+        url: '/api/settings/operations/active/worksites',
+        method: 'POST',
+        body: payload,
+        label: `Enkaz Kayıt: ${payload.code}`
+      });
     } finally {
       setIsAddingWorksite(false);
       setEditingWorksiteId(null);
@@ -1220,16 +1558,25 @@ export default function OperasyonHaritasi({
 
   const handleDeleteWorksite = async (worksiteId: string) => {
     if (!confirm("Bu INSARAG enkaz kaydını silmek istediğinize emin misiniz?")) return;
+    setWorksites(prev => prev.filter(w => w.id !== worksiteId));
+    if (selectedWorksite?.id === worksiteId) setSelectedWorksite(null);
     try {
       const res = await fetch(`/api/settings/operations/active/worksites?operationId=${operationId}&worksiteId=${worksiteId}`, {
         method: 'DELETE'
       });
-      if (res.ok) {
-        setWorksites(prev => prev.filter(w => w.id !== worksiteId));
-        if (selectedWorksite?.id === worksiteId) setSelectedWorksite(null);
+      if (!res.ok) {
+        enqueueOfflineAction({
+          url: `/api/settings/operations/active/worksites?operationId=${operationId}&worksiteId=${worksiteId}`,
+          method: 'DELETE',
+          label: `Enkaz Sil: ${worksiteId}`
+        });
       }
-    } catch (err) {
-      console.error("Enkaz silinemedi", err);
+    } catch {
+      enqueueOfflineAction({
+        url: `/api/settings/operations/active/worksites?operationId=${operationId}&worksiteId=${worksiteId}`,
+        method: 'DELETE',
+        label: `Enkaz Sil: ${worksiteId}`
+      });
     }
   };
 
@@ -1304,7 +1651,7 @@ export default function OperasyonHaritasi({
     }
   };
 
-  // ── Konumumu Bul ve Gönder ────────────────────────────────────────────────
+  // ── Konumumu Bul ve Gönder (Offline Kuyruk Destekli) ─────────────────────
   const pingLocation = async (lat: number, lng: number) => {
     const now = Date.now();
     if (now - lastPingRef.current < 5000) return; // Max 5 saniyede bir at
@@ -1312,21 +1659,54 @@ export default function OperasyonHaritasi({
 
     if (!userId) return;
 
-    try {
-        if (channelRef.current) {
-            channelRef.current.send({
-                type: 'broadcast',
-                event: 'location_update',
-                payload: { memberId: userId, lat, lng, timestamp: now }
-            });
+    // Kendi konumumuzu yerel state ve izlere de anında işle (Offline olsa bile çemberlerde reaksiyon versin)
+    setLocations(prev => {
+      const existing = prev[userId];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        [userId]: {
+          ...existing,
+          lat,
+          lng,
+          is_online: true,
+          recorded_at: new Date(now).toISOString()
         }
-        fetch('/api/settings/operations/active/location', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberId: userId, lat, lng })
-        }).catch(() => {});
-    } catch (e) {
-        console.error("GPS Ping failed", e);
+      };
+    });
+    setTrails(prev => ({
+      ...prev,
+      [userId]: [...(prev[userId] ?? []), [lat, lng] as [number, number]].slice(-MAX_TRAIL)
+    }));
+
+    try {
+      if (channelRef.current && navigator.onLine) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'location_update',
+          payload: { memberId: userId, lat, lng, timestamp: now }
+        });
+      }
+      const res = await fetch('/api/settings/operations/active/location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, lat, lng })
+      });
+      if (!res.ok) {
+        enqueueOfflineAction({
+          url: '/api/settings/operations/active/location',
+          method: 'POST',
+          body: { memberId: userId, lat, lng },
+          label: `GPS Konum (${lat.toFixed(4)}, ${lng.toFixed(4)})`
+        });
+      }
+    } catch {
+      enqueueOfflineAction({
+        url: '/api/settings/operations/active/location',
+        method: 'POST',
+        body: { memberId: userId, lat, lng },
+        label: `GPS Konum (${lat.toFixed(4)}, ${lng.toFixed(4)})`
+      });
     }
   };
 
@@ -1536,6 +1916,30 @@ export default function OperasyonHaritasi({
                 <span>{worksites.length} Enkaz/Nokta</span>
               </button>
             )}
+
+            {/* Offline Durum & Kuyruk Rozeti */}
+            {(!isOnline || offlineQueueCount > 0) && (
+              <button
+                type="button"
+                onClick={() => flushOfflineQueue()}
+                disabled={!isOnline || isSyncingOffline}
+                className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap border transition-all ${
+                  !isOnline
+                    ? 'bg-rose-500/20 border-rose-500/40 text-rose-300 animate-pulse'
+                    : 'bg-sky-500/20 hover:bg-sky-500/30 border-sky-500/40 text-sky-300 cursor-pointer'
+                }`}
+                title={!isOnline ? 'İnternet kesik! Yaptığınız tüm sektör, LKP çemberi, enkaz ve GPS işlemleri cihaz hafızasına kaydediliyor; internet gelince otomatik aktarılacak.' : 'Kuyruktaki verileri şimdi sunucuya aktar'}
+              >
+                <span>{!isOnline ? '📴' : '🔄'}</span>
+                <span>
+                  {!isOnline
+                    ? `Offline Mod (${offlineQueueCount} Bekleyen Veri)`
+                    : isSyncingOffline
+                    ? 'Senkronize Ediliyor...'
+                    : `${offlineQueueCount} Offline Veri — Şimdi Aktar`}
+                </span>
+              </button>
+            )}
           </div>
 
           {/* Sağ Grup: Adım Adım Saha İşaretleme Butonları & Araçlar */}
@@ -1550,10 +1954,10 @@ export default function OperasyonHaritasi({
                   ? 'bg-amber-500/25 text-amber-300 border border-amber-400 animate-pulse'
                   : 'bg-blue-600 hover:bg-blue-500 border border-blue-400/40 text-white'
               }`}
-              title="1. Adım: Harita üzerinde arama yapılacak mahalleyi/bölgeyi köşe noktalarına tıklayarak çerçeveleyin (INSARAG ASR-1)"
+              title="1. Adım: Harita üzerinde arama yapılacak mahalleyi/bölgeyi köşe noktalarına tıklayarak çerçeveleyin (INSARAG ASR-1 Geniş Alan & ASR-2 Sektör Değerlendirme)"
             >
               <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">1</span>
-              <span>📐 {isDrawingSector ? 'Köşeleri Seçin...' : 'Alan / Sektör Çiz'}</span>
+              <span>📐 {isDrawingSector ? 'Köşeleri Seçin...' : 'ASR-1/2 Alan & Sektör Çiz'}</span>
             </button>
 
             {/* 2. Adım: Enkaz / Bina Ekle */}
@@ -1572,10 +1976,10 @@ export default function OperasyonHaritasi({
                   ? 'bg-rose-500/25 text-rose-300 border border-rose-400 animate-pulse'
                   : 'bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/40 text-white'
               }`}
-              title="2. Adım: Yıkık bina, enkaz veya kritik müdahale noktasını haritaya tıklayarak işaretleyin (INSARAG ASR-3/4/5)"
+              title="2. Adım: Yıkık bina, enkaz veya kritik müdahale noktasını haritaya tıklayarak işaretleyin (INSARAG ASR-3 Hızlı SAR, ASR-4 Derin Kurtarma, ASR-5 Temizlik/Devir)"
             >
               <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">2</span>
-              <span>🏗️ {isAddingWorksite ? 'Haritada Noktaya Tıklayın' : 'Enkaz / Bina Ekle'}</span>
+              <span>🏗️ {isAddingWorksite ? 'Haritada Noktaya Tıklayın' : 'ASR-3/4/5 Enkaz Ekle'}</span>
             </button>
 
             {/* 3. Adım: Doğa Arama Kayıp Çemberi */}
@@ -1594,10 +1998,10 @@ export default function OperasyonHaritasi({
                   ? 'bg-amber-500/25 text-amber-300 border border-amber-400 animate-pulse'
                   : 'bg-purple-600 hover:bg-purple-500 border border-purple-400/40 text-white'
               }`}
-              title="3. Adım: Doğada kaybolan kişinin son görüldüğü noktayı (LKP) işaretleyip %50 ve %95 bulunma çemberi oluşturun"
+              title="3. Adım: Doğada kaybolan kişinin son görüldüğü noktayı (LKP) işaretleyip Koester %50 ve %95 bulunma çemberi oluşturun (WSAR)"
             >
               <span className="px-1.5 py-0.2 bg-black/25 rounded text-[10px] font-black">3</span>
-              <span>🧭 {isAddingLkp ? 'Son Görülme Noktasına Tıklayın' : 'Kayıp Çemberi'}</span>
+              <span>🧭 {isAddingLkp ? 'Son Görülme Noktasına Tıklayın' : 'Doğa LKP Çemberi'}</span>
             </button>
 
             {/* Yardım / Hızlı Rehber Butonu */}
@@ -1847,22 +2251,46 @@ export default function OperasyonHaritasi({
             {onMapClick && !isDrawingSector && !isAddingWorksite && !isAddingLkp && <CenterPinButton onClick={onMapClick} />}
             {onMapClick && !isDrawingSector && !isAddingWorksite && !isAddingLkp && <CenterCrosshair />}
 
-            {/* ASR-1 Sektörleri & Doğa Arama LKP Olasılık Çemberleri */}
+            {/* ASR-1/ASR-2 Sektörleri & Doğa Arama LKP Olasılık Çemberleri (Canlı GPS Reaksiyonlu) */}
             {sectors.map((sec) => {
               const isSecSelected = selectedSector?.id === sec.id;
               const center = sec.lkpMeta?.center || getPolygonCenter(sec.polygon);
-              const icon = makeSectorLabelIcon(sec);
+
+              // Çember / Sektör içindeki aktif GPS personellerini ve GPS iz noktalarını hesapla
+              const insidePersonnel = people.filter(
+                p => p.lat !== undefined && p.lng !== undefined && isPointInPolygon([p.lat, p.lng], sec.polygon)
+              );
+              const inInner50Personnel = (sec.sectorType === 'LKP' && sec.lkpMeta)
+                ? people.filter(
+                    p =>
+                      p.lat !== undefined &&
+                      p.lng !== undefined &&
+                      getDistanceFromLatLonInKm(p.lat, p.lng, sec.lkpMeta!.center[0], sec.lkpMeta!.center[1]) * 1000 <= sec.lkpMeta!.radius50m
+                  )
+                : [];
+
+              let trailPointsInside = 0;
+              Object.values(trails).forEach(pts => {
+                if (!pts) return;
+                pts.forEach(pt => {
+                  if (isPointInPolygon(pt, sec.polygon)) trailPointsInside++;
+                });
+              });
+
+              const hasGpsReaction = insidePersonnel.length > 0;
+              const activeOuterColor = hasGpsReaction ? '#22c55e' : sec.color;
+              const icon = makeSectorLabelIcon(sec, insidePersonnel.length, trailPointsInside, inInner50Personnel.length);
 
               return (
                 <Fragment key={sec.id}>
                   <Polygon
                     positions={sec.polygon}
                     pathOptions={{
-                      color: sec.color,
-                      fillColor: sec.color,
-                      fillOpacity: isSecSelected ? 0.32 : 0.14,
-                      weight: isSecSelected ? 4 : 2.5,
-                      dashArray: (sec.status === 'Değerlendirme' || sec.sectorType === 'LKP') ? '6, 6' : undefined
+                      color: activeOuterColor,
+                      fillColor: activeOuterColor,
+                      fillOpacity: isSecSelected ? 0.34 : hasGpsReaction ? 0.24 : 0.14,
+                      weight: isSecSelected ? 4 : hasGpsReaction ? 3.5 : 2.5,
+                      dashArray: (sec.status === 'Değerlendirme' || sec.sectorType === 'LKP') && !hasGpsReaction ? '6, 6' : undefined
                     }}
                     eventHandlers={{
                       click: (e) => {
@@ -1873,17 +2301,17 @@ export default function OperasyonHaritasi({
                       }
                     }}
                   />
-                  {/* Eğer LKP Kayıp Arama Çemberi ise %50 İç Olasılık Halkasını da Çiz */}
+                  {/* Eğer LKP Kayıp Arama Çemberi ise %50 İç Olasılık Halkasını da Çiz (Personel girince parlar) */}
                   {sec.sectorType === 'LKP' && sec.lkpMeta && (
                     <Circle
                       center={sec.lkpMeta.center}
                       radius={sec.lkpMeta.radius50m}
                       pathOptions={{
-                        color: '#22c55e',
-                        fillColor: '#22c55e',
-                        fillOpacity: 0.18,
-                        weight: 2.5,
-                        dashArray: '4, 4'
+                        color: inInner50Personnel.length > 0 ? '#4ade80' : '#22c55e',
+                        fillColor: inInner50Personnel.length > 0 ? '#22c55e' : '#22c55e',
+                        fillOpacity: inInner50Personnel.length > 0 ? 0.32 : 0.16,
+                        weight: inInner50Personnel.length > 0 ? 4 : 2.5,
+                        dashArray: inInner50Personnel.length > 0 ? undefined : '4, 4'
                       }}
                     />
                   )}
@@ -2343,14 +2771,47 @@ export default function OperasyonHaritasi({
             </div>
           )}
 
-          {/* ASR-1 Sektör & ASR-2 Otomatik Sektör Değerlendirme Kartı */}
+          {/* ASR-1 Sektör & ASR-2 Otomatik Sektör Değerlendirme & Doğa LKP GPS Reaksiyon Kartı */}
           {!selectedWorksite && selectedSector && (() => {
             const sectorWorksites = worksites.filter(ws => isPointInPolygon(ws.location, selectedSector.polygon));
             const cleanedCount = sectorWorksites.filter(ws => ws.status === 'Temizlendi' || ws.asrLevel === 'ASR-5').length;
             const sectorLive = sectorWorksites.reduce((acc, ws) => acc + (ws.victims?.liveExtracted || 0), 0);
             const sectorDeceased = sectorWorksites.reduce((acc, ws) => acc + (ws.victims?.deceasedExtracted || 0), 0);
             const sectorPersonnel = people.filter(p => p.lat !== undefined && p.lng !== undefined && isPointInPolygon([p.lat, p.lng], selectedSector.polygon));
-            const progressPct = sectorWorksites.length > 0 ? Math.round((cleanedCount / sectorWorksites.length) * 100) : (selectedSector.status === 'Tamamlandı' ? 100 : 0);
+            const inInner50Personnel = (selectedSector.sectorType === 'LKP' && selectedSector.lkpMeta)
+              ? people.filter(
+                  p =>
+                    p.lat !== undefined &&
+                    p.lng !== undefined &&
+                    getDistanceFromLatLonInKm(p.lat, p.lng, selectedSector.lkpMeta!.center[0], selectedSector.lkpMeta!.center[1]) * 1000 <= selectedSector.lkpMeta!.radius50m
+                )
+              : [];
+
+            let trailPointsInSector = 0;
+            let trailPointsIn50Ring = 0;
+            Object.values(trails).forEach(pts => {
+              if (!pts) return;
+              pts.forEach(pt => {
+                if (isPointInPolygon(pt, selectedSector.polygon)) {
+                  trailPointsInSector++;
+                  if (
+                    selectedSector.sectorType === 'LKP' &&
+                    selectedSector.lkpMeta &&
+                    getDistanceFromLatLonInKm(pt[0], pt[1], selectedSector.lkpMeta.center[0], selectedSector.lkpMeta.center[1]) * 1000 <= selectedSector.lkpMeta.radius50m
+                  ) {
+                    trailPointsIn50Ring++;
+                  }
+                }
+              });
+            });
+
+            const gpsSweepPct = Math.min(100, Math.round((trailPointsInSector / 20) * 100));
+            const progressPct =
+              selectedSector.status === 'Tamamlandı'
+                ? 100
+                : sectorWorksites.length > 0
+                ? Math.round((cleanedCount / sectorWorksites.length) * 100)
+                : gpsSweepPct;
 
             return (
               <div>
@@ -2366,7 +2827,9 @@ export default function OperasyonHaritasi({
                   </div>
                   <div style={{ flex: 1, minWidth:0 }}>
                     <div style={{ fontSize:15, fontWeight:700, color:'#f1f5f9' }}>
-                      {selectedSector.sectorType === 'LKP' ? `WSAR LKP [${selectedSector.code}]` : `ASR-1 & ASR-2 [${selectedSector.code}]`}
+                      {selectedSector.sectorType === 'LKP'
+                        ? `WSAR LKP Olasılık Çemberi [${selectedSector.code}]`
+                        : `${selectedSector.sectorType || 'ASR-1'} & ASR-2 [${selectedSector.code}]`}
                     </div>
                     <div style={{ fontSize:12, color:'#94a3b8', marginTop:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                       {selectedSector.name}
@@ -2396,10 +2859,72 @@ export default function OperasyonHaritasi({
                   </span>
                   <span style={{
                     padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
-                    background: 'rgba(56,189,248,0.15)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.3)'
+                    background: sectorPersonnel.length > 0 ? 'rgba(34,197,94,0.2)' : 'rgba(56,189,248,0.15)',
+                    color: sectorPersonnel.length > 0 ? '#4ade80' : '#38bdf8',
+                    border: `1px solid ${sectorPersonnel.length > 0 ? 'rgba(34,197,94,0.4)' : 'rgba(56,189,248,0.3)'}`
                   }}>
-                    👥 Sektörde {sectorPersonnel.length} Personel
+                    {sectorPersonnel.length > 0 ? `🟢 Sahada Aktif: ${sectorPersonnel.length} Personel` : `👥 Bölgede ${sectorPersonnel.length} Personel`}
                   </span>
+                  {trailPointsInSector > 0 && (
+                    <span style={{
+                      padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                      background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.35)'
+                    }}>
+                      📡 {trailPointsInSector} GPS Tarama İzi
+                    </span>
+                  )}
+                </div>
+
+                {/* CANLI GPS SAHA REAKSİYONU (LKP Çemberi veya Sektör İçi GPS Tarama Analizi) */}
+                <div style={{
+                  background: sectorPersonnel.length > 0 ? 'rgba(22,163,74,0.12)' : 'rgba(15,23,42,0.85)',
+                  border: `1px solid ${sectorPersonnel.length > 0 ? 'rgba(34,197,94,0.45)' : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: 10,
+                  padding: '10px 12px',
+                  marginBottom: 10
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: sectorPersonnel.length > 0 ? '#4ade80' : '#94a3b8' }}>
+                      📡 CANLI GPS SAHA REAKSİYONU & TARAMA ANALİZİ
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#38bdf8' }}>
+                      {selectedSector.sectorType === 'LKP' && selectedSector.lkpMeta
+                        ? `%50 Halka: ${selectedSector.lkpMeta.radius50m}m | %95 Halka: ${selectedSector.lkpMeta.radius95m}m`
+                        : `GPS Tarama: ~%${gpsSweepPct}`}
+                    </span>
+                  </div>
+
+                  {selectedSector.sectorType === 'LKP' && selectedSector.lkpMeta ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, marginBottom: sectorPersonnel.length > 0 ? 8 : 0 }}>
+                      <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 8, padding: '6px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 13, fontWeight: 900, color: '#4ade80' }}>{inInner50Personnel.length} Kişi</div>
+                        <div style={{ fontSize: 9.5, color: '#86efac' }}>🟢 %50 İç Çemberde</div>
+                      </div>
+                      <div style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, padding: '6px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 13, fontWeight: 900, color: '#fbbf24' }}>{sectorPersonnel.length} Kişi</div>
+                        <div style={{ fontSize: 9.5, color: '#fde68a' }}>🟡 %95 Dış Çemberde</div>
+                      </div>
+                      <div style={{ background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.35)', borderRadius: 8, padding: '6px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 13, fontWeight: 900, color: '#38bdf8' }}>{trailPointsInSector} Nokta</div>
+                        <div style={{ fontSize: 9.5, color: '#bae6fd' }}>📡 GPS Yürüyüş İzi ({trailPointsIn50Ring} iç)</div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {sectorPersonnel.length > 0 ? (
+                    <div style={{ fontSize: 11, color: '#e2e8f0', display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                      <span style={{ color: '#86efac', fontWeight: 700 }}>Sahadaki Personeller:</span>
+                      {sectorPersonnel.map(p => (
+                        <span key={p.member_id} style={{ background: 'rgba(0,0,0,0.45)', padding: '2px 8px', borderRadius: 12, border: `1px solid ${p.team_color}` }}>
+                          🟢 {p.member_name} ({p.team_name})
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                      Henüz bu çember/sektör içine giren aktif GPS sinyalli personel yok. Ekip sahaya girdiğinde çember otomatik olarak <strong style={{ color: '#4ade80' }}>yeşil reaksiyon</strong> verir ve yürüyüş izlerini sayar.
+                    </div>
+                  )}
                 </div>
 
                 {/* ASR-2 Sektör İçi Otomatik Enkaz & Kurtarma Analizi */}
@@ -2430,10 +2955,10 @@ export default function OperasyonHaritasi({
                   </div>
                 </div>
 
-                {/* ASR-2 Sektör Tarama İlerleme Çubuğu */}
+                {/* ASR-2 Sektör / LKP Tarama İlerleme Çubuğu */}
                 <div style={{ background:'#111827', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'8px 10px', marginBottom:10 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, fontWeight:700, color:'#cbd5e1', marginBottom:4 }}>
-                    <span>ASR-2 Sektör Tarama & Temizlik İlerlemesi</span>
+                    <span>{selectedSector.sectorType === 'LKP' ? 'WSAR Çember GPS Tarama & Arama İlerlemesi' : 'ASR-2 Sektör Tarama & Temizlik İlerlemesi'}</span>
                     <span style={{ color:'#4ade80' }}>%{progressPct}</span>
                   </div>
                   <div style={{ width:'100%', height:6, background:'#1f2937', borderRadius:4, overflow:'hidden' }}>
@@ -2466,14 +2991,35 @@ export default function OperasyonHaritasi({
                 )}
 
                 {/* Aksiyon butonları */}
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {selectedSector.status !== 'Tamamlandı' ? (
+                    <button
+                      onClick={() => handleQuickSectorStatus(selectedSector, 'Tamamlandı')}
+                      style={{
+                        flex: 1, minWidth: '150px', padding: '10px 8px', borderRadius: 8, background: '#16a34a',
+                        color: '#fff', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer'
+                      }}
+                    >
+                      ✅ Taramayı Tamamlandı İşaretle
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleQuickSectorStatus(selectedSector, 'Aktif Arama')}
+                      style={{
+                        flex: 1, minWidth: '150px', padding: '10px 8px', borderRadius: 8, background: '#0284c7',
+                        color: '#fff', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer'
+                      }}
+                    >
+                      🟢 Tekrar Aktif Aramaya Aç
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       const center = selectedSector.lkpMeta?.center || getPolygonCenter(selectedSector.polygon);
                       setFlyTo(center);
                     }}
                     style={{
-                      flex: 1, padding: '10px 0', borderRadius: 8, background: '#2563eb',
+                      flex: 1, minWidth: '100px', padding: '10px 8px', borderRadius: 8, background: '#2563eb',
                       color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer'
                     }}
                   >
@@ -2482,7 +3028,7 @@ export default function OperasyonHaritasi({
                   <button
                     onClick={() => handleStartEditSector(selectedSector)}
                     style={{
-                      flex: 1, padding: '10px 0', borderRadius: 8, background: '#d97706',
+                      flex: 1, minWidth: '110px', padding: '10px 8px', borderRadius: 8, background: '#d97706',
                       color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer'
                     }}
                   >
@@ -2612,15 +3158,18 @@ export default function OperasyonHaritasi({
         </div>
       </div>
 
-      {/* ── ASR-1 Sektör Oluşturma Yan Kartı (Harita Sağ Üstte Açılır) ─── */}
+      {/* ── ASR-1 / ASR-2 Sektör Oluşturma Modalı (Doğrudan Harita Kutusunun Ortasında Açılır) ─── */}
       {showSectorModal && (
-        <div className="absolute top-16 right-4 z-[1200] w-[92%] sm:w-[380px] max-h-[82%] overflow-y-auto bg-[#0f172a]/95 border border-amber-500/50 rounded-2xl p-5 shadow-2xl backdrop-blur-md text-left transition-all">
+        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm">
+          <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-amber-500/50 rounded-2xl p-5 shadow-2xl text-left">
           <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
             <div className="flex items-center gap-2.5">
               <span className="text-xl">📐</span>
               <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Yeni ASR-1 Sektörü Tanımla</h3>
-                <p className="text-[10px] text-neutral-400">INSARAG Seviye 1: Geniş Alan Sektörlemesi</p>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  {editingSectorId ? 'Sektör / Arama Bölgesi Güncelle' : 'Yeni Arama Sektörü Tanımla'}
+                </h3>
+                <p className="text-[10px] text-amber-400">INSARAG ASR-1 / ASR-2 & Doğa Grid Sektörleme Standardı</p>
               </div>
             </div>
             <button 
@@ -2629,7 +3178,20 @@ export default function OperasyonHaritasi({
             >✕</button>
           </div>
 
-          <form onSubmit={handleSaveSector} className="space-y-4">
+          <form onSubmit={handleSaveSector} className="space-y-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-amber-400 uppercase tracking-widest mb-1">Sektör Standardı / Seviyesi</label>
+                <select
+                  value={newSectorForm.sectorType}
+                  onChange={e => setNewSectorForm({ ...newSectorForm, sectorType: e.target.value as any })}
+                  className="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold focus:border-amber-500 outline-none"
+                >
+                  <option value="ASR-1">ASR-1 — Geniş Alan Ön Keşif & Sektörleme (INSARAG)</option>
+                  <option value="ASR-2">ASR-2 — Sektör Değerlendirme & Enkaz Triyaj Alanı (INSARAG)</option>
+                  <option value="WSAR-GRID">WSAR-GRID — Doğa Arama Kutu / Grid Sektör Tarama (POA/POD)</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Sektör Kodu *</label>
@@ -2768,17 +3330,19 @@ export default function OperasyonHaritasi({
               </div>
             </form>
           </div>
+        </div>
       )}
 
-      {/* ── ASR-3 INSARAG Enkaz Triyaj Yan Kartı (Harita Sağ Üstte Açılır) ─── */}
+      {/* ── ASR-3/4/5 INSARAG Enkaz Triyaj Modalı (Doğrudan Harita Kutusunun Ortasında Açılır) ─── */}
       {showWorksiteModal && (
-        <div className={`absolute top-16 right-4 z-[1200] w-[92%] sm:w-[420px] max-h-[85%] overflow-y-auto bg-[#0f172a]/95 border ${editingWorksiteId ? 'border-amber-500/50' : 'border-emerald-500/50'} rounded-2xl p-5 shadow-2xl backdrop-blur-md text-left transition-all`}>
+        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm">
+          <div className={`relative w-full max-w-lg max-h-[92%] overflow-y-auto bg-[#0f172a] border ${editingWorksiteId ? 'border-amber-500/50' : 'border-emerald-500/50'} rounded-2xl p-5 shadow-2xl text-left transition-all`}>
           <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
             <div className="flex items-center gap-2.5">
               <span className="text-xl">{editingWorksiteId ? '✏️' : '🏗️'}</span>
               <div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                  {editingWorksiteId ? 'ASR-3 Vardiya Devri & Güncelleme' : 'ASR-3 İşaretleme & Triyaj'}
+                  {editingWorksiteId ? 'ASR-3/4/5 Vardiya Devri & Güncelleme' : 'ASR-3/4/5 İşaretleme & Triyaj'}
                 </h3>
                 <p className={`text-[10px] ${editingWorksiteId ? 'text-amber-400' : 'text-emerald-400'}`}>
                   {editingWorksiteId ? 'INSARAG Enkaz Düzenleme & Zaman Damgalı Log' : 'INSARAG Worksite Assessment (İş Sahası Değerlendirmesi)'}
@@ -3075,23 +3639,24 @@ export default function OperasyonHaritasi({
                 type="submit"
                 className={`flex-1 py-3 ${editingWorksiteId ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'} text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg`}
               >
-                {editingWorksiteId ? 'Vardiyayı / Bilgileri Güncelle' : 'Enkazı Kaydet (ASR-3)'}
+                {editingWorksiteId ? 'Vardiyayı / Bilgileri Güncelle' : `Enkazı Kaydet (${worksiteForm.asrLevel})`}
               </button>
             </div>
           </form>
+          </div>
         </div>
       )}
 
-      {/* ── INSARAG ASR-3 Vardiya & Durum Tarihçesi Modal ─────────────── */}
+      {/* ── INSARAG ASR-3/4/5 Vardiya & Durum Tarihçesi Modal (Harita İçinde Açılır) ─── */}
       {showWorksiteHistoryModal && selectedWorksite && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg max-h-[85vh] bg-[#0b1329] border border-sky-500/30 rounded-2xl p-6 shadow-2xl flex flex-col text-left">
+        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg max-h-[90%] bg-[#0b1329] border border-sky-500/30 rounded-2xl p-6 shadow-2xl flex flex-col text-left">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4 shrink-0">
               <div className="flex items-center gap-3">
                 <span className="text-2xl p-2 bg-sky-500/20 rounded-xl border border-sky-500/30">📜</span>
                 <div>
                   <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                    <span>ASR-3 [{selectedWorksite.code}]</span>
+                    <span>{selectedWorksite.asrLevel || 'ASR-3'} [{selectedWorksite.code}]</span>
                     <span className="text-xs font-mono text-sky-400 font-bold bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">TUR-M1G</span>
                   </h3>
                   <p className="text-xs text-neutral-400 mt-0.5 font-medium">{selectedWorksite.name} — Vardiya & İşlem Günlüğü</p>
@@ -3160,10 +3725,10 @@ export default function OperasyonHaritasi({
         </div>
       )}
 
-      {/* ── START TRİYAJ & KAZAZEDE ÇIKARMA KARTI MODAL ──────────────── */}
+      {/* ── START TRİYAJ & KAZAZEDE ÇIKARMA KARTI MODAL (Harita İçinde Açılır) ─── */}
       {showExtricationModal && selectedWorksite && (
-        <div className="fixed inset-0 z-[2100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-[#0f172a] border border-rose-500/40 rounded-2xl p-5 shadow-2xl text-left">
+        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-rose-500/40 rounded-2xl p-5 shadow-2xl text-left">
             <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">🚑</span>
@@ -3248,10 +3813,10 @@ export default function OperasyonHaritasi({
         </div>
       )}
 
-      {/* ── DOĞA ARAMA KURTARMA: LKP (SON GÖRÜLME NOKTASI) & OLASILIK ÇEMBERİ MODAL ── */}
+      {/* ── DOĞA ARAMA KURTARMA: LKP (SON GÖRÜLME NOKTASI) & OLASILIK ÇEMBERİ MODAL (Harita İçinde Açılır) ── */}
       {showLkpModal && (
-        <div className="fixed inset-0 z-[2100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-[#0f172a] border border-purple-500/40 rounded-2xl p-5 shadow-2xl text-left">
+        <div className="absolute inset-0 z-[2100] flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-md max-h-[92%] overflow-y-auto bg-[#0f172a] border border-purple-500/40 rounded-2xl p-5 shadow-2xl text-left">
             <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">🧭</span>
@@ -3260,7 +3825,7 @@ export default function OperasyonHaritasi({
                     Doğa Arama (WSAR) LKP Olasılık Çemberi
                   </h3>
                   <p className="text-[10px] text-purple-400">
-                    Koester Kayıp Şahıs Davranışı %50 ve %95 Bulunma Halkaları
+                    Global Koester (ISRID) Kayıp Şahıs Davranışı %50 ve %95 Bulunma Halkaları
                   </p>
                 </div>
               </div>
@@ -3282,23 +3847,29 @@ export default function OperasyonHaritasi({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Kayıp Profili</label>
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Global Koester Kayıp Profili</label>
                   <select
                     value={lkpForm.profileName}
                     onChange={e => {
                       const val = e.target.value as any;
                       let r50 = 1500, r95 = 5000;
                       if (val === 'Çocuk (1-6 Yaş)') { r50 = 300; r95 = 1000; }
+                      else if (val === 'Çocuk / Genç (7-15 Yaş)') { r50 = 800; r95 = 3000; }
                       else if (val === 'Demans / Alzheimer Yaşlı') { r50 = 500; r95 = 2000; }
                       else if (val === 'Avcı / Mantar Toplayıcı') { r50 = 1000; r95 = 3500; }
+                      else if (val === 'Psikolojik / Depresif Vaka') { r50 = 600; r95 = 2200; }
+                      else if (val === 'Araç / ATV / Dağ Bisikleti') { r50 = 3000; r95 = 10000; }
                       setLkpForm({ ...lkpForm, profileName: val, radius50m: r50, radius95m: r95 });
                     }}
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white outline-none focus:border-purple-500"
                   >
-                    <option value="Doğa Yürüyüşçüsü (Hiker)">Doğa Yürüyüşçüsü</option>
-                    <option value="Demans / Alzheimer Yaşlı">Demans / Alzheimer Yaşlı</option>
-                    <option value="Çocuk (1-6 Yaş)">Çocuk (1-6 Yaş)</option>
-                    <option value="Avcı / Mantar Toplayıcı">Avcı / Mantar Toplayıcı</option>
+                    <option value="Doğa Yürüyüşçüsü (Hiker)">🥾 Doğa Yürüyüşçüsü (%50: 1.5km / %95: 5km)</option>
+                    <option value="Demans / Alzheimer Yaşlı">👴 Demans / Alzheimer Yaşlı (%50: 500m / %95: 2km)</option>
+                    <option value="Çocuk (1-6 Yaş)">👶 Çocuk 1-6 Yaş (%50: 300m / %95: 1km)</option>
+                    <option value="Çocuk / Genç (7-15 Yaş)">🧒 Çocuk / Genç 7-15 Yaş (%50: 800m / %95: 3km)</option>
+                    <option value="Avcı / Mantar Toplayıcı">🌲 Avcı / Mantar Toplayıcı (%50: 1km / %95: 3.5km)</option>
+                    <option value="Psikolojik / Depresif Vaka">🧠 Psikolojik / Depresif Vaka (%50: 600m / %95: 2.2km)</option>
+                    <option value="Araç / ATV / Dağ Bisikleti">🚵 Araç / ATV / Dağ Bisikleti (%50: 3km / %95: 10km)</option>
                   </select>
                 </div>
                 <div>
@@ -3349,6 +3920,10 @@ export default function OperasyonHaritasi({
                     <option key={t.id} value={t.name}>{t.name}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-[11px] text-emerald-300">
+                📡 <strong>Canlı GPS Saha Reaksiyonu:</strong> Ekip GPS ile bu çemberin içine girdiğinde %50 ve %95 halkaları otomatik olarak <strong>yeşil yanar</strong> ve yürüyüş izlerinden taranan noktaları canlı sayar.
               </div>
 
               <div className="flex items-center gap-3 pt-2">
